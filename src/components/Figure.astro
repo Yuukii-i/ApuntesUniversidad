@@ -1,0 +1,263 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  side?: 'left' | 'right' | 'full';
+  /** Ancho máximo opcional en píxeles (px) para limitar el tamaño de visualización de la figura. */
+  width?: number;
+}
+
+const { src, alt, caption, side = 'full', width } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+const resolvedSrc = src.startsWith('http') || src.startsWith('data:')
+  ? src
+  : `${baseUrl}${src.startsWith('/') ? '' : '/'}${src}`;
+
+const sideClasses = {
+  left: 'sm:float-left sm:mr-6 sm:mb-4 sm:max-w-[40%] w-fit max-w-full clear-left',
+  right: 'sm:float-right sm:ml-6 sm:mb-4 sm:max-w-[40%] w-fit max-w-full clear-right xl:float-right xl:clear-right xl:w-[330px] xl:-mr-[378px] xl:max-w-none xl:ml-0',
+  full: 'my-6 w-fit max-w-full mx-auto clear-both',
+}[side];
+
+const maxHeight = side === 'full' ? '75vh' : '60vh';
+const figureStyle = typeof width === 'number' ? `max-width: min(100%, ${width}px);` : undefined;
+const imgStyle = `width: auto; max-width: 100%; height: auto; object-fit: contain; display: block; max-height: ${maxHeight};`;
+---
+
+<figure class={`${sideClasses} not-prose`} style={figureStyle}>
+  <button
+    type="button"
+    aria-label="Ampliar imagen"
+    class="block w-fit max-w-full mx-auto p-0 bg-transparent cursor-zoom-in rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+    data-figure-zoom
+    data-src={resolvedSrc}
+    data-alt={alt}
+    data-caption={caption ?? ''}
+  >
+    <img
+      src={resolvedSrc}
+      alt={alt}
+      loading="lazy"
+      class="rounded-xl max-w-full h-auto object-contain block bg-surface-2"
+      style={imgStyle}
+    />
+  </button>
+  {caption && (
+    <figcaption class="mt-2 text-center text-xs text-muted w-0 min-w-full">
+      {caption}
+    </figcaption>
+  )}
+</figure>
+
+<script>
+  function initFigureOverlay() {
+    const win = window as unknown as { __figureOverlayInit?: boolean };
+    if (win.__figureOverlayInit) return;
+    win.__figureOverlayInit = true;
+
+    let overlay = document.getElementById('figure-enlarge-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'figure-enlarge-overlay';
+      overlay.className = 'fixed inset-0 z-[100] bg-black/85 hidden overflow-auto p-4 sm:p-6';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', 'Ampliar imagen');
+      overlay.setAttribute('aria-hidden', 'true');
+      overlay.innerHTML = `
+        <div class="fixed top-4 right-4 z-20 flex items-center gap-2" data-overlay-controls>
+          <button
+            type="button"
+            data-overlay-mode
+            class="px-3 py-1.5 rounded-lg bg-surface-2 text-xs text-text hover:bg-surface transition-colors cursor-pointer font-medium shadow-md"
+          >
+            Tamaño real
+          </button>
+          <button
+            type="button"
+            data-overlay-close
+            aria-label="Cerrar"
+            class="px-3 py-1.5 rounded-lg bg-surface-2 text-xs text-text hover:bg-surface transition-colors cursor-pointer font-medium shadow-md"
+          >
+            Cerrar
+          </button>
+        </div>
+        <div
+          data-overlay-stage
+          class="min-h-full min-w-full flex flex-col items-center justify-center p-2"
+        >
+          <img
+            data-overlay-img
+            src=""
+            alt=""
+            class="rounded-xl bg-surface-2 select-none transition-[width,height] duration-150"
+            style="display: block;"
+          />
+          <p
+            data-overlay-caption
+            class="mt-3 text-center text-xs sm:text-sm text-muted max-w-[90vw] hidden"
+          ></p>
+        </div>
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    const overlayEl = overlay;
+    const imgEl = overlayEl.querySelector('[data-overlay-img]') as HTMLImageElement | null;
+    const captionEl = overlayEl.querySelector('[data-overlay-caption]') as HTMLElement | null;
+    const modeBtn = overlayEl.querySelector('[data-overlay-mode]') as HTMLButtonElement | null;
+    const closeBtn = overlayEl.querySelector('[data-overlay-close]') as HTMLButtonElement | null;
+    const stageEl = overlayEl.querySelector('[data-overlay-stage]') as HTMLElement | null;
+
+    let activeTrigger: HTMLElement | null = null;
+    let isNaturalSize = false;
+    let savedScrollY = 0;
+
+    function applySizeMode(natural: boolean) {
+      isNaturalSize = natural;
+      if (!imgEl || !modeBtn || !stageEl) return;
+
+      const natW = imgEl.naturalWidth || 800;
+      const natH = imgEl.naturalHeight || 600;
+
+      if (isNaturalSize) {
+        // Modo tamaño real (1:1 pixel exacto, scroll si supera el viewport)
+        imgEl.style.width = `${natW}px`;
+        imgEl.style.height = `${natH}px`;
+        imgEl.style.maxWidth = 'none';
+        imgEl.style.maxHeight = 'none';
+        imgEl.style.cursor = 'zoom-out';
+        imgEl.setAttribute('title', 'Ajustar');
+        modeBtn.textContent = 'Ajustar';
+        stageEl.classList.remove('justify-center');
+        stageEl.classList.add('justify-start');
+      } else {
+        // Modo fit: escalar hasta ocupar el espacio del viewport disponible preservando relación de aspecto
+        const maxW = Math.max(300, window.innerWidth * 0.95);
+        const maxH = Math.max(300, window.innerHeight * 0.90);
+        const scale = Math.min(maxW / natW, maxH / natH);
+        const fitW = Math.round(natW * scale);
+        const fitH = Math.round(natH * scale);
+
+        imgEl.style.width = `${fitW}px`;
+        imgEl.style.height = `${fitH}px`;
+        imgEl.style.maxWidth = '95vw';
+        imgEl.style.maxHeight = '92vh';
+        imgEl.style.cursor = 'zoom-in';
+        imgEl.setAttribute('title', 'Tamaño real');
+        modeBtn.textContent = 'Tamaño real';
+        stageEl.classList.remove('justify-start');
+        stageEl.classList.add('justify-center');
+      }
+    }
+
+    function openOverlay(btn: HTMLElement) {
+      if (!imgEl || !captionEl) return;
+      activeTrigger = btn;
+      savedScrollY = window.scrollY;
+
+      const src = btn.getAttribute('data-src') || '';
+      const alt = btn.getAttribute('data-alt') || '';
+      const caption = btn.getAttribute('data-caption') || '';
+
+      imgEl.src = src;
+      imgEl.alt = alt;
+
+      if (caption) {
+        captionEl.textContent = caption;
+        captionEl.classList.remove('hidden');
+      } else {
+        captionEl.textContent = '';
+        captionEl.classList.add('hidden');
+      }
+
+      overlayEl.classList.remove('hidden');
+      overlayEl.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      // Asegurar que la imagen cargue o use sus dimensiones naturales para el cálculo inicial
+      if (imgEl.complete && imgEl.naturalWidth > 0) {
+        applySizeMode(false);
+      } else {
+        imgEl.onload = () => {
+          applySizeMode(false);
+        };
+      }
+
+      // Devolver foco a control de cierre sin desplazar la página
+      closeBtn?.focus({ preventScroll: true });
+    }
+
+    function closeOverlay() {
+      if (overlayEl.classList.contains('hidden')) return;
+      overlayEl.classList.add('hidden');
+      overlayEl.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+
+      // Restaurar scroll si algún navegador lo alteró
+      if (window.scrollY !== savedScrollY) {
+        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+      }
+
+      if (imgEl) {
+        imgEl.onload = null;
+        imgEl.src = '';
+      }
+
+      if (activeTrigger && typeof activeTrigger.focus === 'function') {
+        activeTrigger.focus({ preventScroll: true });
+      }
+      activeTrigger = null;
+    }
+
+    document.addEventListener('click', (e) => {
+      const target = e.target as HTMLElement | null;
+      if (!target) return;
+
+      const trigger = target.closest('[data-figure-zoom]') as HTMLElement | null;
+      if (trigger) {
+        e.preventDefault();
+        openOverlay(trigger);
+        return;
+      }
+
+      if (overlayEl.classList.contains('hidden')) return;
+
+      if (target.closest('[data-overlay-close]')) {
+        e.preventDefault();
+        closeOverlay();
+        return;
+      }
+
+      if (target.closest('[data-overlay-mode]') || target === imgEl) {
+        e.preventDefault();
+        applySizeMode(!isNaturalSize);
+        return;
+      }
+
+      if (target === overlayEl || target === stageEl) {
+        closeOverlay();
+      }
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !overlayEl.classList.contains('hidden')) {
+        e.preventDefault();
+        closeOverlay();
+      }
+    });
+
+    window.addEventListener('resize', () => {
+      if (!overlayEl.classList.contains('hidden') && !isNaturalSize) {
+        applySizeMode(false);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFigureOverlay);
+  } else {
+    initFigureOverlay();
+  }
+</script>

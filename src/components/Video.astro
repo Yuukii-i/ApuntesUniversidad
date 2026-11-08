@@ -1,0 +1,54 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  url: string;
+  title: string;
+}
+
+const { url, title } = Astro.props;
+
+function getYouTubeEmbedUrl(inputUrl: string): string | null {
+  const match = inputUrl.match(
+    /(?:youtube\.com\/(?:watch\?.*v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/
+  );
+  return match ? `https://www.youtube-nocookie.com/embed/${match[1]}` : null;
+}
+
+const embedUrl = getYouTubeEmbedUrl(url);
+---
+
+{
+  embedUrl ? (
+    <div class="my-6 rounded-xl overflow-hidden bg-surface-2 aspect-video not-prose shadow-sm">
+      <iframe
+        src={embedUrl}
+        title={title}
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen
+        class="w-full h-full"
+      />
+    </div>
+  ) : (
+    <a
+      href={url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="block my-6 p-4 rounded-xl bg-surface-2 hover:bg-surface transition-colors not-prose group"
+    >
+      <div class="flex items-center gap-3">
+        <Icon name="play" size={18} class="text-accent shrink-0" />
+        <div class="min-w-0 flex-1">
+          <span class="text-xs uppercase tracking-wider text-accent font-semibold block">
+            Video externo
+          </span>
+          <span class="text-sm font-bold text-text group-hover:text-accent transition-colors block truncate">
+            {title}
+          </span>
+          <span class="text-xs text-muted block truncate mt-0.5">{url}</span>
+        </div>
+      </div>
+    </a>
+  )
+}

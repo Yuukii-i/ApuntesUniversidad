@@ -1,0 +1,90 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getClasses, topicsOfClass, topicSlugOf } from '../../lib/content';
+import { getLastUpdate, formatDateEs } from '../../lib/lastUpdate';
+import { getCollection } from 'astro:content';
+
+const classes = await getClasses();
+const allTopics = await getCollection('topics');
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+---
+
+<Base title="Todas las Clases" description="Listado completo de materias y sus temas de estudio">
+  <main class="max-w-4xl mx-auto py-6">
+    <header class="mb-12">
+      <h1 class="text-3xl sm:text-4xl font-extrabold text-text mb-3">
+        Clases y Materias
+      </h1>
+      <p class="text-muted text-base sm:text-lg leading-relaxed">
+        Índice completo de todas las asignaturas disponibles con sus respectivos temas de estudio.
+      </p>
+    </header>
+
+    <div class="space-y-12">
+      {classes.map((clase) => {
+        const topics = topicsOfClass(allTopics, clase.id);
+        const lastUpdate = getLastUpdate(clase.id);
+        const formattedDate = formatDateEs(lastUpdate);
+
+        return (
+          <section class="space-y-4">
+            <div>
+              <div class="flex items-center gap-2 mb-2">
+                <span
+                  class="w-3 h-3 rounded-full inline-block"
+                  style={clase.data.accent ? `background-color: ${clase.data.accent}` : 'background-color: var(--accent)'}
+                ></span>
+                <span class="text-xs uppercase tracking-wider text-muted font-semibold">
+                  Materia
+                </span>
+              </div>
+              <h2 class="text-2xl font-bold text-text mb-2">
+                <a href={`${baseUrl}/${clase.id}/`} class="hover:text-accent transition-colors">
+                  {clase.data.title}
+                </a>
+              </h2>
+              <p class="text-muted text-sm leading-relaxed mb-3">
+                {clase.data.description}
+              </p>
+              <div class="text-xs text-muted">
+                Última actualización: {formattedDate}
+              </div>
+            </div>
+
+            {topics.length === 0 ? (
+              <div class="p-6 rounded-xl bg-surface/50 text-muted text-sm">
+                Esta clase aún no tiene temas.
+              </div>
+            ) : (
+              <div class="grid grid-cols-1 gap-3 pt-2">
+                {topics.map((tema) => {
+                  const href = `${baseUrl}/${clase.id}/${topicSlugOf(tema.id)}/`;
+                  return (
+                    <a
+                      href={href}
+                      class="block p-4 rounded-xl bg-surface hover:bg-surface-2 transition-colors group"
+                    >
+                      <div class="flex items-center justify-between gap-4">
+                        <span class="text-sm font-semibold text-text group-hover:text-accent transition-colors">
+                          {tema.data.title}
+                        </span>
+                        <span class="text-xs text-muted font-mono">
+                          Tema {tema.data.order}
+                        </span>
+                      </div>
+                      {tema.data.summary && (
+                        <p class="text-xs text-muted mt-1.5 leading-relaxed line-clamp-2">
+                          {tema.data.summary}
+                        </p>
+                      )}
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })}
+    </div>
+  </main>
+</Base>

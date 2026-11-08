@@ -1,0 +1,24 @@
+# build and tooling: node_modules/, dist/, .astro/, .env, .env.*, *.log, .DS_Store, Thumbs.db
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+
+# AI and agent workflow (stays local): CLAUDE.md, GEMINI.md, AGENTS.md, .claude/, .gemini/, .antigravity/, .superpowers/, docs/, scripts/
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+.claude/
+.gemini/
+.antigravity/
+.superpowers/
+docs/
+scripts/
+
+# owner's source notes (stay local): inbox/, *.pdf
+inbox/
+*.pdf

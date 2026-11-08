@@ -1,0 +1,62 @@
+---
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/theme.css';
+import '../styles/inline-code.css';
+import 'katex/dist/katex.min.css';
+import Header from '../components/Header.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = 'Sitio de apuntes universitarios de informática' } = Astro.props;
+const pageTitle = !title || title === 'Apuntes' ? 'Apuntes' : `${title} | Apuntes`;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0d1117" />
+    <link rel="icon" type="image/svg+xml" href={`${baseUrl}/favicon.svg`} />
+    <title>{pageTitle}</title>
+
+    <script is:inline>
+      (() => {
+        const storedTheme = typeof localStorage !== 'undefined' ? localStorage.getItem('theme') : null;
+        const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+        const theme = storedTheme || (prefersLight ? 'light' : 'dark');
+        if (theme === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+        }
+      })();
+    </script>
+  </head>
+  <body class="bg-bg text-text min-h-screen flex flex-col font-sans antialiased selection:bg-accent selection:text-bg">
+    <!-- Enlace de salto accesible para navegación con teclado -->
+    <a
+      href="#main-content"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-surface focus:text-accent focus:rounded-xl focus:shadow-lg"
+    >
+      Saltar al contenido
+    </a>
+
+    <!-- Header pegajoso -->
+    <Header />
+
+    <div id="main-content" class="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 py-6">
+      <slot />
+    </div>
+
+    <footer class="bg-bg py-8 px-4 mt-auto text-center text-xs text-muted">
+      <p>Apuntes universitarios de informática • Modo oscuro prioritario</p>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,83 @@
+/* Eliminación de comillas y pseudo-elementos backtick de Tailwind Typography */
+.prose :where(code):not(:where([class~="not-prose"] *))::before,
+.prose :where(code):not(:where([class~="not-prose"] *))::after,
+.prose code::before,
+.prose code::after {
+  content: none !important;
+}
+
+:root {
+  --ic-cls: #ffa657;
+  --ic-fn: #d2a8ff;
+  --ic-var: #79c0ff;
+  --ic-kw: #ff7b72;
+  --ic-const: #79c0ff;
+  --ic-str: #a5d6ff;
+  --ic-tag: #7ee787;
+  --ic-attr: #79c0ff;
+  --ic-neutral: var(--text);
+}
+
+:root[data-theme="light"] {
+  --ic-cls: #953800;
+  --ic-fn: #7e4cdb; /* oscurecido minimamente desde #8250df para lograr contraste >= 4.5:1 (4.57:1) */
+  --ic-var: #0550ae;
+  --ic-kw: #cf222e;
+  --ic-const: #0550ae;
+  --ic-str: #0a3069;
+  --ic-tag: #116329;
+  --ic-attr: #0550ae;
+  --ic-neutral: var(--text);
+}
+
+/* Chip de codigo inline con colores de sintaxis tipo IDE */
+code.ic,
+.ic {
+  font-family: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.9em;
+  padding: 0.1em 0.38em;
+  border-radius: 0.35rem;
+  background-color: var(--surface-2);
+  color: var(--ic-neutral);
+  font-weight: 500;
+}
+
+code.ic.ic-cls,
+.ic.ic-cls {
+  color: var(--ic-cls);
+}
+
+code.ic.ic-fn,
+.ic.ic-fn {
+  color: var(--ic-fn);
+}
+
+code.ic.ic-var,
+.ic.ic-var {
+  color: var(--ic-var);
+}
+
+code.ic.ic-kw,
+.ic.ic-kw {
+  color: var(--ic-kw);
+}
+
+code.ic.ic-const,
+.ic.ic-const {
+  color: var(--ic-const);
+}
+
+code.ic.ic-str,
+.ic.ic-str {
+  color: var(--ic-str);
+}
+
+code.ic.ic-tag,
+.ic.ic-tag {
+  color: var(--ic-tag);
+}
+
+code.ic.ic-attr,
+.ic.ic-attr {
+  color: var(--ic-attr);
+}

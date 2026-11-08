@@ -1,0 +1,102 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import TopicLayout from '../../layouts/Topic.astro';
+import {
+  getClasses,
+  classSlugOf,
+  topicSlugOf,
+  orderedTopics,
+  adjacentTopics,
+} from '../../lib/content';
+
+import Figure from '../../components/Figure.astro';
+import Row from '../../components/Row.astro';
+import Demo from '../../components/Demo.astro';
+import Video from '../../components/Video.astro';
+import Graph from '../../components/GraphWrapper.astro';
+import Callout from '../../components/Callout.astro';
+import Side from '../../components/Side.astro';
+
+export async function getStaticPaths() {
+  const classes = await getClasses();
+  const allTopics = await getCollection('topics');
+  const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+  const ordered = orderedTopics(classes, allTopics);
+
+  return allTopics.map((topic) => {
+    const classSlug = classSlugOf(topic.id);
+    const topicSlug = topicSlugOf(topic.id);
+    const currentClass = classes.find((c) => c.id === classSlug);
+
+    const { prev: prevItem, next: nextItem } = adjacentTopics(ordered, topic.id);
+
+    const prev = prevItem
+      ? {
+          title: prevItem.title,
+          url: `${baseUrl}/${prevItem.classSlug}/${prevItem.topicSlug}/`,
+          classTitle: prevItem.classTitle,
+          isDifferentClass: prevItem.classSlug !== classSlug,
+        }
+      : null;
+
+    const next = nextItem
+      ? {
+          title: nextItem.title,
+          url: `${baseUrl}/${nextItem.classSlug}/${nextItem.topicSlug}/`,
+          classTitle: nextItem.classTitle,
+          isDifferentClass: nextItem.classSlug !== classSlug,
+        }
+      : null;
+
+    return {
+      params: {
+        clase: classSlug,
+        tema: topicSlug,
+      },
+      props: {
+        topic,
+        classTitle: currentClass?.data.title || classSlug,
+        classSlug,
+        currentTopicSlug: topicSlug,
+        prev,
+        next,
+      },
+    };
+  });
+}
+
+interface Props {
+  topic: CollectionEntry<'topics'>;
+  classTitle: string;
+  classSlug: string;
+  currentTopicSlug: string;
+  prev?: { title: string; url: string; classTitle?: string; isDifferentClass?: boolean } | null;
+  next?: { title: string; url: string; classTitle?: string; isDifferentClass?: boolean } | null;
+}
+
+const { topic, classTitle, classSlug, currentTopicSlug, prev, next } = Astro.props;
+const { Content, headings } = await render(topic);
+
+const components = {
+  Figure,
+  Row,
+  Demo,
+  Video,
+  Graph,
+  Callout,
+  Side,
+};
+---
+
+<TopicLayout
+  title={topic.data.title}
+  summary={topic.data.summary}
+  classTitle={classTitle}
+  classSlug={classSlug}
+  currentTopicSlug={currentTopicSlug}
+  headings={headings}
+  prev={prev}
+  next={next}
+>
+  <Content components={components} />
+</TopicLayout>

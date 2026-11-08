@@ -1,0 +1,40 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  type: 'note' | 'warning' | 'addition';
+}
+
+const { type } = Astro.props;
+
+const config = {
+  note: {
+    label: 'Nota',
+    iconName: 'note' as const,
+    containerClass: 'bg-surface-2 text-text',
+    badgeClass: 'text-accent',
+  },
+  warning: {
+    label: 'Atención',
+    iconName: 'warning' as const,
+    containerClass: 'bg-amber-500/10 text-text',
+    badgeClass: 'text-amber-400',
+  },
+  addition: {
+    label: 'Adición',
+    iconName: 'addition' as const,
+    containerClass: 'callout-addition bg-indigo-500/10 text-text',
+    badgeClass: 'text-indigo-400',
+  },
+}[type];
+---
+
+<div class={`my-6 p-5 rounded-xl ${config.containerClass} not-prose`}>
+  <div class="flex items-center gap-2 mb-2 font-semibold text-xs uppercase tracking-wider">
+    <Icon name={config.iconName} class={config.badgeClass} size={16} />
+    <span class={config.badgeClass}>{config.label}</span>
+  </div>
+  <div class="text-sm leading-relaxed text-text space-y-2">
+    <slot />
+  </div>
+</div>

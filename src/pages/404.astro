@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+---
+
+<Base title="Página no encontrada" description="La página solicitada no existe o ha sido movida.">
+  <div class="flex flex-col items-center justify-center py-20 sm:py-32 text-center px-4">
+    <div class="text-xs uppercase tracking-widest text-accent font-semibold mb-3">Error 404</div>
+    <h1 class="text-4xl sm:text-5xl font-extrabold text-text tracking-tight mb-4">
+      Página no encontrada
+    </h1>
+    <p class="text-muted text-base sm:text-lg max-w-md mx-auto mb-8 leading-relaxed">
+      El contenido que buscas no existe o ha cambiado de dirección.
+    </p>
+    <div class="flex items-center justify-center gap-4">
+      <a
+        href={`${baseUrl}/`}
+        class="px-5 py-2.5 rounded-xl bg-surface-2 text-text hover:bg-surface font-medium text-sm transition-colors cursor-pointer"
+      >
+        Ir al Inicio
+      </a>
+      <a
+        href={`${baseUrl}/clases/`}
+        class="px-5 py-2.5 rounded-xl bg-surface-2 text-accent hover:bg-surface font-medium text-sm transition-colors cursor-pointer"
+      >
+        Ver Clases
+      </a>
+    </div>
+  </div>
+</Base>

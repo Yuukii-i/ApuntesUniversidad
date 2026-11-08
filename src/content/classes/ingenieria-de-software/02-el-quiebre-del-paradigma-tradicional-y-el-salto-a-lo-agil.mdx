@@ -1,0 +1,188 @@
+---
+title: "El quiebre del paradigma tradicional y el salto a lo Ágil"
+order: 2
+---
+
+import Figure from '../../../components/Figure.astro';
+
+Cuando la Ingeniería de Software comenzó, los primeros profesionales miraron a su alrededor y se preguntaron: *"¿Cómo construyen cosas los otros ingenieros?"*. Copiaron directamente a la ingeniería tradicional (civil, mecánica, eléctrica, aviación, etc.). Es de aquí que nació el ya antes mencionado Modelo Waterfall, el cual para no repetir lo anteriormente dicho, fracasó porque el software no es comparable con algo físico como un auto o un edificio, el software está sujeto a cambios, lo cual presentó los siguientes problemas:
+
+- Requerimientos mutantes.
+- Documentación Detallada.
+
+Es por esto que nació la Metodología Ágil mencionada en el capítulo 1, la cual propone hacer el mismo ciclo que utiliza Cascada pero en miniatura y repitiéndolo muchas veces.
+
+<Figure
+  src="/classes/ingenieria-de-software/02-el-quiebre-del-paradigma-tradicional-y-el-salto-a-lo-agil/waterfall-vs-agil.png"
+  alt="Comparación entre el flujo lineal de Waterfall y los ciclos cortos e iterativos de Ágil"
+  side="full"
+/>
+
+El gran desafío ágil se formula con la siguiente pregunta: *"Suponga un sistema grande y complejo... ¿Cuál es el menor incremento de sistema que consigo implementar en 15 días y validar con el usuario?"* Importante recalcar **Validar** precisamente porque el cliente no sabe lo que quiere hasta que lo ve funcionando. Entonces ¿Qué significa realmente ser "Ágil"? Para poder adoptar esta nueva filosofía de trabajo tuvo que cambiar la forma de pensar.
+
+- **Menor énfasis en documentación** y un menor énfasis en tener un gran diseño inicial (big upfront design).
+- **Constante involucramiento del cliente** a lo largo de todo el desarrollo, no solo al principio.
+- **Adopción de nuevas prácticas de programación** para soportar esta velocidad de entregas cada 15 días, como el testing, la refactorización (refactoring) y la integración continua.
+
+Esta fue la gran ruptura intelectual la cual llevó a todo el desarrollo moderno. Las aplicaciones que usas todos los días en tu teléfono no son diseñadas en años, se construyen en ciclos iterativos de un par de semanas.
+
+## Extreme Programming (XP) y los Contratos de Software
+
+### Extreme Programming (XP)
+
+El Extreme Programming es un método ágil propuesto por el ingeniero Kent Beck en 1999, el cual estructuró esta metodología bajo una fórmula muy simple:
+
+**XP = Valores + Principios + Prácticas.**
+
+Los valores o "cultura" son fundamentales al construir software. XP define pilares muy humanos:
+
+- Comunicación, Simplicidad, Feedback (retroalimentación), Coraje y Respeto.
+- **Calidad de Vida:** XP fue pionero en establecer que los desarrolladores deben trabajar una semana de 40 horas. Un programador cansado escribe mal código.
+
+Entre sus principios encontramos: la economicidad, la mejora continua, asumir que las fallas suelen suceder, los pasos pequeños y la responsabilidad personal.
+
+Una de las prácticas más llamativas que propone XP es la **"Programación en Pares"**, la cual consiste en dos programadores trabajando en el mismo computador, uno de ellos asume el rol de *Driver* (Conductor) el cual tiene las manos en el teclado y escribe el código, el otro asume el rol de *Navigator* (Navegador) que es quien observa, piensa en problemas futuros y sugiere mejoras. Podemos pensar en esta práctica como una Carrera de Rally, el conductor se encarga de manejar el vehículo mientras que el Navegador, le indica al conductor sobre curvas, peligros, saltos, etc.
+
+Al principio podría parecer que esta práctica es mala económicamente, ya que le estás pagando a dos programadores para hacer el trabajo de uno, pero si recordamos, en el capítulo 1 se mencionó cómo el 80% de los costos de un proyecto de software son de mantenimiento. Si dos programadores juntos escriben un código tan limpio que no tiene bugs y nunca falla en producción, a la larga te ahorras los costos de mantenimiento por esa parte.
+
+### El Conflicto con los Contratos: Alcance Cerrado vs Abierto
+
+El software puede ser desarrollado Internamente como Externamente mediante contratos, es aquí donde surge el problema:
+
+#### Contratos de Alcance Cerrado (El modelo tradicional)
+
+- El cliente define todos los requerimientos desde el inicio ("cierra el alcance").
+- La empresa desarrolladora responde con un precio fijo y un plazo fijo de entrega.
+- **Problema:** Como vimos, los requisitos van a cambiar. Si cambian, hay peleas legales, multas y se sacrifica la calidad para llegar a la fecha.
+
+#### Contratos de Alcance Abierto (Defendidos por XP)
+
+- El alcance de lo que se va a construir se define iteración a iteración (por ejemplo, cada 15 días).
+- El pago se realiza por hombre/hora trabajado.
+- El contrato se va renovando en cada iteración.
+- Esto exige mucha madurez y acompañamiento constante por parte del cliente.
+- **Ventajas:** Privilegia la calidad, el cliente no va a ser engañado con código malo solo por "entregar por entregar", y si no le gusta el trabajo, puede cambiar de prestador de servicio rápidamente.
+
+## Scrum - El equipo, los roles y el Backlog
+
+Scrum es una de las metodologías ágiles más utilizadas en el mundo laboral actual. Si consiguieras trabajo hoy como desarrollador, habría un 90% de probabilidades de trabajar usando Scrum. Esta metodología ágil nació en 1995 por Jeffery Sutherland y Ken Schwaber, el principio fundamental es el trabajo iterativo en el cual a cada iteración la llamamos **Sprint**. Un sprint tiene una duración máxima de 1 mes, aunque lo más normal es que duren 15 días, dentro de este Sprint se implementan pequeñas funcionalidades del sistema las cuales en Scrum se llaman **Historias de Usuario**. Hay que pensar en un Sprint como un mini-proyecto que empieza y termina en dos semanas. Al final de esas dos semanas, no entregas un documento ni un plano, entregas un pedazo de software real y funcionando que el cliente ya puede usar.
+
+### El Equipo de Scrum y sus Roles Fundamentales
+
+Scrum rompe con la idea de tener departamentos separados, en cambio propone equipos pequeños y muy unidos (de 5 a 11 personas), donde se incluyen desarrolladores, diseñadores, científicos de datos, etc. En la industria moderna a estos equipos se les llama **Squads**, la regla de oro de Scrum es que no existe jerarquía, nadie es el jefe de nadie. Dentro de estos 5 a 11 miembros las responsabilidades se separan en tres roles estrictos:
+
+- **El Product Owner (PO):** Es un rol obligatorio, su función es escribir las historias de usuario y explicarlas verbalmente a los desarrolladores además de definir las "pruebas de aceptación" y priorizar qué es lo más importante construir. A pesar de esto el PO no es el jefe de los desarrolladores. Este rol viene a reemplazar las extensas documentaciones del modelo cascada, aquí el PO se sienta con los desarrolladores para explicar los requisitos.
+- **Los desarrolladores (Devs):** Son quienes construyen el sistema, tienen total autonomía técnica y el poder de decirle que "no" al PO, si es que consideran que no serán capaces de implementar todo en un Sprint.
+- **El Scrum Master:** Es el especialista en Scrum, su trabajo es ayudar al equipo a adoptar correctamente la metodología, además se encarga de resolver problemas no técnicos. Ej, si los desarrolladores no tienen computadores rápidos, el Scrum Master pelea con gerencia para conseguirlos. El Scrum Master no es el líder del equipo y puede pertenecer a más de un equipo a la vez.
+
+### El Backlog del Producto
+
+Para que el equipo no pierda el rumbo se necesita una lista de cosas por hacer, a esto se le conoce como "El Backlog del Producto". Es básicamente una lista de historias de usuario (y otros ítems de trabajo) que el PO quiere para el sistema. Tiene dos características vitales:
+
+- **Priorizada:** Las historias que están en el tope (arriba) de la lista tienen la mayor prioridad y se hacen primero.
+- **Dinámica:** Las historias no están escritas en piedra; pueden salir, entrar o cambiar constantemente según varíe el mercado o lo que pida el cliente.
+
+## La Rutina Scrum - Planificación, Ejecución y Mejora
+
+### La Planificación del Scrum
+
+Todo Sprint comienza con una reunión donde se decide qué Historias de Usuario entrarán en esa iteración. Esta reunión tiene un Time-Box máximo de 8 horas y se divide en dos partes:
+
+- **Primera parte:** El Product Owner (PO) propone las historias que le gustaría ver implementadas, pero **los Desarrolladores deciden** si tienen la capacidad para implementarlas.
+- **Segunda parte:** Las historias seleccionadas se dividen en tareas técnicas, las cuales son asignadas a los desarrolladores.
+
+El resultado de esta reunión es el Backlog Sprint, que es la lista de tareas específicas para ese Sprint, con sus responsables y duraciones. Pero ¿cómo es que los desarrolladores saben cuánto pueden hacer? Para realizar este cálculo se utilizan los Story Points, que suele ser una escala empírica, estos representan la complejidad y peso de una tarea, la suma de los puntos que el equipo logra terminar en un Sprint se conoce como su "Velocidad".
+
+### La Reunión Diaria (Daily Scrum)
+
+Una vez que el Sprint inicia, el equipo necesitará sincronizarse, es por esto que se realizan reuniones diarias que no superan los 15 minutos, la idea es que cada participante responda las siguientes preguntas:
+
+- ¿Qué es lo que hice ayer?
+- ¿Qué es lo que pretendo hacer hoy?
+- ¿Estoy teniendo alguna dificultad?
+
+El objetivo es simplemente mejorar la comunicación del equipo, no es para rendirle cuentas al jefe sino para que si un desarrollador tiene algún problema, otro pueda ayudarlo y no se estanquen.
+
+### La Revisión del Sprint y el "Definition of Done"
+
+Una vez que terminan las semanas de trabajo, se reúnen los desarrolladores con el PO y los Stakeholders (clientes/interesados) con un Time-box de 4 horas, aquí el equipo muestra el resultado final, el cual puede ser Aprobado, Aprobado parcialmente o Reprobada. Si es que es Reprobada o Aprobada parcial, la historia vuelve al Backlog del producto para hacerse de nuevo.
+
+Ahora para que una historia se considere Aprobada debe cumplir con los Criterios de Conclusión o "Definition of Done", estos son criterios internos obligatorios, como por ejemplo: que el código tenga pruebas unitarias con cobertura $\ge 75\%$, que otro dev haya revisado el código, o que se haya actualizado la documentación.
+
+### La Retrospectiva
+
+El último evento de un Sprint, con un Time-box de 3 horas se trata de hablar del equipo, aquí se reúne el equipo para analizar su proceso de trabajo y decidir qué es lo que hay que cambiar. La retrospectiva es el verdadero secreto de la agilidad. Si el Sprint fue un desastre, no importa, aprendimos. Si nos dimos cuenta de que fallamos por no tener los permisos del servidor a tiempo, en la retro acordamos pedir los permisos el día 1 en el próximo Sprint. Así, el equipo se vuelve más rápido y fuerte cada 15 días.
+
+## Kanban - El flujo continuo de Japón al Software
+
+Kanban no nació en una empresa de tecnología, sino que nació por la década de los 50, específicamente en el Sistema de Producción de la automotriz Toyota. Nació bajo los conceptos de manufactura "lean" (Sin desperdicios) y la producción "Just-in-time", su principal concepto es que nadie debe producir más de lo que el siguiente paso puede absorber.
+
+Esto se logra mediante el sistema "Pull", en vez de que un jefe le asigne (Push) tareas a los desarrolladores, estos escogen (Pull) una tarea para trabajar, la concluyen y luego buscan una nueva tarea. Esto hace que Kanban sea muy diferente a Scrum ya que:
+
+- Kanban es mucho más simple.
+- **No existen los sprints**; el trabajo fluye continuamente, no se reinicia cada 15 días.
+- **No es obligatorio usar roles** (como el Product Owner o el Scrum Master).
+- **No hay eventos obligatorios** (como la Daily, Retrospectiva o Revisión).
+- Es el propio equipo quien tiene la libertad de definir sus roles y eventos si los necesitan.
+
+El trabajo de Kanban se representa como un tablero dividido en columnas que representan el flujo de trabajo en el tiempo, una estructura clásica incluye los pasos: Backlog, Especificación, Implementación y Revisión de Código, donde algunas columnas como Especificación o Implementación se dividen en dos sub-columnas: "en progreso" y "concluidas".
+
+<Figure
+  src="/classes/ingenieria-de-software/02-el-quiebre-del-paradigma-tradicional-y-el-salto-a-lo-agil/tablero-kanban.png"
+  alt="Estructura de un tablero Kanban con columnas de flujo de trabajo, límites WIP y sub-columnas en progreso y concluidas"
+  side="full"
+/>
+
+La magia de Kanban radica en el uso de límites rígidos conocidos como WIP o "Trabajo en Progreso", el cual es el número máximo de tareas que pueden existir en un paso determinado al mismo tiempo, sumando tanto las que están en "ejecución" como las que están "concluidas".
+Por ejemplo, si el límite de "Implementación" es 5, y ya hay 5 tarjetas allí, **ningún programador puede empezar a programar una tarea nueva** aunque esté desocupado. Tienen que ayudar a que una de esas 5 tareas avance al siguiente paso.
+Este sistema de límites permite:
+
+- Crear un flujo de trabajo sustentable, evitando que el equipo se sobrecargue.
+- Fijar un "acuerdo" de capacidad de trabajo entre el equipo y la organización.
+- Evitar que el trabajo se quede atascado o concentrado en un solo paso (evitar cuellos de botella).
+
+Es por esto que una de las frases más famosas y comunes de Kanban es: **"Pare de comenzar y comience a terminar"**.
+
+### El ciclo Kanban
+
+<Figure
+  src="/classes/ingenieria-de-software/02-el-quiebre-del-paradigma-tradicional-y-el-salto-a-lo-agil/ciclo-kanban-1.png"
+  alt="Inicio del ciclo Kanban: tarea en la columna Backlog"
+  side="full"
+/>
+
+<Figure
+  src="/classes/ingenieria-de-software/02-el-quiebre-del-paradigma-tradicional-y-el-salto-a-lo-agil/ciclo-kanban-2.png"
+  alt="Paso de la tarea desde Backlog hacia Especificación en progreso"
+  side="full"
+/>
+
+<Figure
+  src="/classes/ingenieria-de-software/02-el-quiebre-del-paradigma-tradicional-y-el-salto-a-lo-agil/ciclo-kanban-3.png"
+  alt="Avance de la tarea desde Especificación en progreso hacia especificadas"
+  side="full"
+/>
+
+<Figure
+  src="/classes/ingenieria-de-software/02-el-quiebre-del-paradigma-tradicional-y-el-salto-a-lo-agil/ciclo-kanban-4.png"
+  alt="Avance de la tarea desde Especificación hacia Implementación en progreso e implementadas"
+  side="full"
+/>
+
+## Otros modelos y el Juicio Profesional
+
+El salto de la mentalidad tradicional (Waterfall, alrededor de 1970) a la agilidad moderna (Ágil, alrededor del año 2000) no ocurrió de la noche a la mañana, fue una transición gradual. Antes de que Scrum dominara el mundo se propusieron dos métodos que intentaban ser iterativos:
+
+- **Modelo en Espiral (1986):** Propuesto por Barry Boehm. Introdujo la idea de iteraciones, pero a una escala gigante: sus iteraciones duraban de 6 a 24 meses (mucho más que las iteraciones de 15 días de XP o Scrum).
+- **RUP (Rational Unified Process, 2003):** Propuesto originalmente por la empresa Rational (que luego fue comprada por IBM). Sus dos características principales eran el uso intensivo de diagramas UML y herramientas CASE.
+  - *(Nota: CASE significa "Computer-Aided Software Engineering", un nombre inspirado en los sistemas CAD utilizados en la ingeniería tradicional para dibujar planos).*
+
+### La lección final
+
+En el mundo laboral los procesos casi nunca son adoptados al 100% o exactamente como lo dicen los manuales, esto hace que el buen juicio sea fundamental y le da importancia a la experimentación. Si un equipo comienza usando Scrum y se da cuenta de que las iteraciones rígidas de 15 días los estresan demasiado, el buen juicio les dictará que tal vez deban experimentar moviéndose a Kanban, y eso está perfecto.
+
+A continuación se presentan escenarios de la vida real donde el ingeniero tiene que usar su criterio:
+
+- **El manejo de Bugs:** El manual de Scrum dice que las tareas se planifican antes de iniciar el Sprint. Pero, ¿qué pasa si el sistema de un banco sufre una caída masiva a mitad de semana debido a un bug crítico que afecta a miles de usuarios? El sentido común dice que no van a esperar a la próxima "Sprint Planning" en dos semanas para arreglarlo; el equipo debe interrumpir el Sprint para salvar el sistema.
+- **Refactorización:** ¿Debería una limpieza de código pequeña (menos de 1 hora) pasar por toda la burocracia del Product Owner, o el desarrollador simplemente debería hacerla? (Generalmente, la hace como parte de su rutina de calidad).
+- **El dilema del Contrato Cerrado:** Existen cuatro variables en proyectos: Alcance, Tiempo, Costo y Calidad. En un contrato de alcance cerrado (donde no se puede cambiar lo que se pidió ni el dinero que se pagará), cuando ocurren imprevistos, ¿cuál variable suele sacrificar la empresa desarrolladora para evitar multas por atraso? Lamentablemente, se sacrifica la **Calidad**.

@@ -1,0 +1,58 @@
+---
+import ThemeToggle from './ThemeToggle.astro';
+import Search from './Search.astro';
+
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+const rawPath = Astro.url.pathname.replace(/\/$/, '');
+const normalizedPath = rawPath || '/';
+const normalizedBase = baseUrl || '';
+
+const isHome = normalizedPath === normalizedBase || normalizedPath === '/';
+const isClases = normalizedPath === `${normalizedBase}/clases` || normalizedPath.startsWith(`${normalizedBase}/clases/`);
+---
+
+<header class="sticky top-0 z-30 bg-bg px-4 sm:px-6 py-3.5">
+  <div class="max-w-[1920px] mx-auto flex items-center justify-between">
+    <!-- Izquierda: Hamburguesa (< 1024px) y Enlaces -->
+    <div class="flex items-center gap-4 sm:gap-6 lg:gap-10">
+      <button
+        id="tree-toggle-btn"
+        type="button"
+        class="lg:hidden p-1.5 rounded-xl text-muted hover:text-text hover:bg-surface transition-colors cursor-pointer flex items-center justify-center"
+        aria-label="Abrir menú de materias y temas"
+        aria-expanded="false"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <nav class="flex items-center gap-8 sm:gap-10 text-sm font-medium">
+        <a
+          href={`${baseUrl}/`}
+          class={`transition-colors ${isHome ? 'text-accent' : 'text-muted hover:text-text'}`}
+        >
+          Inicio
+        </a>
+        <a
+          href={`${baseUrl}/clases/`}
+          class={`transition-colors ${isClases ? 'text-accent' : 'text-muted hover:text-text'}`}
+        >
+          Clases
+        </a>
+      </nav>
+    </div>
+
+    <!-- Derecha: Búsqueda y Selector de Tema -->
+    <div class="flex items-center gap-3 sm:gap-4">
+      <Search />
+      <ThemeToggle />
+    </div>
+  </div>
+</header>
+
+<script is:inline>
+  document.getElementById('tree-toggle-btn')?.addEventListener('click', () => {
+    document.dispatchEvent(new CustomEvent('toggle-tree'));
+  });
+</script>

@@ -1,0 +1,296 @@
+---
+import { getClasses, topicsOfClass, topicSlugOf } from '../lib/content';
+import { getCollection } from 'astro:content';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  currentClassSlug?: string;
+  currentTopicSlug?: string;
+  headings?: Heading[];
+}
+
+const { currentClassSlug = '', currentTopicSlug = '', headings = [] } = Astro.props;
+
+const classes = await getClasses();
+const allTopics = await getCollection('topics');
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+
+// Filtrar clases que tengan temas (ocultar clases vacías)
+const treeData = classes
+  .map((c) => {
+    const topics = topicsOfClass(allTopics, c.id).map((t) => ({
+      id: t.id,
+      slug: topicSlugOf(t.id),
+      title: t.data.title,
+      order: t.data.order,
+    }));
+    return {
+      classSlug: c.id,
+      classTitle: c.data.title,
+      order: c.data.order,
+      topics,
+    };
+  })
+  .filter((item) => item.topics.length > 0);
+
+const sections = headings.filter((h) => h.depth === 2 || h.depth === 3);
+---
+
+<!-- Fondo oscurecido para drawer móvil -->
+<div id="tree-drawer-backdrop" class="fixed inset-0 z-40 bg-black/60 hidden lg:hidden" aria-hidden="true"></div>
+
+<!-- Contenedor del árbol de navegación -->
+<aside
+  id="tree-aside"
+  class="fixed lg:sticky top-0 lg:top-16 left-0 z-50 lg:z-10 h-full lg:h-auto max-h-screen lg:max-h-[calc(100vh-4.5rem)] w-[290px] shrink-0 bg-bg lg:bg-transparent p-4 lg:p-0 overflow-y-auto tree-scroll transform -translate-x-full lg:translate-x-0 transition-transform duration-200 lg:transition-none"
+  aria-label="Navegación de materias y temas"
+>
+  <!-- Cabecera de cierre en móvil -->
+  <div class="flex items-center justify-between pb-3 mb-2 lg:hidden">
+    <span class="text-xs font-bold uppercase tracking-wider text-muted">Contenido</span>
+    <button
+      id="tree-drawer-close"
+      type="button"
+      class="p-1 rounded text-muted hover:text-text cursor-pointer"
+      aria-label="Cerrar menú"
+    >
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <nav class="space-y-3">
+    {treeData.map((item) => {
+      const isCurrentClass = item.classSlug === currentClassSlug;
+      return (
+        <div class="tree-class-folder" data-class-slug={item.classSlug} data-is-current={isCurrentClass ? 'true' : 'false'}>
+          <!-- Botón de carpeta de la materia -->
+          <button
+            type="button"
+            class="tree-folder-toggle flex items-center justify-between w-full py-1.5 px-2 rounded-lg text-left text-[15px] font-semibold text-text hover:bg-surface transition-colors cursor-pointer group"
+            aria-expanded={isCurrentClass ? 'true' : 'false'}
+          >
+            <span class="flex items-center gap-2 truncate">
+              <svg
+                class="tree-chevron w-3.5 h-3.5 text-muted group-hover:text-text transition-transform duration-150 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+              <span class="truncate">{item.classTitle}</span>
+            </span>
+          </button>
+
+          <!-- Lista de temas de la materia -->
+          <div class="tree-folder-content pl-3.5 space-y-0.5 mt-1 hidden">
+            {item.topics.map((t) => {
+              const isCurrentTopic = isCurrentClass && t.slug === currentTopicSlug;
+              return (
+                <div>
+                  <a
+                    href={`${baseUrl}/${item.classSlug}/${t.slug}/`}
+                    class={`tree-topic-link block py-1 px-2 rounded-lg text-[13.5px] leading-snug transition-colors truncate ${
+                      isCurrentTopic
+                        ? 'text-accent font-semibold bg-surface'
+                        : 'text-muted hover:text-text hover:bg-surface/50'
+                    }`}
+                  >
+                    {t.title}
+                  </a>
+
+                  <!-- Si es el tema actual, desplegar sus secciones (H2 y H3) -->
+                  {isCurrentTopic && sections.length > 0 && (
+                    <div class="pl-3 py-1 space-y-0.5 my-1">
+                      {sections.map((sec) => (
+                        <a
+                          href={`#${sec.slug}`}
+                          data-heading-slug={sec.slug}
+                          class={`tree-section-link block py-0.5 px-2 rounded text-[13px] transition-colors truncate text-muted hover:text-text ${
+                            sec.depth === 3 ? 'pl-4 text-[12px]' : ''
+                          }`}
+                        >
+                          {sec.text}
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    })}
+  </nav>
+</aside>
+
+<style>
+  /* Scrollbar fina y discreta */
+  .tree-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-2) transparent;
+  }
+  .tree-scroll::-webkit-scrollbar {
+    width: 4px;
+  }
+  .tree-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .tree-scroll::-webkit-scrollbar-thumb {
+    background: var(--surface-2);
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    // 1. Control de carpetas desplegables y persistencia en localStorage
+    const folders = document.querySelectorAll('.tree-class-folder');
+
+    folders.forEach((folder) => {
+      const classSlug = folder.getAttribute('data-class-slug');
+      const isCurrent = folder.getAttribute('data-is-current') === 'true';
+      const toggle = folder.querySelector('.tree-folder-toggle');
+      const content = folder.querySelector('.tree-folder-content');
+      const chevron = folder.querySelector('.tree-chevron');
+
+      if (!classSlug || !toggle || !content || !chevron) return;
+
+      const storageKey = `tree-folder-expanded-${classSlug}`;
+      const savedState = localStorage.getItem(storageKey);
+
+      let expanded = isCurrent;
+      if (savedState !== null) {
+        expanded = savedState === 'true';
+      }
+
+      function updateFolderUI() {
+        if (expanded) {
+          content.classList.remove('hidden');
+          chevron.classList.add('rotate-90');
+          toggle.setAttribute('aria-expanded', 'true');
+        } else {
+          content.classList.add('hidden');
+          chevron.classList.remove('rotate-90');
+          toggle.setAttribute('aria-expanded', 'false');
+        }
+      }
+
+      updateFolderUI();
+
+      toggle.addEventListener('click', () => {
+        expanded = !expanded;
+        localStorage.setItem(storageKey, String(expanded));
+        updateFolderUI();
+      });
+    });
+
+    // 2. Control del Drawer en dispositivos móviles
+    const drawer = document.getElementById('tree-aside');
+    const backdrop = document.getElementById('tree-drawer-backdrop');
+    const closeBtn = document.getElementById('tree-drawer-close');
+    const toggleBtn = document.getElementById('tree-toggle-btn');
+
+    function openDrawer() {
+      drawer?.classList.remove('-translate-x-full');
+      backdrop?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      toggleBtn?.setAttribute('aria-expanded', 'true');
+    }
+
+    function closeDrawer() {
+      drawer?.classList.add('-translate-x-full');
+      backdrop?.classList.add('hidden');
+      document.body.style.overflow = '';
+      toggleBtn?.setAttribute('aria-expanded', 'false');
+    }
+
+    document.addEventListener('toggle-tree', () => {
+      if (drawer?.classList.contains('-translate-x-full')) {
+        openDrawer();
+      } else {
+        closeDrawer();
+      }
+    });
+
+    backdrop?.addEventListener('click', closeDrawer);
+    closeBtn?.addEventListener('click', closeDrawer);
+
+    // Cerrar drawer al hacer clic en un enlace en móviles (< 1024px)
+    drawer?.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        if (window.innerWidth < 1024) {
+          closeDrawer();
+        }
+      });
+    });
+
+    // 3. Scroll-spy para resaltar la sección actual y desplazar únicamente el contenedor del árbol
+    const sectionLinks = Array.from(document.querySelectorAll('.tree-section-link'));
+    if (sectionLinks.length > 0) {
+      const headingElements = sectionLinks
+        .map((link) => {
+          const slug = link.getAttribute('data-heading-slug');
+          return slug ? document.getElementById(slug) : null;
+        })
+        .filter(Boolean);
+
+      let activeSlug = null;
+
+      function onScroll() {
+        const headerOffset = 90;
+        let current = null;
+
+        for (const el of headingElements) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= headerOffset + 50) {
+            current = el;
+          } else {
+            break;
+          }
+        }
+
+        if (!current && headingElements.length > 0) {
+          current = headingElements[0];
+        }
+
+        if (current && current.id !== activeSlug) {
+          activeSlug = current.id;
+          let activeLink = null;
+
+          sectionLinks.forEach((link) => {
+            if (link.getAttribute('data-heading-slug') === activeSlug) {
+              link.classList.add('text-accent', 'font-semibold');
+              link.classList.remove('text-muted');
+              activeLink = link;
+            } else {
+              link.classList.remove('text-accent', 'font-semibold');
+              link.classList.add('text-muted');
+            }
+          });
+
+          // Desplazar el contenedor del árbol (nunca la ventana) para mantener visible el elemento activo
+          if (activeLink && drawer) {
+            const containerRect = drawer.getBoundingClientRect();
+            const linkRect = activeLink.getBoundingClientRect();
+            if (linkRect.top < containerRect.top) {
+              drawer.scrollTop -= (containerRect.top - linkRect.top + 16);
+            } else if (linkRect.bottom > containerRect.bottom) {
+              drawer.scrollTop += (linkRect.bottom - containerRect.bottom + 16);
+            }
+          }
+        }
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      setTimeout(onScroll, 100);
+    }
+  })();
+</script>

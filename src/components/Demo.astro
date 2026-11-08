@@ -1,0 +1,65 @@
+---
+import Icon from './Icon.astro';
+
+interface Props {
+  src: string;
+  title: string;
+  height?: number;
+}
+
+const { src, title, height = 400 } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+const resolvedSrc = src.startsWith('http')
+  ? src
+  : `${baseUrl}${src.startsWith('/') ? '' : '/'}${src}`;
+---
+
+<div class="my-6 p-4 rounded-xl bg-surface-2 not-prose max-w-full overflow-hidden">
+  <div class="flex items-center justify-between gap-4 mb-3">
+    <span class="text-xs font-semibold text-text truncate">{title}</span>
+    <a
+      href={resolvedSrc}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-xs text-accent hover:underline inline-flex items-center gap-1 shrink-0"
+    >
+      <span>Abrir en página completa</span>
+      <Icon name="external" size={13} class="inline" />
+    </a>
+  </div>
+  <iframe
+    data-src={resolvedSrc}
+    title={title}
+    loading="lazy"
+    style={`height: ${height}px;`}
+    class="demo-iframe w-full max-w-full rounded-lg bg-surface"
+  ></iframe>
+</div>
+
+<script>
+  function initLazyDemos() {
+    const iframes = document.querySelectorAll('iframe.demo-iframe[data-src]');
+    if (!iframes.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const iframe = entry.target as HTMLIFrameElement;
+            const src = iframe.getAttribute('data-src');
+            if (src && !iframe.getAttribute('src')) {
+              iframe.setAttribute('src', src);
+            }
+            obs.unobserve(iframe);
+          }
+        });
+      },
+      { rootMargin: '200px 0px' }
+    );
+
+    iframes.forEach((iframe) => observer.observe(iframe));
+  }
+
+  initLazyDemos();
+  document.addEventListener('astro:page-load', initLazyDemos);
+</script>

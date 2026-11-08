@@ -1,0 +1,186 @@
+---
+title: "El origen de la Ingeniería de software"
+order: 1
+---
+
+import Figure from '../../../components/Figure.astro';
+
+En la década de los 60, las computadoras estaban empezando a ser más potentes, pero la forma en la que se desarrollaban los programas seguía siendo rudimentaria, en el sentido en que cada programador era un "artista sin reglas".
+
+El término ingeniería de software fue utilizado por primera vez en 1968 en una conferencia de trabajo organizada por la OTAN en Alemania, el motivo de esta conferencia fue que un participante comentó que ciertos sistemas estaban exigiendo demandas que superaban las capacidades de la época, los profesionales se dieron cuenta de que esto era un problema grave.
+
+Es por esto que se creó un mapa conocido como el SWEBOK (Guide to the Software Engineering Body of Knowledge) el cual busca definir las áreas fundamentales que todo profesional debe dominar.
+
+Las áreas de estudio del SWEBOK incluyen:
+
+- **Ingeniería de Requerimientos:** Entender qué necesita el cliente.
+- **Diseño y Construcción de Software:** Planificar la arquitectura y escribir el código.
+- **Testing y Mantención de Software:** Probar que funcione bien y arreglarlo o mejorarlo en el futuro.
+- **Gestión de la Configuración y de Proyectos:** Administrar las versiones del código y liderar a los equipos.
+- **Procesos y Modelos de Software:** Los pasos a seguir para construir el sistema.
+- **Calidad, Práctica Profesional y Aspectos Económicos:** Asegurar estándares, actuar éticamente y manejar los costos del proyecto.
+
+### La dura realidad: No existe bala de plata
+
+Esta frase fue dicha por Frederick P. Brooks Jr. En un famoso artículo publicado en 1987, la premisa es que no existe innovación individual que sea capaz de mágicamente mejorar la productividad, la confiabilidad o la simplicidad del software.
+
+Brooks señala que se ha avanzado mucho reduciendo las tareas "accidentales", como por ejemplo lenguajes de programación más fáciles de usar, pero que el resto depende de disciplina, en resumen lo que Brooks nos dice, es que para cuando un proyecto de software se sale de presupuesto o se atrasa, no existe varita mágica que haga que de repente sea sencillo.
+
+### Las 4 dificultades del software
+
+A diferencia de otras áreas de la ingeniería, la ingeniería de software es inherentemente difícil, debido a que:
+
+- **Complejidad:** El software es complejo por naturaleza. *(A diferencia de un puente, un software tiene millones de "estados" posibles. Un solo usuario haciendo clic en el orden equivocado puede desencadenar un error imprevisto).*
+- **Conformidad:** El software debe adaptarse al mundo. *(El software a menudo tiene que funcionar en sistemas operativos viejos o cumplir con leyes tributarias humanas que no siempre tienen una lógica matemática).*
+- **Facilidad de Cambios:** El software está en constante mutación. *(Nadie le pide a un ingeniero civil que mueva los pilares de un edificio ya construido, pero los clientes constantemente piden agregar "solo un botoncito más" o cambiar el comportamiento de un sistema de software porque lo perciben como algo fácil de alterar).*
+- **Invisibilidad:** El software es abstracto. *(No puedes ver ni tocar el software. Si te pido el plano de una casa, ves puertas y paredes. Los diagramas de software rara vez logran capturar toda la realidad espacial e interconectada de los millones de líneas de código, lo que dificulta su comprensión mental).*
+
+## Requerimientos del Software
+
+Todo proyecto de software inicia con la pregunta ¿qué es exactamente lo que necesitamos construir?, es de aquí que nacen los requisitos del software, estos definen lo que el sistema debe hacer para atender a los clientes con calidad de servicio, estos se separan en dos:
+
+- **Requerimientos Funcionales:** Se refieren a "lo que" un sistema debe hacer. Son las funcionalidades concretas o los servicios que el software debe implementar.
+  - *(Ej: "El sistema debe permitir al usuario agregar productos a un carrito de compras", o "El sistema debe calcular el impuesto de la compra").*
+- **Requerimientos No-Funcionales:** Se refieren a "cómo" un sistema debe operar. Estos establecen bajo cuáles restricciones operará el sistema y con cuál nivel de calidad de servicio. A continuación se presentan ejemplos clásicos:
+  - **Desempeño:** Dar el saldo de una cuenta bancaria en 5 segundos.
+  - **Disponibilidad:** El sistema debe estar online el 99.99% del tiempo.
+  - **Capacidad:** Debe poder almacenar datos de 1 millón de clientes.
+  - **Tolerancia a fallas:** El sistema debe continuar operando incluso si los servidores principales en Santiago se caen.
+  - **Seguridad:** Se deben cifrar los datos intercambiados con otras agencias.
+  - **Privacidad:** El software no debe almacenar la localización de los usuarios.
+  - **Interoperabilidad:** El sistema se integra de forma exitosa con los sistemas del Servicio de Impuestos Internos (SII).
+  - **Mantención:** Los bugs descubiertos deben ser corregidos en un plazo de 24 horas.
+  - **Usabilidad:** Debe existir una versión adaptada para celulares y tablets.
+
+### El problema de la comunicación
+
+Recopilar requerimientos es considerablemente difícil, debido a que el lenguaje humano es ambiguo, esto debido a que cada rol (negocios, diseño, programador) tiene un modelo mental distinto del problema, esto se ilustra con la siguiente caricatura, en la que podemos ver cómo cada rol planificó el request, cuando el cliente solo quería un columpio simple:
+
+<Figure
+  src="/classes/ingenieria-de-software/01-el-origen-de-la-ingenieria-de-software/columpio-comunicacion.png"
+  alt="Caricatura del columpio que ilustra cómo cada rol interpreta de forma distinta el requerimiento del cliente"
+  side="full"
+/>
+
+## Pruebas de Software
+
+Una vez que ya sabemos lo que vamos a construir basándonos en los requerimientos, el siguiente paso crítico será verificar que lo que hayamos hecho funcione correctamente, es aquí donde entra el Testing de Software cuyo objetivo principal es verificar si es que un programa presenta un resultado esperado al ser ejecutado, estos existen de dos maneras:
+
+- Pruebas manuales
+- Pruebas automatizadas
+
+El enfoque moderno se centra fuertemente en las pruebas automatizadas, por ejemplo:
+
+- Hacer pruebas manuales es como revisar un documento de mil páginas buscando errores ortográficos con una lupa cada vez que le cambias una coma. Es lento y propenso a errores humanos. Las pruebas automatizadas, en cambio, son pequeños programas que escribimos para que evalúen de forma instantánea a nuestro programa principal.
+
+### El desastre del Ariane 5 y la Importancia del Testing
+
+El Ariane 5 fue un cohete que fue lanzado en 1996, este cohete explotó solamente 30 segundos después de ser lanzado lo que costó medio billón de dólares en daños, el reporte del comité de investigación determinó que la explosión fue causada exclusivamente por un bug, el error exacto fue que el programa intentó convertir un número real de 64 bits a un entero de 16 bits. Hoy en día cualquier prueba automatizada habría detectado este error de asignación de memoria.
+
+### La Pirámide de Testing
+
+<Figure
+  src="/classes/ingenieria-de-software/01-el-origen-de-la-ingenieria-de-software/piramide-testing.png"
+  alt="Pirámide de Testing: Pruebas Unitarias en la base, Pruebas de Integración en el medio y Pruebas de Sistema en la cúspide"
+  side="right"
+/>
+
+- **Base de la pirámide (Pruebas Unitarias):** Tienen la menor granularidad, son las de mayor cantidad, se ejecutan de manera más rápida y tienen el menor costo. Evalúan pequeños fragmentos de código aislados (como una sola función).
+- **Medio de la pirámide (Pruebas de Integración):** Verifican cómo interactúan esos pequeños fragmentos entre sí.
+- **Cúspide de la pirámide (Pruebas de Sistema):** Tienen la mayor granularidad, se hacen en menor cantidad, son las más lentas de ejecutar y representan un mayor costo. Evalúan el sistema completo de principio a fin, simulando al usuario final.
+
+### La ley de Dijkstra (El límite matemático de las pruebas)
+
+Dijkstra nos dice que *"Las pruebas de software solo muestran la presencia de errores, pero no su ausencia"*, esta es una lección de humildad para todo programador. Un sistema tiene infinitas combinaciones de entradas, clicks y estados, que tus pruebas pasen en verde no significa que el programa sea invencible, solo significa que para los casos que tú probaste el programa funciona. Matemáticamente es imposible probar todos los escenarios posibles del universo, el testing ayuda a hacer un sistema más confiable, pero no lo hace perfecto.
+
+## Mantenimiento, Refactoring y Sistemas Legados
+
+Existe un mito con los principiantes en software, y es que creen que cuando el software se lanza a producción el trabajo terminó. La realidad es que los costos de mantenimiento pueden llegar a representar hasta el 80% del costo total durante el ciclo de vida del sistema, esto se debe a que el software debe evolucionar, este debe corregir errores, implementar nuevos requerimientos y además los constantes cambios del entorno tecnológico, Windows se actualiza, Apple saca un nuevo iPhone, cambian las leyes digitales y de impuestos, etc. Es de aquí que salen los **Cuatro Tipos de Mantención:**
+
+- **Correctiva:** Arreglar los "bugs" que los usuarios encuentran cuando usan el sistema.
+- **Preventiva:** Anticiparse a los fallos (por ejemplo, optimizar un servidor antes del Cyber Monday).
+- **Adaptativa:** Hacer que el software funcione en un nuevo entorno (por ejemplo, migrar la aplicación de Android 13 a Android 14).
+- **Evolutiva:** Agregar nuevas funcionalidades que el negocio o el cliente exigen.
+
+### Refactoring
+
+Una técnica fundamental durante el mantenimiento es el Refactoring, este se define como la transformación del código fuente para preservar el funcionamiento pero con el objetivo de que el diseño interno mejore, es decir renombrar variables para que sean fáciles de entender, extraer métodos pequeños de métodos grandes o también mover un método a una clase más apropiada.
+
+### Los sistemas de legado
+
+Con el paso del tiempo, el programa mantenido envejece y pasa a ser lo que se llama "Sistema de Legado", estos como ya se mencionó, son sistemas antiguos que utilizan lenguajes de programación, bases de datos o sistemas operativos que ya no son modernos. Su mantención es altamente costosa, pero muchas veces son de vital importancia, ya que para las empresas grandes "legado" no significa irrelevante.
+
+Uno de los ejemplos más claros es el lenguaje COBOL (*COmmon Business-Oriented Language*), nacido en 1959, es aún uno de los lenguajes de programación más importantes del mundo, ya que hoy en día existen aproximadamente 200 billones de líneas de código COBOL, los cuales mayoritariamente pertenecen a sistemas bancarios, el 95% de las transacciones realizadas en un ATM funcionan con COBOL. Esto nos lleva a la parte más importante de los sistemas de legado y es que a pesar de que da miedo tocar algo y romperlo, hay que hacerlo para mantener la economía funcionando.
+
+## Procesos de Desarrollo y Gestión de Proyectos
+
+Ahora que sabemos cómo reunir requerimientos y cómo probar el código, necesitamos saber cómo vamos a organizar el equipo a lo largo del tiempo, esto se logra mediante algo conocido como **Proceso de Software**, el cual se define como la serie de actividades que deben ser seguidas para construir un sistema de software. Históricamente la industria se ha dividido en dos grandes modelos:
+
+### Modelo Cascada (Waterfall)
+
+Es el enfoque tradicional y estrictamente secuencial copiado directamente de la ingeniería civil, cuyas fases son:
+
+1. Levantamiento de requisitos.
+2. Análisis.
+3. Diseño.
+4. Codificación.
+5. Pruebas.
+6. Implementación.
+
+El modelo Waterfall nos dice que no podemos pasar a la siguiente fase sin que la anterior esté 100% terminada y documentada, el problema con este modelo es que el Software no es como un puente, es un material abstracto el cual como se mencionó anteriormente, lo cual presenta los siguientes problemas en la práctica:
+
+- Los requerimientos cambian constantemente debido a que los clientes no siempre saben lo que quieren desde el inicio.
+- Levantar por completo los requisitos demanda mucho tiempo y produce documentaciones extensas las cuales rápidamente se vuelven obsoletas.
+- Como resultado muchas veces cuando el sistema finalmente está listo, el mundo ya "cambió" y ahora el software no sirve.
+
+A esto tenemos que sumarle la implacable curva de los costos, el gráfico de costos que veremos a continuación, nos muestra cómo realizar cambios a medida que avanzamos en el proyecto, aumenta exponencialmente.
+
+<Figure
+  src="/classes/ingenieria-de-software/01-el-origen-de-la-ingenieria-de-software/curva-costos-cambio.png"
+  alt="Gráfico del costo de realizar cambios a lo largo del tiempo en las fases de desarrollo"
+  side="full"
+/>
+
+Esto se debe a que borrar una línea en un documento Word en las primeras fases toma 5 segundos y cuesta \$0, pero, descubrir que una función estaba mal en la fase de "Producción" requiere que varios ingenieros desarmen bases de datos, reescriban código y tiren a la basura meses de trabajo.
+
+### Modelo Ágil
+
+Es por el fracaso del modelo Cascada que nació el Modelo Ágil en 2001, cuando 17 destacados ingenieros se reunieron en Utah y crearon el Manifiesto Ágil, el cual nació como una fuerte crítica a los modelos secuenciales, este modelo proponía el desarrollo incremental e iterativo, esto en metodologías Ágiles como Scrum permite diseñar solo una parte del programa en dos semanas, mostrárselo al cliente, recibir feedback y continuar con el siguiente pedazo.
+
+### La ley de Brooks y el manejo de crisis
+
+En la gestión de proyectos no solo basta con elegir un buen modelo, a veces las cosas saldrán mal y los proyectos se atrasarán, es aquí donde entra una de las leyes empíricas más famosas expuestas por Brooks en su libro *"El Mítico Hombre-Mes"*, la cual nos dice:
+
+> *"Agregar nuevos desarrolladores a un proyecto que ya está atrasado lo retrasará aún más."*
+
+Esto podrá sonar contraintuitivo, ya que la lógica nos dice que si tienes 10 trabajadores haciendo una zanja, si contratas 10 más tendrás el doble de trabajadores, pero en Desarrollo de Software esto no funciona así, debido a que si tienes 10 programadores en un proyecto atrasado, si contratas 10 programadores más, los 10 programadores originales tendrán que detener sus tareas y enseñarle o explicarle a los nuevos programadores, lo cual terminará atrasando el proyecto aún más.
+
+## Ética Profesional y Clasificación de Sistemas
+
+Ahora que ya sabemos cómo construir software de manera eficiente y técnica, entran dos preguntas: ¿Deberíamos construirlo? y ¿Qué nivel de rigor necesita lo que estamos construyendo?
+
+El poder de crear software conlleva una gran responsabilidad social, un famoso caso de esto es el de los ingenieros de Google los cuales se negaron a construir una herramienta de ciberseguridad que permitía ganar contratos militares. Otro ejemplo de esto mismo es el caso de Volkswagen en 2015. Se descubrió que el código de sus automóviles incluía una trampa lógica (un simple `kw::if`). Si el auto detectaba que estaba en un laboratorio de certificación, emitía contaminantes dentro de las normas; pero si estaba en la calle, emitía niveles muy superiores de contaminación.
+
+Ahora bien, no todo software necesita el mismo nivel de rigor o costo, es por esto que para entender cuánto esfuerzo de ingeniería se necesita para un proyecto, Bertrand Meyer propone clasificar los sistemas en tres categorías A, B y C.
+
+### Sistemas A (Casuales)
+
+- Son un tipo muy común de sistema, generalmente pequeños y sin mucha importancia.
+- Suelen estar desarrollados por un equipo pequeño y descartable.
+- Se acepta que tengan bugs.
+- El mayor riesgo que tienen es el Over-Engineering.
+- Un ejemplo sería el script (programa pequeño) que haces un domingo por la tarde para organizar automáticamente las fotos de tu viaje. Si falla y borra una foto temporal, no pasa nada. Si intentas aplicarle a este script toda la documentación, pirámides de testing y metodologías de un banco, estarás perdiendo tu tiempo (eso es Over-Engineering).
+
+### Sistemas B (Negocios)
+
+- Son sistemas importantes para una organización.
+- Estos son los sistemas que más se benefician de todo lo que vemos en el curso de Ingeniería de Software.
+- El riesgo principal es que, al no usar técnicas adecuadas de ingeniería, el software se vuelva un pasivo en lugar de un activo para la organización.
+- Algunos ejemplos son el sistema de facturación de un supermercado o la app de Uber. Si fallan, la empresa pierde muchísimo dinero, los clientes se enojan y los competidores ganan terreno. Aquí sí necesitas metodologías ágiles, buen testing y código limpio.
+
+### Sistemas C (Críticos)
+
+- Son sistemas de misión crítica donde **nada puede salir mal**.
+- El costo de una falla es inmenso, medido directamente en vidas humanas o fortunas incalculables (\$\$\$).
+- Se encuentran en áreas como el control del Metro, la aviación y la medicina.
+- Requieren certificaciones estrictas que muchas veces escapan del ámbito de un curso regular; por ejemplo, la aviación civil utiliza el riguroso documento "DO-178C" para certificar que el software de vuelo es seguro.

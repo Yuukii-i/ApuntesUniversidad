@@ -1,0 +1,38 @@
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #21262d;
+  --text: #f0f6fc;
+  --muted: #8b949e;
+  --accent: #38bdf8;
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --surface: #f6f8fa;
+  --surface-2: #eaeef2;
+  --text: #1f2328;
+  --muted: #656d76;
+  --accent: #0369a1;
+}
+
+/* Anillo de enfoque visible para accesibilidad mediante teclado */
+:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* Desactivar animaciones y desplazamientos suaves para usuarios con preferencia de movimiento reducido */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  html.scroll-smooth {
+    scroll-behavior: auto !important;
+  }
+}

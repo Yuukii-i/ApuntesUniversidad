@@ -1,0 +1,59 @@
+---
+import Icon from './Icon.astro';
+
+interface Target {
+  title: string;
+  url: string;
+  classTitle?: string;
+  isDifferentClass?: boolean;
+}
+
+interface Props {
+  prev?: Target | null;
+  next?: Target | null;
+}
+
+const { prev, next } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav class="flex flex-col sm:flex-row gap-4 justify-between mt-12 pt-8" aria-label="Navegación entre temas">
+      {prev ? (
+        <a
+          href={prev.url}
+          class="flex-1 p-4 rounded-xl bg-surface-2 hover:bg-surface text-left transition-colors group"
+        >
+          <span class="flex items-center gap-1 text-xs text-muted mb-1 font-medium">
+            <Icon name="chevron-left" size={14} class="shrink-0" />
+            <span>
+              {prev.isDifferentClass && prev.classTitle ? `Clase anterior: ${prev.classTitle}` : 'Anterior'}
+            </span>
+          </span>
+          <span class="block text-sm font-semibold text-text group-hover:text-accent transition-colors">
+            {prev.title}
+          </span>
+        </a>
+      ) : (
+        <div class="hidden sm:block flex-1" />
+      )}
+
+      {next && (
+        <a
+          href={next.url}
+          class="flex-1 p-4 rounded-xl bg-surface-2 hover:bg-surface text-right transition-colors group"
+        >
+          <span class="flex items-center justify-end gap-1 text-xs text-muted mb-1 font-medium">
+            <span>
+              {next.isDifferentClass && next.classTitle ? `Siguiente clase: ${next.classTitle}` : 'Siguiente'}
+            </span>
+            <Icon name="chevron-right" size={14} class="shrink-0" />
+          </span>
+          <span class="block text-sm font-semibold text-text group-hover:text-accent transition-colors">
+            {next.title}
+          </span>
+        </a>
+      )}
+    </nav>
+  )
+}

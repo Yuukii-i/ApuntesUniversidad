@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import ClassCard from '../components/ClassCard.astro';
+import { getClasses } from '../lib/content';
+
+const classes = await getClasses();
+---
+
+<Base title="Apuntes" description="Apuntes universitarios organizados por materia y tema">
+  <div class="space-y-8">
+    <div class="bg-surface p-8 rounded-xl">
+      <h1 class="text-3xl font-extrabold text-text mb-2">
+        Materias y Apuntes
+      </h1>
+      <p class="text-muted text-base leading-relaxed max-w-2xl">
+        Colección de apuntes y notas de clases de informática. Selecciona una materia para explorar sus temas y contenido estructurado.
+      </p>
+    </div>
+
+    {
+      classes.length === 0 ? (
+        <div class="bg-surface p-12 rounded-xl text-center">
+          <p class="text-muted text-lg">No hay materias disponibles actualmente.</p>
+        </div>
+      ) : (
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {classes.map((c) => (
+            <ClassCard
+              id={c.id}
+              title={c.data.title}
+              description={c.data.description}
+              accent={c.data.accent}
+            />
+          ))}
+        </div>
+      )
+    }
+  </div>
+</Base>

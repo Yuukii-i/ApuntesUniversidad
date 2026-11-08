@@ -1,0 +1,338 @@
+---
+title: "Abstracciones"
+order: 5
+---
+
+import Figure from '../../../components/Figure.astro';
+
+{/* REVISAR: El separador original en el PDF indica "Capitulo 5 (6 según el profesor)". Se asignó order: 5 siguiendo la secuencia de temas del apunte. */}
+
+El principal problema en las ciencias de la computación es tomar un problema complejo y dividirlo en piezas manejables que puedan ser resueltas de forma independiente, es aquí donde entra la **Abstracción**.
+
+La abstracción es la estrategia principal para esta división de problemas, la idea es crear representaciones simplificadas de una entidad las cuales pueden ser cosas como clases, interfaces, paquetes o bibliotecas. Todo buen diseño tiene una regla clara: aunque la implementación de la abstracción sea un desafío técnico, su uso final debe ser simple e intuitivo para el resto de los desarrolladores.
+
+<Figure
+  src="/classes/ingenieria-de-software/05-abstracciones/usando-abstraccion.png"
+  alt="Comparación visual entre usar abstracción (Using Abstraction) y no usar abstracción (Without Abstraction)"
+  side="full"
+/>
+
+## Integridad conceptual
+
+Propuesta por Frederick Brooks, establece que un sistema no puede ser simplemente un conjunto de funcionalidades inconexas, es decir, debe existir coherencia y cohesión entre ellas. Es preferible omitir funcionalidades anómalas en lugar de acumular características independientes y descoordinadas. La falta de esta integridad añade complejidad accidental, dificultando el entendimiento del sistema.
+
+A nivel de código, la integridad conceptual exige consistencia estricta. Se rompe si existe una parte del sistema que usa un estándar de nombres o framework, mientras otra parte utiliza herramientas completamente distintas. Un ejemplo evidente de violación de este principio es cuando una función no concuerda con lo que realmente hace. Ej:
+
+```java
+public class Calculator {
+    public int add(int a, int b) {
+        return a - b; // Falla la integridad conceptual: el método "add" resta en lugar de sumar
+    }
+}
+```
+
+## Ocultamiento de la Información
+
+Introducida por David Parnas en 1972, esta regla dicta que las clases deben esconder deliberadamente aquellas decisiones internas de diseño que estén sujetas a cambios futuros. Implementar esto genera tres beneficios directos:
+
+- Permite desarrollo paralelo de múltiples clases de forma independiente.
+- Facilita flexibilidad a cambios.
+- Simplifica entendimiento del código para nuevos desarrolladores.
+
+Ejemplo:
+
+Mala implementación, exponemos la estructura de datos obligando al cliente a usar la implementación exacta:
+
+```java
+public class Estacionamiento {
+    public Hashtable<String, String> vehiculos; // Exposición directa
+    public Estacionamiento() {
+        vehiculos = new Hashtable<String, String>();
+    }
+}
+// El cliente está forzado a saber cómo insertar: e.vehiculos.put("TCP-7030", "Uno");
+```
+
+Buena implementación, escondemos el hash table y solo exponemos una interfaz útil:
+
+```java
+public class Estacionamiento {
+    private Hashtable<String, String> vehiculos;
+
+    public void estaciona(String patente, String vehiculo) {
+        vehiculos.put(patente, vehiculo); // El cliente ignora qué estructura almacena los datos
+    }
+}
+```
+
+En lenguajes orientados a objetos como Java, existe la costumbre de declarar todos los atributos de una clase de forma privados pero luego se exponen utilizando *Getters* y *Setters*. Esto no garantiza el ocultamiento de la información, en la práctica son un instrumento de liberación de la información. John Ousterhout advierte que exponer los datos privados de esta manera, revela la implementación interna.
+
+## Cohesión
+
+La cohesión determina que la implementación de cualquier clase debe enfocarse en proveer una única funcionalidad o servicio. Una clase cohesa simplifica drásticamente el desarrollo, facilita la asignación de un único responsable para su mantenimiento y resulta mucho más fácil de reutilizar y someter a pruebas automatizadas.
+
+Relacionado estrechamente con la cohesión es la **Separación de Intereses**, este principio defiende que una clase o función debe implementar apenas un único interés. Ej:
+
+Mala implementación, la clase `cls::estacionamiento` no debería saber los datos del gerente.
+
+```java
+class Estacionamento {
+    // Falla la separación de intereses: los datos personales del gerente no pertenecen a la lógica del estacionamiento
+    private String nombre_gerente;
+    private String fono_gerente;
+    private String rut_gerente;
+}
+```
+
+## Acoplamiento
+
+El acoplamiento define la fuerza de la conexión entre dos clases. Depender de decenas de clases externas es un indicador de que una clase está asumiendo demasiadas responsabilidades.
+
+Un acoplamiento se considera aceptable, cuando una clase consume los métodos públicos de otra mediante una interfaz estable, esto hace que los cambios en la clase proveedora rara vez impacten al cliente.
+Ej: Conexión aceptable, la clase `cls::A` únicamente utiliza el método público de `cls::B` a través de una interfaz estable (`fn::getTotal()` siempre funcionará igual).
+
+```java
+class A {
+    private void f(B b) {
+        int total = b.getTotal(); // Interacción segura mediante una interfaz pública
+    }
+}
+
+class B {
+    private int total;
+    public int getTotal() {
+        return total;
+    }
+    private void g() {
+        File arch = File.open("arch1"); // B encapsula la complejidad del archivo
+        arch.writeInt(total);
+    }
+}
+```
+
+Un acoplamiento se considera **no aceptable** cuando los cambios en una clase fácilmente afectan a sus dependencias, normalmente esto ocurre por malas prácticas como el acceso directo a recursos de otra clase, alteración compartida de variables globales o la inestabilidad de métodos públicos.
+Ej: Ambas clases acceden al mismo archivo, `cls::A` lee y `cls::B` escribe, si trabajan al mismo tiempo `cls::A` puede hacer una lectura sucia, debido a que `cls::B` la modificó.
+
+```java
+class A {
+    private void f() {
+        File arch = File.open("arch1.db"); // Acoplamiento no aceptable: acceso directo a un recurso
+        int total = arch.readInt();
+    }
+}
+
+class B {
+    private void g() {
+        int total; // lógica para calcular el valor total
+        File arch = File.open("arch1.db"); // Dependencia compartida del mismo recurso
+        arch.writeInt(total);
+    }
+}
+```
+
+Además existen dos tipos de acoplamiento:
+
+- **Estructural:** Ocurre cuando una clase posee una referencia explícita a otra dentro de su código. Puede ser aceptable o no dependiendo de la estabilidad de la interfaz destino.
+- **Evolutivo (o lógico):** Ocurre cuando los cambios en una clase tienden a propagarse invariablemente hacia la clase dependiente, lo cual representa siempre un escenario no deseado.
+
+## Principios SOLID
+
+Los principios de diseño SOLID son recomendaciones prácticas y operativas que los desarrolladores aplican para alcanzar propiedades estructurales complejas como alta cohesión y bajo acoplamiento.
+
+### Principio S, Responsabilidad Única (SRP)
+
+Toda clase debe tener una única responsabilidad, definida concretamente como un "único motivo para modificarla". Ej:
+La clase `cls::disciplina` no cumple con SRP, debido a que calcula el índice y además lo imprime, si ocurriese una falla, sería difícil saber si fue culpa del `print` o de la lógica de cálculo.
+
+```java
+class Disciplina {
+    void calculaImprimeIndice() {
+        double indice = 0.5; // lógica de cálculo
+        System.out.println(indice); // lógica de presentación
+    }
+}
+```
+
+Ahora cada clase tiene una sola razón de cambiar, `cls::Disciplina` solo hace cálculo y `cls::Console` solo printea, si ocurre un error podemos saber exactamente dónde fue.
+
+```java
+class Disciplina {
+    double calculaIndiceInasistencia() {
+        return 0.5;
+    }
+}
+class Console {
+    void imprimeIndice(Disciplina disciplina) {
+        double indice = disciplina.calculaIndiceInasistencia();
+        System.out.println(indice);
+    }
+}
+```
+
+### Principio O, Abierto/Cerrado (OCP)
+
+Una función debe estar preparada para extender su comportamiento sin requerir alteraciones directas de su código fuente.
+
+```java
+double calcTotalBecas(Alumno[] lista) {
+    double total = 0.0;
+    for (Alumno alumno : lista) {
+        if (alumno instanceof AlumnoGrad) {
+            total += 100.0; // Código específico
+        } else if (alumno instanceof AlumnoMagister) {
+            total += 200.0; // Modificar aquí para agregar doctorado
+        }
+    }
+    return total;
+}
+```
+
+Si mañana decides que otro tipo de alumno también puede recibir becas, tendrás que modificar directamente el código de la función, lo que fácilmente podría provocar que una función sin fallas, empiece a fallar.
+{/* MOVIDO: después del bloque de código "calcTotalBecas" */}
+
+Ahora el cálculo de las becas está abierto a modificaciones, si mañana decides que alguien más puede recibir becas, solo tendrás que crear esa clase, si falla, ya sabrás por qué fue.
+
+```java
+abstract class Alumno {
+    abstract double calcularBeca();
+}
+
+double calcTotalBecas(Alumno[] lista) {
+    double total = 0.0;
+    for (Alumno alumno : lista) {
+        total += alumno.calcularBeca(); // Polimorfismo: no hay if/else
+    }
+    return total;
+}
+```
+
+### Principio L, Sustitución de Liskov (LSP)
+
+Las subclases no pueden violar el contrato o comportamiento esperado de sus clases padres al redefinir métodos. Cualquier código que reciba un objeto padre debe poder recibir objetos de las clases hijas sin notar la diferencia y sin generar errores lógicos.
+
+```java
+class A {
+    int suma(int a, int b) {
+        return a + b; // 1 + 2 = 3
+    }
+}
+class B extends A {
+    int suma(int a, int b) {
+        String r = String.valueOf(a) + String.valueOf(b);
+        return Integer.parseInt(r); // 1 + 2 = 12 (Viola el contrato matemático)
+    }
+}
+```
+
+La clase `cls::A` hace una suma normal de `a + b`, mientras que la clase `cls::B` concatena dos strings, esto genera un problema porque si `var::a` y `var::b` fueran 1 y 2 respectivamente, `cls::A` devolvería 3 mientras que `cls::B` devolvería 12.
+{/* MOVIDO: después del bloque de código "class A / class B" */}
+
+La clase `cls::B` puede hacer otras cosas, pero para respetar Liskov, tiene que devolver lo mismo que `cls::A`.
+
+```java
+class B extends A {
+    int suma(int a, int b) {
+        // Puede optimizar el cálculo o registrar un log,
+        // pero DEBE retornar 3 matemáticamente.
+        return Math.addExact(a, b);
+    }
+}
+```
+
+### Principio I, Segregación de Interfaces (ISP)
+
+{/* REVISAR: En el original dice "evitando que los clientes de métodos que no utilizaran" (falta un verbo como "dependan" antes de "de métodos"). Se conserva la redacción original corrigiendo únicamente la tilde de "utilizarán". */}
+Es una especialización del SRP aplicada al diseño de contratos. Dicta que las interfaces deben ser pequeñas y específicas, evitando que los clientes de métodos que no utilizarán.
+
+La interfaz `cls::funcionario` tiene métodos que no todos los funcionarios pueden utilizar.
+
+```java
+interface Funcionario {
+    double getSalario();
+    double getFGTS(); // Solo aplicable a sector privado
+    int getSIAPE();   // Solo aplicable a sector público
+}
+```
+
+Ahora, cada funcionario tiene solo los métodos que van a utilizar.
+
+```java
+interface Funcionario {
+    double getSalario();
+}
+interface FuncionarioCLT extends Funcionario {
+    double getFGTS();
+}
+interface FuncionarioPublico extends Funcionario {
+    int getSIAPE();
+}
+```
+
+### Principio D: Inversión de Dependencias (DIP)
+
+Las clases deben depender de abstracciones y no de implementaciones concretas, ya que las abstracciones son considerablemente más estables.
+
+```java
+void g(ProjetorLG projetor) {
+    // Si mañana compramos un proyector Sony, este método se rompe
+}
+```
+
+El método solo funciona con un proyector LG, el código está acoplado a LG.
+{/* MOVIDO: después del bloque de código "void g(ProjetorLG projetor)" */}
+
+Ahora no importa qué proyector pongas, siempre funcionará. No hay acoplamiento específico.
+
+```java
+interface Projetor { ... }
+
+void g(Projetor projetor) {
+    // Acepta cualquier clase que implemente la interfaz Projetor
+}
+```
+
+## Preferir Composición a Herencia
+
+La herencia naturalmente genera un fuerte acoplamiento entre las clases, lo que introduce problemas significativos en la evolución del sistema. Se considera un mecanismo de **"reúso de caja blanca"** porque las clases hijas quedan expuestas a los detalles de implementación del padre, lo que viola directamente el encapsulamiento y obliga a modificar a las hijas si el padre cambia. Mientras que la composición **"reúso de caja negra"** lo resuelve al hacer que una clase posea a la otra como atributo interno.
+Ej:
+`cls::Stack` se ve obligado a heredar todos los métodos de `cls::ArrayList`, si `cls::ArrayList` tuviera un método "`fn::Ordenar()`" `cls::Stack` tendría que forzosamente implementar algún tipo de error que diga `str::"Un Stack no se puede ordenar"`.
+
+```java
+class Stack extends ArrayList {
+    // Hereda todos los métodos de ArrayList
+}
+```
+
+Ahora, `cls::Stack` es capaz de implementar solo los métodos que le interesan, haciendo que por ejemplo `fn::Stack.pop()` internamente haga un `fn::elementos.pop()`.
+
+```java
+class Stack {
+    private ArrayList elementos;
+    // Solo implementa push() y pop()
+}
+```
+
+## Principio de Demeter
+
+Para proteger el encapsulamiento, este principio dicta que un método solo debe invocar operaciones sobre un grupo muy restringido de entidades: su propia clase, los objetos pasados como parámetros, los objetos instanciados dentro del propio método, o los atributos directos de la clase.
+Ej:
+Método para calcular una venta, es equivalente a que el cajero agarre la cartera del cliente y le descuente el costo.
+
+```java
+double precio = 6.00;
+Cartera cartera = cliente.getCartera();
+if (cartera.getValorTotal() >= precio) { // Viola Demeter
+    cartera.debita(precio); // Viola Demeter
+}
+```
+
+Ahora `var::cliente` es quien calcula el pago. Venta ya no tiene que sacarle la cartera al cliente, sino que amablemente le pide que haga el pago.
+
+```java
+double precio = 6.00;
+try {
+    cliente.pagar(precio); // El cliente encapsula la lógica interna
+} catch (ExcepcionValorInsuficiente e) {
+    // manejo de error
+}
+```

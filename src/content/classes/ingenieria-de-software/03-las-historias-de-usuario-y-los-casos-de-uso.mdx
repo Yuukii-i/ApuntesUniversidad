@@ -1,0 +1,186 @@
+---
+title: "Las Historias de Usuario y los Casos de Uso"
+order: 3
+---
+
+import Figure from '../../../components/Figure.astro';
+
+Para capturar los requerimientos sin necesidad de volver a la burocracia de los documentos extensos vistos en Cascada, tenemos tres pilares conocidos como "Las 3 C's":
+
+- **Carta (Card):** Un registro breve (una tarjeta) que funciona como un recordatorio para detonar conversaciones sobre el requisito durante el sprint.
+- **Conversaciones:** El diálogo donde el PO explica a los desarrolladores los matices del requerimiento, como los tipos de medios de pago, modalidades de cuotas o formas de entrega.
+- **Confirmación:** Los escenarios específicos que el PO usará para aceptar la implementación de la historia (también llamados tests o criterios de aceptación), los cuales suelen documentarse en el reverso de la tarjeta.
+
+Para mantener el enfoque en el valor humano las historias de usuario siguen una estructura de escritura estricta, la cual se enfoca en la perspectiva de quien usará el sistema:
+
+> "Como un [cierto tipo de usuario], me gustaría [realizar algo con el sistema] para [alguna meta a alcanzar]"
+
+Por ejemplo:
+
+- Como *usuario típico*, me gustaría renovar préstamos de libros.
+- Como *profesor*, me gustaría sugerir la compra de libros.
+- Como *funcionario*, me gustaría que el sistema aplique multas al devolver préstamos atrasados.
+
+### Criterios INVEST
+
+Para que una historia de usuario se considere buena y construible debe pasar por los filtros de las características INVEST, las cuales son:
+
+- **I**ndependientes: Se pueden desarrollar en cualquier orden.
+- **N**egociables: Son abiertas para negociación, no contratos legales fijos.
+- **V**aliosas: Deben agregar valor real al usuario o negocio.
+- **E**stimables: El equipo técnico debe ser capaz de calcular su tamaño.
+- **S**horts (Cortas): Deben ser lo suficientemente pequeñas para terminarse en un solo sprint.
+- **T**esteables: Se debe poder verificar su funcionamiento de forma objetiva.
+
+### El Destino de los Requisitos No Funcionales
+
+Como las historias de usuario se centran en los requisitos funcionales, surge la duda de qué hacer con los requisitos no funcionales. El equipo debe definir los Requisitos No Funcionales junto al PO e incluirlos explícitamente en los criterios de conclusión, es decir, si el desempeño es un requisito crítico la historia de "cerrar una compra" solo se considerará finalizada si además de funcionar supera una revisión de código enfocada en desempeño.
+
+### Casos de Uso
+
+A veces los sistemas tienen procesos con demasiadas ramificaciones, que una Historia de Usuario no sería capaz de englobar, es por esto que existen los Casos de Uso.
+Un caso de uso es un documento de especificación de requisitos muy detallado, su objetivo es describir paso a paso a un actor realizando una operación específica con el sistema, por ejemplo una Transferencia Bancaria:
+
+1. Autenticar al cliente.
+2. Informar cuenta de destino.
+3. Informar monto.
+4. Informar fecha.
+5. El sistema efectúa la transferencia.
+
+Es de este proceso paso a paso que nacen las **Extensiones** las cuales son ramificaciones que se desvían del flujo normal. Estas se dividen en dos tipos:
+
+- **Excepciones (o errores):** ¿Qué pasa si las cosas salen mal? Por ejemplo, si en el paso 3 el monto ingresado es superior al saldo actual, el sistema debe solicitar un nuevo monto.
+- **Detalles alternativos:** ¿Qué pasa si el usuario elige una ruta distinta? Por ejemplo, si en el paso 4 la fecha informada es una fecha futura, la transferencia no se hace inmediatamente, sino que se agenda.
+
+Los Casos de Uso nos obligan a pensar en todos los casos en que nuestro sistema puede fallar, es muy fácil confundir este concepto con crear algoritmos pero, los Casos de Uso son parte de la etapa de levantamiento de requisitos, el foco principal es solamente el entendimiento y delimitación del problema.
+
+## Lean Startup y el Producto Mínimo Viable (MVP)
+
+Antes de escribir una línea de código debemos evaluar la incertidumbre del proyecto, porque imaginemos que el cliente nos pide una función que nadie va a utilizar, en estos casos debemos saber qué herramienta de requisitos utilizar, es aquí donde entran los **Sistemas de Bajo y Alto Riesgo:**
+
+- **Bajo riesgo y usuarios conocidos:** Son sistemas cuya necesidad y viabilidad son obvias en el mercado. Un ejemplo clásico es un sistema de control de bibliotecas. En estos casos, las historias de usuario que vimos anteriormente funcionan perfectamente.
+- **Alto riesgo y éxito incierto:** Son ideas nuevas donde no sabemos si habrá clientes o si funcionará el modelo de negocio, como una tienda virtual para préstamos de libros digitales con pago exclusivo vía bitcoins. Estos escenarios son típicos de startups, y como el riesgo de fracaso es altísimo, la idea tiene que ser rápidamente validada con usuarios reales.
+
+### El Producto Mínimo Viable (MVP)
+
+Para los Sistemas de Alto Riesgo, la industria adaptó una filosofía popularizada por Eric Ries en su libro *"The Lean Startup"*, el cual se desglosa así:
+
+- **Producto:** Ya puede ser usado por alguien.
+- **Mínimo:** Tiene el menor conjunto de funcionalidades posibles para representar el menor costo de desarrollo.
+- **Viable:** Su objetivo no es ser el sistema definitivo, sino validar una idea de negocio.
+
+La regla fundamental es que **un MVP es un experimento**. Por lógica si ya sabemos que el proyecto va a funcionar, ya sea porque el cliente ya te contrató y te va a pagar, o ya existe un mercado seguro, entonces no existe riesgo, por lo que no se necesitaría de un MVP.
+
+<Figure
+  src="/classes/ingenieria-de-software/03-las-historias-de-usuario-y-los-casos-de-uso/sin-mvp-vs-con-mvp.png"
+  alt="Comparación del desarrollo de un producto sin MVPs frente a iteraciones incrementales y funcionales con MVPs"
+  side="full"
+/>
+
+### El Ciclo de Vida: Construir, Medir, Aprender
+
+El MVP existe dentro de un ciclo de aprendizaje rápido y continuo:
+
+1. Tienes una **IDEA** y pasas a **Construir** el MVP.
+2. Lo lanzas al mercado para **Medir** su desempeño y obtener **DATOS**.
+3. Usas esos datos para **Aprender** y refinar la idea original.
+
+En el MVP **la velocidad importa más que la perfección**, en esta fase inicial el MVP no necesita usar todas las prácticas de ingeniería de software porque el objetivo es validarlo rápidamente, de aquí nace la famosa frase de Reid Hoffman: *"Si no sientes vergüenza de tu MVP, te demoraste demasiado en lanzarlo"*.
+
+Y ¿Qué pasa al final del ciclo? Una vez que hemos medido los datos del experimento, el equipo debe tomar una decisión. Pueden hacer pequeños ajustes, pueden desistir porque se acabó el dinero, pueden celebrar porque consiguieron el encaje en el mercado (*Product Market Fit*) y ahora sí construir un producto robusto, o pueden **Pivotear**, lo que significa hacer un cambio estructural en base a lo aprendido. Los tipos más comunes son:
+
+- **Zoom-in:** Una sola funcionalidad del MVP era tan buena y usada que se convierte en el nuevo producto completo.
+- **Zoom-out:** El MVP entero pasa a ser solo una pequeña funcionalidad dentro de un producto más grande.
+- **Otros pivotes:** Cambiar el segmento de clientes al que se apunta, cambiar el canal de distribución, o cambiar la tecnología (por ejemplo, pasar de iOS a Android).
+
+### Algunos ejemplos de MVP en la industria:
+
+- **Zappos (Validar la hipótesis central):** En 1999, la gran duda era: *¿Las personas van a comprar zapatos por Internet?* En lugar de gastar millones construyendo centros de distribución y comprando inventario, el fundador hizo un sistema web simple con fotos de zapatos que él mismo tomaba en tiendas físicas locales. Cuando alguien compraba en la web, él iba a la tienda física, compraba el zapato a precio normal y lo enviaba por correo. Su backend (trabajo interno) era 100% manual, pero cumplió su objetivo: validar que sí existía mercado. (Zappos terminó siendo comprada por Amazon por miles de millones).
+- **MVP "Mago de Oz" (EasyTaxi):** En este tipo de MVP, el cliente interactúa con una interfaz digital creyendo que todo el sistema está automatizado, pero en realidad el backend es completamente manual. El cliente no sabe de esto, pero permite a los creadores probar el servicio sin programar los complejos algoritmos de fondo desde el día uno.
+- **MVP "Simple App" (Threads de Meta):** Cuando Meta quiso competir contra X (Twitter), no lanzaron una aplicación perfecta. Lanzaron un MVP súper básico: sin versión web, sin hashtags, sin trending topics, sin mensajes directos (DMs), sin una línea de tiempo cronológica y sin edición de posts. Solo querían validar rápidamente la demanda del mercado antes de invertir en todas esas funcionalidades extra.
+
+### Tests A/B
+
+Una vez que el producto ya está en el mercado y tiene usuarios activos, a veces los desarrolladores debaten sobre qué funcionalidad es mejor. Por ejemplo, en una tienda virtual algunos desarrolladores pueden proponer un nuevo sistema de recomendaciones (*"quien compra P también compra X, Y, Z"*). ¿Vale la pena migrar a la nueva versión? Para responder a esta pregunta se utilizan los tests A/B.
+En estos tests el sistema divide aleatoriamente a los usuarios en dos grupos:
+
+- Un grupo ve la **Versión A (Control)**, que es el sistema original.
+- El otro grupo ve la **Versión B (Tratamiento)**, que es la nueva propuesta.
+
+Es mediante un simple código de aleatoriedad que el tráfico se divide, al final del experimento se analiza alguna métrica clave donde si la versión B muestra ganancias estadísticas relevantes, se migra hacia ella, de lo contrario nada cambia.
+
+## El Proceso Formal y la "Elicitación"
+
+En la práctica, los requisitos jamás aparecen completos y perfectos al inicio de un proyecto; por el contrario, se descubren, discuten, refinan, documentan, validan y cambian continuamente. Para domar este caos natural existe un proceso de cuatro etapas principales envueltas por una capa de control constante.
+
+<Figure
+  src="/classes/ingenieria-de-software/03-las-historias-de-usuario-y-los-casos-de-uso/proceso-requisitos.png"
+  alt="Diagrama del proceso de ingeniería de requisitos: Elicitación, Análisis, Especificación y Validación envueltos por Gestión y trazabilidad"
+  side="full"
+/>
+
+Donde:
+
+- **Elicitación:** Consiste en descubrir las necesidades, objetivos, restricciones y expectativas de todos los interesados.
+- **Análisis:** Es la fase donde resolvemos las ambigüedades, los conflictos, definimos prioridades, dependencias y el alcance real.
+- **Especificación:** El momento de registrar estos requisitos limpios en un formato comprensible, como las historias de usuario o casos de uso que ya vimos.
+- **Validación:** Comprobar rigurosamente que los requisitos representan lo que realmente se necesita y que, además, pueden verificarse.
+- **Gestión y trazabilidad (La capa continua):** Acompaña a todo el proceso para controlar los cambios, las versiones y las prioridades.
+
+Dentro de la Elicitación buscamos descubrir qué es lo que necesitan los usuarios, pero no podemos preguntarles directamente debido a que:
+
+- Los usuarios muchas veces no conocen todas sus necesidades.
+- Distintos interesados (stakeholders) suelen tener objetivos contradictorios entre sí.
+- Algunas restricciones son implícitas; es decir, el cliente asume que algo es tan obvio que ni siquiera te lo menciona.
+- El problema original cambia a medida que ambas partes lo comprenden mejor.
+
+Es por esto que para descubrir las necesidades de los usuarios utilizamos las Técnicas de Elicitación, las cuales varían según la situación y son las siguientes:
+
+- **Entrevistas:** Ideales para profundizar uno a uno en las necesidades, problemas y expectativas.
+- **Cuestionarios:** Útiles para obtener información estadística de muchos usuarios rápidamente.
+- **Observación:** Fundamental para comprender el trabajo *real* que hace la persona, y no solo el trabajo que *declara* hacer verbalmente.
+- **Workshops (Talleres):** Reuniones grupales para negociar el alcance y las prioridades entre interesados con visiones distintas.
+- **Análisis documental:** Revisar los formularios, reglamentos, manuales, procesos y sistemas previos que ya usa la empresa.
+- **Prototipos:** Representaciones tempranas (incluso dibujos) para validar ideas visualmente antes de programar.
+
+## Los 5 Atributos de Calidad de un Requisito
+
+No basta con solo tener los requisitos anotados en un papel, debemos escribirlos de tal forma que sean fáciles de entender, implementar, sean verificables y además puedan ser mantenidos a lo largo del tiempo. Es por esto que existen los 5 Atributos de Calidad de un Requisito:
+
+- **Claridad:** El requisito debe tener una sola interpretación razonable.
+  - *Requisito débil:* El sistema debe ser rápido y fácil de usar. *(Las palabras "rápido" y "fácil" son expresiones ambiguas si no se define cómo se medirán).*
+  - *Versión mejorada:* El sistema debe responder las consultas en menos de 2 segundos para el 95% de las solicitudes bajo una carga de 500 usuarios concurrentes.
+- **Consistencia:** El requisito no debe contradecir a otros requisitos del proyecto.
+  - *Ejemplo de inconsistencia:* Un requisito (R1) dice que solo los administradores pueden eliminar usuarios, mientras que otro (R2) indica que los operadores pueden eliminar cualquier usuario.
+  - El equipo debe detectar esto y aclarar las reglas de autorización antes de pasar a la fase de diseño.
+- **Completitud:** El requisito debe contener absolutamente toda la información necesaria.
+  - *Requisito incompleto:* El sistema debe enviar una notificación cuando se apruebe una solicitud.
+  - *Información faltante:* Para que esté completo, falta definir a quién se notifica, por qué canal (correo, SMS), qué datos incluye el mensaje, cuándo se considera aprobada la solicitud y qué ocurre si falla el envío.
+- **Verificabilidad:** Se debe poder comprobar de forma objetiva si el sistema final cumple o no con lo pedido.
+  - *Requisito no verificable:* El sistema debe tener una interfaz moderna. *(No hay forma científica ni objetiva de medir qué es "moderno").*
+  - *Versión mejorada:* El sistema debe cumplir las pautas de diseño de la guía institucional y superar una prueba de usabilidad con al menos 80% de tareas completadas sin asistencia.
+- **Trazabilidad:** Es la capacidad de seguir la vida de un requisito desde la necesidad inicial del stakeholder, pasando por el requisito formal, el diseño, la prueba, hasta el código. Si el cliente cambia de opinión en el futuro, la trazabilidad te permite saber exactamente qué historias de usuario, componentes de código y pruebas deben modificarse.
+
+## La Técnica Auxiliar del Análisis Lingüístico
+
+En el mundo real, es raro que el cliente te entregue un diagrama técnico, lo más probable es que te envíen un correo informal redactado en lenguaje natural de lo que quieren, es por esto que se utiliza el Análisis Lingüístico. Esta técnica se basa en buscar verbos y sustantivos para poder transformar descripciones informales en "candidatos" a historias de usuario, casos de uso o requisitos funcionales. La técnica consiste en mapear las palabras de la siguiente manera:
+
+- **Sustantivos:** Al identificarlos, solemos encontrar a los posibles actores, entidades, objetos, datos o recursos del sistema. *(Ejemplo: estudiante, portal, certificado, documento).*
+- **Verbos:** Nos revelan las posibles acciones, funcionalidades, casos de uso o responsabilidades que tendrá el sistema. *(Ejemplo: solicitar, verificar, generar, enviar).*
+- **Adjetivos y Adverbios:** Suelen ser indicadores clave de posibles restricciones, atributos de calidad o requisitos no funcionales. *(Ejemplo: "automáticamente", "rápido", "seguro").*
+
+A continuación veremos un ejemplo:
+"El **estudiante** **solicita** un **certificado** en el **portal**. El **sistema** **verifica** que no tenga **deudas** y **genera** el **documento** en formato PDF."
+Aplicando la técnica:
+
+- De los **sustantivos** rescatamos al actor (*estudiante*) y las entidades de datos (*certificado, deudas, documento PDF*).
+- De los **verbos** extraemos las funciones clave que debemos programar: *solicitar certificado, verificar deudas, generar PDF*.
+- Con esto, ya podemos redactar un Requisito Funcional claro: *"El sistema debe verificar si el estudiante tiene deudas pendientes antes de generar el certificado"*.
+
+A pesar de que esta técnica es muy buena para empezar un borrador, tiene límites claros como:
+
+- No todo sustantivo es una entidad importante que deba guardarse en una base de datos.
+- No todo verbo corresponde a una funcionalidad real del sistema.
+- Se corre el riesgo de confundir las acciones humanas del usuario con las acciones internas del sistema.
+
+Además esta técnica por sí sola no detecta prioridades, reglas de negocio ni restricciones de calidad (Requisitos No Funcionales).

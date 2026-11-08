@@ -1,0 +1,197 @@
+---
+title: "Modelos de Software y UML"
+order: 4
+---
+
+import Figure from '../../../components/Figure.astro';
+
+En capítulos anteriores vimos los requisitos los cuales son "el qué" hace el sistema, pero con solo ese conocimiento no podemos hacer un proyecto de software, necesitamos saber "el cómo" opera el sistema lo cual vendría siendo el código. Para poder llenar esta brecha entre lo que pide el cliente y la implementación (código).
+{/* REVISAR: La oración "Para poder llenar esta brecha entre lo que pide el cliente y la implementación (código)." queda inconclusa en el apunte original; se preserva literal según las reglas de ingestión. */}
+
+Dentro del mundo de la ingeniería es ley seguir modelos matemáticos y físicos rígidos, pero al intentar aplicar estos mismos modelos en la Ingeniería de Software nos dimos cuenta de que no son tan efectivos, es de aquí que nace UML (Unified Modeling Language) en el año 1995, el cual vendría a ser el reemplazo de los modelos matemáticos y físicos de ingeniería, orientado exclusivamente para el modelado de Software.
+
+### Blueprint vs Sketch
+
+Históricamente herramientas como CASE (mencionada en capítulos anteriores) intentaron implementar UML como un Blueprint o plano a seguir en el cual se intentaba documentar todo de manera exhaustiva, muy similar a como el Modelo Cascada forzaba a tener una documentación exhaustiva antes de comenzar. Con el nacimiento y posterior "Boom" de las metodologías ágiles, hoy en día UML no se utiliza tanto como documentación exhaustiva y perfecta, sino que se utiliza más como Sketch o Boceto para conversar sobre alguna parte del código o documentar decisiones de diseño, a continuación se presenta una tabla comparativa de ambos usos:
+
+| Característica | UML como Boceto (Sketch) | UML como Plano (Blueprint) |
+| :--- | :--- | :--- |
+| **Propósito Principal** | Explorar ideas, comunicar conceptos y resolver problemas de arquitectura en equipo. | Especificar un diseño detallado y definitivo para la construcción del sistema. |
+| **Nivel de Detalle** | Bajo a medio. Se omiten atributos o métodos obvios para centrarse en las partes críticas o complejas. | Exhaustivo y preciso. Define estrictamente cada clase, tipo de dato, interfaz y relación. |
+| **Completitud** | Incompleto por diseño. Solo modela la fracción del sistema que está bajo discusión en ese momento. | Completo. Debe representar la totalidad del sistema (o módulo) sin dejar ambigüedades. |
+| **Relación con el Código** | Sirve como guía flexible. El programador tiene libertad para tomar decisiones tácticas durante la codificación. | Es una especificación estricta. A menudo se utiliza para la generación automática de código (Ingeniería hacia adelante). |
+| **Herramientas Típicas** | Pizarras físicas, papel, o herramientas de dibujo rápido (Excalidraw, Draw.io). | Herramientas CASE complejas y especializadas (Enterprise Architect, IBM Rational). |
+| **Ciclo de Vida** | Efímero. Suele borrarse de la pizarra o guardarse como una simple foto de referencia rápida. | Persistente. Se mantiene, se versiona y se actualiza constantemente como documentación oficial. |
+| **Metodología Afín** | Desarrollo Ágil (Scrum, XP). | Modelos tradicionales o predictivos (Cascada, RUP). |
+
+## Diagramas Estáticos
+
+Un diagrama estático es uno de los dos "mundos" de UML, este se define como una representación gráfica que muestra la estructura de un sistema de software, incluyendo sus componentes, clases, atributos y las relaciones entre ellos, sin importar el tiempo ni los cambios dinámicos.
+
+### El Diagrama de Clases
+
+Dentro de los diagramas estáticos de UML, uno de los más conocidos es el "Diagrama de Clases" cuya función es permitirnos visualizar las "plantillas" a partir de las cuales construiremos nuestros Objetos en POO. Los diagramas de clases presentan un formato genérico donde cada clase se representa como un rectángulo dividido en tres compartimentos:
+
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/clase-uml.png"
+  alt="Representación de una clase en UML con tres compartimentos: nombre de la clase, atributos y métodos"
+  side="right"
+/>
+
+- **Arriba: El nombre de la clase.**
+- **En el medio: Los atributos** (las variables o datos que guarda la clase).
+- **Abajo: Los métodos** (las funciones o acciones que la clase puede ejecutar).
+- **Visibilidad:** Se utiliza una simbología rápida al lado de los atributos y métodos. Un signo menos (`-`) indica que es privado, mientras que un signo más (`+`) indica que es público.
+
+Además, las clases necesitan "comunicarse", para esto UML define varios tipos de líneas para representar cómo las clases se relacionan:
+
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/relaciones-clases-uml.png"
+  alt="Tipos de relaciones entre clases en UML: Association, Generalization, Realization, Aggregation, Composition y Dependency"
+  side="right"
+/>
+
+- **Asociación (Association):** Relación estructural básica e independiente. Indica que dos clases se conocen y se comunican entre sí.
+- **Generalización (Generalization):** Relación de herencia ("es un/a"). Una clase hija (subclase) hereda atributos y métodos de una clase padre (superclase), se lee como hija -> padre.
+- **Realización (Realization):** Relación de implementación. Una clase acuerda implementar el comportamiento (métodos) definido por una interfaz, se lee como clase -> interfaz.
+- **Agregación (Aggregation):** Relación "todo-parte" débil. La parte puede existir independientemente del todo (ej. un *Profesor* y un *Departamento*), se lee como parte->todo.
+- **Composición (Composition):** Relación "todo-parte" fuerte. El ciclo de vida de la parte depende estrictamente del todo; si el todo se destruye, la parte también (ej. una *Casa* y una *Habitación*), se lee como parte -> todo.
+- **Dependencia (Dependency):** Relación de uso temporal o débil. Una clase requiere de otra para funcionar (ej. la recibe como parámetro de un método). Un cambio en la clase dependida afecta a la dependiente.
+
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/multiplicidad-navegabilidad-rol.png"
+  alt="Notación UML para Multiplicity, Navigability y Role en las líneas de relación"
+  side="right"
+/>
+
+- **Multiplicidad (Multiplicity):** Define cuántas instancias de una clase están conectadas a una sola instancia de la otra clase. Se escribe en los extremos de la línea.
+  - `1` (Exactamente uno)
+  - `0..1` (Cero o uno)
+  - `*` o `0..*` (Cero o muchos)
+  - `1..*` (Uno o muchos)
+- **Navegabilidad (Navigability):** Indica la dirección en la que se puede consultar o atravesar la relación en el código. Se representa con una flecha abierta (`>`) en la línea de asociación.
+- **Rol (Role):** Es una etiqueta de texto cerca de uno de los extremos de la línea que describe la función específica que cumple esa clase dentro de la relación (ej. *empleador* o *propietario*).
+
+Finalmente, cuando nuestro sistema crece, tener 500 clases en un solo diagrama hace que sea imposible de leer, para esto se utilizan los Diagramas de Paquetes cuyo objetivo es agrupar las clases de manera lógica y mostrar dependencias a gran escala. Por ejemplo: Se puede modelar que el paquete de la interfaz (`MobileView` o `WebView`) depende del paquete de negocios (`BusinessLayer`), y este último depende del paquete de persistencia de datos (`Persistence`).
+
+{/* REVISAR: La imagen original del diagrama de paquetes en el PDF tiene baja resolución en sus etiquetas internas y muestra paquetes EJB 3.0 en lugar del ejemplo MobileView/BusinessLayer/Persistence mencionado en el texto. */}
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/diagrama-paquetes.png"
+  alt="Ejemplo de Diagrama de Paquetes en UML agrupando componentes y sus dependencias"
+  side="full"
+/>
+
+## Diagramas Dinámicos
+
+{/* REVISAR: El apunte original dice "A diferencia de los diagramas dinámicos donde se muestra la estructura del sistema de manera estática", cuando por contexto contrasta con "diagramas estáticos". Se conserva el texto original sin alterar el significado. */}
+A diferencia de los diagramas dinámicos donde se muestra la estructura del sistema de manera estática, los diagramas dinámicos se definen como una representación visual que muestra cómo cambia un sistema, cómo se comunican sus componentes y cómo fluyen los datos o las tareas a lo largo del tiempo, es decir, los diagramas dinámicos se enfocan en la **lógica**.
+
+### Diagramas de Secuencia
+
+Normalmente cuando un usuario hace click en un botón, internamente ocurren muchas cosas de manera simultánea para poder completar la acción que debe hacer ese botón, los diagramas de secuencia se encargan de mostrar todo ese proceso. Estos diagramas tienen los siguientes elementos:
+
+- **Líneas de vida (Lifeline):** Cada participante u objeto tiene una línea vertical punteada que representa su existencia en el tiempo a lo largo de la operación.
+- **Mensajes y Activaciones:** Los objetos se comunican mediante flechas horizontales que representan llamadas a métodos o mensajes. Cuando un objeto está ejecutando una acción, se dibuja un rectángulo vertical sobre su línea de vida (activación).
+- **Self-call (Llamada a sí mismo):** Un objeto puede enviarse un mensaje a sí mismo, dibujando una flecha que sale y vuelve a su misma línea de vida.
+
+Originalmente era difícil representar ciclos, esto se resolvió encapsulando el ciclo dentro de un cuadro etiquetado como `"loop"`.
+
+{/* REVISAR: La imagen del diagrama de secuencia en el PDF tiene baja resolución y el texto de los mensajes internos es difícil de leer. */}
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/diagrama-secuencia.png"
+  alt="Ejemplo de Diagrama de Secuencia mostrando líneas de vida, mensajes, activaciones y un bloque loop"
+  side="full"
+/>
+
+### Diagrama de Actividades
+
+A diferencia del diagrama de secuencia que está más enfocado en código y es muy técnico, el diagrama de actividades modela en alto nivel un proceso o flujo de negocios. Para entender mejor el diagrama veamos los siguientes elementos:
+
+- **Nodo inicial:** Es un círculo negro sólido que crea una ficha y da comienzo al flujo.
+- **Acción:** Son los rectángulos redondeados; cuando reciben la ficha, realizan un trabajo y luego la transfieren a su flujo de salida.
+- **Decisión (Rombo):** Evalúa una condición (ej. ¿pagó con boleto o con tarjeta?) y determina a qué flujo de salida transferirá la ficha.
+- **Merge (Unión):** Es otro rombo; cuando la ficha llega desde cualquiera de los distintos caminos de entrada, simplemente se transfiere a la salida para unificar el flujo.
+- **Fork (Multiplicador de fichas):** Se dibuja como una barra negra gruesa. Si necesitas hacer cosas en paralelo (como despachar el producto Y emitir la boleta al mismo tiempo), el fork toma una ficha y la multiplica, enviando una por cada camino.
+- **Join (Sumidero de fichas):** Es otra barra negra que espera a que lleguen las fichas de los procesos en paralelo; solo cuando llegan todas, las unifica en una sola ficha y el flujo continúa.
+- **Nodo final:** Un círculo negro con borde blanco que destruye la ficha y finaliza la ejecución de todo el proceso.
+
+{/* REVISAR: La imagen del diagrama de actividades en el PDF tiene baja resolución en las etiquetas dentro de los nodos de acción. */}
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/diagrama-actividades.png"
+  alt="Ejemplo de Diagrama de Actividades mostrando nodo inicial, acciones, decisión, merge, fork, join y nodo final"
+  side="full"
+/>
+
+Finalmente ahora que conocemos ambos diagramas dinámicos, entra la duda: ¿Cómo sé qué diagrama elegir?, para eso podemos guiarnos de lo siguiente.
+
+| Use Diagrama de Secuencia | Use Diagrama de Actividad |
+| :--- | :--- |
+| Si le interesa saber *quién le envía qué mensaje a quién*. Este diagrama ordena los mensajes en el tiempo, detalla un escenario específico y enfatiza la colaboración entre objetos. | Si le interesa saber *qué pasos y decisiones componen el proceso*. Este diagrama ordena las actividades y la concurrencia, sirve para comprender un proceso completo y enfatiza el flujo de trabajo. |
+
+### La consistencia entre Vistas
+
+El problema de crear varios modelos es que al mirar cualquier modelo de manera aislada este parece correcto, pero una vez que decides mirar todo tu conjunto de modelos se pueden revelar contradicciones, esto es muy común en equipos grandes o desorganizados, algunos ejemplos de estas inconsistencias son:
+
+- **Objeto sin clase:** En tu diagrama de secuencia dibujas que el objeto `cls::GestorPrestamos` hace algo, pero olvidaste crear la clase equivalente en tu diagrama de clases.
+- **Mensaje sin responsabilidad:** En el diagrama de secuencia haces que se invoque el método `fn::renovarPrestamo()`, pero ninguna clase en tu diagrama estático es responsable de tener esa operación.
+- **Regla omitida:** El requisito escrito dice "no se puede renovar si hay reserva activa", pero dibujas un diagrama de actividad que no incluye el rombo de decisión para esa regla.
+- **Actor equivocado:** En el diagrama general asocias "Registrar préstamo" al Estudiante, pero en el diagrama de actividad muestras que lo hace el Bibliotecario.
+
+Para resolver esto, no nos basta con solo borrar. Se debe analizar qué vista refleja mejor el requisito real del cliente y actualizar *todas* las demás vistas para que coincidan.
+
+## Del Requisito al Modelo
+
+Hasta ahora hemos visto los requisitos del sistema y los modelos los cuales nos ayudan a comprender mejor la implementación de los requisitos, dentro de los modelos, existen algunas herramientas que pueden ayudarnos a visualizar mejor los requisitos.
+
+### Diagrama de Casos de Uso
+
+UML nos ofrece su herramienta de alto nivel, cuyo objetivo no es explicar cómo funciona el sistema por dentro sino lo siguiente:
+
+- Quién interactúa con el sistema.
+- Qué objetivos busca lograr cada uno de esos usuarios.
+- Cuál es el límite (la frontera) del sistema que se está modelando.
+
+Para entender mejor este diagrama, miremos sus elementos y un ejemplo.
+
+- **Actor:** Representa un rol externo que interactúa con el sistema, y se dibuja típicamente como un monigote o figura de palo (stickman). *(Ejemplo: Estudiante o Bibliotecario).*
+- **Caso de uso:** Representa un objetivo observable que el actor quiere lograr, y se dibuja como un óvalo con el nombre de la acción dentro. *(Ejemplo: "Buscar libro" o "Solicitar préstamo").*
+- **Límite del sistema:** Representa la frontera entre el sistema y el entorno, y se dibuja como un rectángulo grande que encierra a todos los óvalos. Los actores siempre se dibujan *por fuera* de este rectángulo.
+- **Asociación:** Es la línea que conecta a un actor con un caso de uso, indicando que hay comunicación entre ellos.
+
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/diagrama-casos-de-uso.png"
+  alt="Ejemplo de Diagrama de Casos de Uso mostrando actores fuera del límite del sistema conectados a óvalos de casos de uso"
+  side="full"
+/>
+
+Es importante recalcar que este diagrama NO muestra ningún tipo de algoritmo, clases, implementaciones en código o interfaces de usuario, su función es solo representar objetivos de los actores, además es aquí donde entra la duda "si ya escribí una historia de usuario, ¿para qué hago este dibujo?", lo importante es entender que cada herramienta tiene su uso:
+
+- La **Historia de usuario** se usa para comunicar el *valor* y negociar con el cliente ("Como estudiante, quiero renovar un préstamo para conservar un libro").
+- El **Caso de uso UML** (el dibujo) se usa para comunicar visualmente el *alcance* del sistema al equipo (ver rápidamente qué actores hacen qué cosas).
+- El **Caso de uso textual** (el documento paso a paso) se usa para detallar el *escenario* exacto a los programadores (precondiciones, flujos alternativos, excepciones).
+
+Una vez que ya tenemos este diagrama, podemos hacer muchas cosas a partir de un solo "óvalo"/caso de uso.
+
+- **Diagrama de clases:** Mostrará los conceptos y relaciones necesarios para lograr ese caso de uso (ej. las clases `cls::Bibliotecario`, `cls::Libro`, `cls::Prestamo`).
+- **Diagrama de secuencia:** Mostrará los objetos que colaboran específicamente durante ese escenario.
+- **Diagrama de actividad:** Mostrará el flujo de acciones, las decisiones y los paralelismos que ocurren al registrar el préstamo.
+
+## La trazabilidad
+
+La trazabilidad en ingeniería de software es la capacidad que nos permite seguir un elemento desde su origen (la idea del cliente) hasta su verificación final (las pruebas del código). Para no perder el rastro en esta "cadena", se utiliza una matriz muy simple:
+
+<Figure
+  src="/classes/ingenieria-de-software/04-modelos-de-software-y-uml/cadena-trazabilidad.png"
+  alt="Cadena de trazabilidad: R1 Requisito, HU-03 Historia, CU-04 Caso de uso, M-04 Modelos y TC-07 Validación"
+  side="full"
+/>
+
+Veamos el siguiente ejemplo de un sistema de ventas en línea:
+
+- **R1 Requisito:** El sistema debe aplicar envío gratuito automáticamente a las compras que superen los 50 dólares.
+- **HU-03 Historia:** Como cliente, quiero que el costo de envío se descuente de mi carrito al superar los 50 dólares en productos para ahorrar dinero en mis compras grandes.
+- **CU-04 Caso de uso:** "Calcular descuento de envío". Define la interacción exacta: el usuario avanza al proceso de pago, el sistema suma el total de los productos, evalúa la regla de los 50 dólares y, si se cumple, fija el valor de despacho en 0.
+- **M-04 Modelos:** Un diagrama de clases que defina las entidades `cls::Carrito`, `cls::Producto` y `cls::CalculadoraEnvio`, acompañado de un diagrama de secuencia que ilustre cómo el objeto `cls::Carrito` solicita la validación a `cls::CalculadoraEnvio` antes de mostrar el total.
+- **TC-07 Validación:** Un caso de prueba automatizado que crea un carrito virtual con 55 dólares en productos y verifica matemáticamente que el sistema devuelva un costo de envío igual a cero.
+
+La principal ventaja de utilizar esta matriz es que, si mañana el cliente decide cambiar una regla en un requisito, la matriz de trazabilidad te ayuda a identificar instantáneamente qué diagramas específicos, qué partes del código y qué pruebas exactas deben ser revisadas y modificadas.

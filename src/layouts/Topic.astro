@@ -1,0 +1,196 @@
+---
+import Base from './Base.astro';
+import Tree from '../components/Tree.astro';
+import PrevNext from '../components/PrevNext.astro';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface Props {
+  title: string;
+  summary?: string;
+  classTitle: string;
+  classSlug: string;
+  currentTopicSlug: string;
+  headings: Heading[];
+  prev?: { title: string; url: string; classTitle?: string; isDifferentClass?: boolean } | null;
+  next?: { title: string; url: string; classTitle?: string; isDifferentClass?: boolean } | null;
+}
+
+const {
+  title,
+  summary,
+  classTitle,
+  classSlug,
+  currentTopicSlug,
+  headings,
+  prev,
+  next,
+} = Astro.props;
+
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+---
+
+<Base title={title} description={summary}>
+  <div class="flex gap-8 lg:gap-12 items-start w-full">
+    <!-- Árbol de navegación a la izquierda -->
+    <Tree
+      currentClassSlug={classSlug}
+      currentTopicSlug={currentTopicSlug}
+      headings={headings}
+    />
+
+    <!-- Columna de lectura central y margen derecho para elementos laterales -->
+    <main class="flex-1 min-w-0 max-w-[960px] xl:mr-[378px] w-full">
+      <article
+        class="w-full"
+        data-pagefind-body
+        data-pagefind-meta={`clase:${classTitle}`}
+      >
+        <span data-pagefind-meta={`tema:${title}`} class="hidden" aria-hidden="true">{title}</span>
+        <header class="mb-8">
+          <div class="text-xs uppercase tracking-wider text-muted font-semibold mb-2">
+            {classTitle}
+          </div>
+          <h1
+            class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-text tracking-tight mb-4"
+            data-pagefind-meta="tema"
+          >
+            {title}
+          </h1>
+          {summary && (
+            <p class="text-muted text-base sm:text-lg leading-relaxed max-w-3xl">
+              {summary}
+            </p>
+          )}
+        </header>
+
+        <div class="prose prose-invert max-w-none text-text leading-relaxed">
+          <slot />
+        </div>
+
+        <PrevNext prev={prev} next={next} />
+      </article>
+    </main>
+  </div>
+
+  <style is:global>
+    /* Offset para el encabezado sticky al hacer click en secciones */
+    article h2,
+    article h3,
+    article h4,
+    article h5,
+    article h6 {
+      scroll-margin-top: 5rem;
+    }
+
+    /* Tablas y bloques de código con scroll horizontal interno para móviles */
+    .prose table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .prose pre {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    /* Resaltado de búsqueda */
+    .pagefind-highlight,
+    .pagefind__highlight,
+    mark.pagefind-highlight,
+    mark.pagefind__highlight {
+      background-color: rgba(56, 189, 248, 0.25) !important;
+      color: inherit !important;
+      border-radius: 3px;
+      padding: 0.1em 0.25em;
+    }
+    :root[data-theme="light"] .pagefind-highlight,
+    :root[data-theme="light"] .pagefind__highlight,
+    :root[data-theme="light"] mark.pagefind-highlight,
+    :root[data-theme="light"] mark.pagefind__highlight {
+      background-color: rgba(2, 132, 199, 0.2) !important;
+      color: inherit !important;
+    }
+  </style>
+
+  <script define:vars={{ baseUrl }}>
+    async function initMermaid() {
+      const nodes = document.querySelectorAll('pre.mermaid');
+      if (!nodes.length) return;
+
+      const { default: mermaid } = await import('mermaid');
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: isLight ? 'default' : 'dark',
+      });
+      await mermaid.run({ nodes });
+    }
+
+    async function initPagefindHighlight() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const highlightTerm = urlParams.get('highlight');
+      if (!highlightTerm && !window.location.hash) return;
+
+      if (highlightTerm) {
+        try {
+          const scriptUrl = `${baseUrl}/pagefind/pagefind-highlight.js`.replace(/\/+/g, '/');
+          const { default: PagefindHighlight } = await import(/* @vite-ignore */ scriptUrl);
+          new PagefindHighlight({
+            highlightParam: 'highlight',
+            markOptions: {
+              className: 'pagefind-highlight',
+            },
+          });
+        } catch (err) {
+          // Ignorar si no está en entorno construido
+        }
+      }
+
+      // Desplazar al hash o al primer término resaltado compensando la cabecera sticky
+      setTimeout(() => {
+        let target = null;
+        if (window.location.hash) {
+          try {
+            const rawHash = window.location.hash;
+            const decodedHash = decodeURIComponent(rawHash);
+            target =
+              document.querySelector(rawHash) ||
+              document.querySelector(decodedHash) ||
+              document.getElementById(rawHash.replace(/^#/, '')) ||
+              document.getElementById(decodedHash.replace(/^#/, ''));
+          } catch (e) {
+            // selector inválido ignorado
+          }
+        }
+        if (!target) {
+          target = document.querySelector('.pagefind-highlight, .pagefind__highlight, mark');
+        }
+        if (target) {
+          const rect = target.getBoundingClientRect();
+          const headerOffset = 90;
+          window.scrollTo({
+            top: window.scrollY + rect.top - headerOffset,
+            behavior: 'smooth',
+          });
+        }
+      }, 150);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        initMermaid();
+        initPagefindHighlight();
+      });
+    } else {
+      initMermaid();
+      initPagefindHighlight();
+    }
+  </script>
+</Base>

@@ -1,0 +1,501 @@
+---
+import Icon from './Icon.astro';
+
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<!-- Botón de búsqueda para la cabecera (icono solo, sin texto ni píldora) -->
+<button
+  id="search-open-btn"
+  type="button"
+  class="p-2 rounded-xl text-muted hover:text-text hover:bg-surface transition-colors cursor-pointer flex items-center justify-center"
+  aria-label="Buscar"
+  title="Buscar (Ctrl+K)"
+>
+  <Icon name="search" size={16} />
+</button>
+
+<!-- Modal de búsqueda con fondo oscurecido -->
+<div
+  id="search-backdrop"
+  class="fixed inset-0 z-50 bg-black/60 flex items-start justify-center p-3 sm:p-6 md:p-10 overflow-y-auto hidden"
+  aria-hidden="true"
+>
+  <div
+    id="search-dialog"
+    class="relative w-[min(900px,92vw)] max-h-[80vh] flex flex-col bg-surface-2 rounded-xl shadow-2xl p-4 sm:p-6 text-text my-auto sm:my-8"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Buscador de apuntes"
+  >
+    <!-- Cabecera del modal: input de búsqueda y botón cerrar -->
+    <div class="flex items-center gap-3 bg-surface px-4 py-3 rounded-xl shrink-0">
+      <span class="text-muted flex items-center justify-center">
+        <Icon name="search" size={18} />
+      </span>
+      <input
+        id="search-input"
+        type="search"
+        placeholder="Buscar en todos los apuntes…"
+        class="w-full bg-transparent text-text placeholder:text-muted text-sm sm:text-base focus:outline-none"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button
+        id="search-close-btn"
+        type="button"
+        class="text-xs text-muted hover:text-text px-2 py-1 rounded bg-surface-2 transition-colors cursor-pointer font-mono"
+        aria-label="Cerrar búsqueda"
+      >
+        Esc
+      </button>
+    </div>
+
+    <!-- Primera línea: resumen / estado -->
+    <div id="search-summary" class="text-xs text-muted pt-3 pb-1 px-1 hidden font-medium"></div>
+
+    <!-- Contenedor scrollable de resultados -->
+    <div
+      id="search-results-container"
+      class="mt-2 overflow-y-auto flex-1 pr-1 space-y-6 focus:outline-none"
+    >
+      <div id="search-status" class="text-xs text-muted py-6 hidden text-center"></div>
+      <div id="search-results-tree" class="space-y-6"></div>
+      <div id="search-more-container" class="text-center py-2 hidden">
+        <button
+          id="search-more-btn"
+          type="button"
+          class="text-xs text-accent hover:underline px-4 py-2 rounded-lg bg-surface transition-colors cursor-pointer font-medium"
+        >
+          Mostrar más
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style is:global>
+  #search-dialog mark {
+    background-color: rgba(56, 189, 248, 0.25);
+    color: inherit;
+    border-radius: 2px;
+    padding: 0.05em 0.2em;
+    font-weight: 600;
+  }
+  :root[data-theme="light"] #search-dialog mark {
+    background-color: rgba(2, 132, 199, 0.2);
+    color: inherit;
+  }
+</style>
+
+<script is:inline define:vars={{ baseUrl }}>
+  (() => {
+    const openBtn = document.getElementById('search-open-btn');
+    const closeBtn = document.getElementById('search-close-btn');
+    const backdrop = document.getElementById('search-backdrop');
+    const input = document.getElementById('search-input');
+    const summaryEl = document.getElementById('search-summary');
+    const resultsTree = document.getElementById('search-results-tree');
+    const statusText = document.getElementById('search-status');
+    const moreContainer = document.getElementById('search-more-container');
+    const moreBtn = document.getElementById('search-more-btn');
+
+    let pagefind = null;
+    let pagefindFailed = false;
+    let selectedIndex = -1;
+    let visibleLimit = 30;
+    let currentClassesList = [];
+    let flattenedSections = [];
+    let previouslyFocusedElement = null;
+
+    async function loadPagefind() {
+      if (pagefind) return pagefind;
+      if (pagefindFailed) return null;
+
+      try {
+        const importPath = `${baseUrl}/pagefind/pagefind.js`.replace(/\/+/g, '/');
+        const pf = await import(/* @vite-ignore */ importPath);
+        if (pf.init) {
+          await pf.init();
+        }
+        pagefind = pf;
+        return pagefind;
+      } catch (err) {
+        pagefindFailed = true;
+        return null;
+      }
+    }
+
+    function openModal() {
+      previouslyFocusedElement = document.activeElement;
+      backdrop?.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      if (input) {
+        input.value = '';
+        setTimeout(() => input.focus(), 50);
+      }
+      resetState();
+      loadPagefind();
+    }
+
+    function closeModal() {
+      backdrop?.classList.add('hidden');
+      document.body.style.overflow = '';
+      input?.blur();
+      resetState();
+      if (previouslyFocusedElement && typeof previouslyFocusedElement.focus === 'function') {
+        previouslyFocusedElement.focus();
+      }
+    }
+
+    function resetState() {
+      selectedIndex = -1;
+      visibleLimit = 30;
+      currentQuery = '';
+      currentClassesList = [];
+      flattenedSections = [];
+      if (summaryEl) {
+        summaryEl.textContent = '';
+        summaryEl.classList.add('hidden');
+      }
+      if (resultsTree) resultsTree.innerHTML = '';
+      if (statusText) {
+        statusText.textContent = '';
+        statusText.classList.add('hidden');
+      }
+      if (moreContainer) moreContainer.classList.add('hidden');
+    }
+
+    function buildSectionUrl(rawUrl, query) {
+      if (!rawUrl) return '#';
+      let url = rawUrl;
+      if (baseUrl && !url.startsWith(baseUrl)) {
+        url = `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+      }
+      const hashIdx = url.indexOf('#');
+      let path = hashIdx !== -1 ? url.slice(0, hashIdx) : url;
+      const hash = hashIdx !== -1 ? url.slice(hashIdx) : '';
+
+      const hasExt = /\.[a-z0-9]+$/i.test(path);
+      if (!hasExt && !path.endsWith('/')) {
+        path += '/';
+      }
+
+      const encoded = encodeURIComponent(query.trim());
+      const sep = path.includes('?') ? '&' : '?';
+      return `${path}${sep}highlight=${encoded}${hash}`;
+    }
+
+    function updateSelection() {
+      const items = resultsTree?.querySelectorAll('[data-section-index]');
+      if (!items) return;
+      items.forEach((item) => {
+        const idx = Number(item.getAttribute('data-section-index'));
+        if (idx === selectedIndex) {
+          item.classList.add('bg-surface');
+          item.setAttribute('aria-selected', 'true');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('bg-surface');
+          item.setAttribute('aria-selected', 'false');
+        }
+      });
+    }
+
+    function renderTree() {
+      if (!resultsTree) return;
+      resultsTree.innerHTML = '';
+      flattenedSections = [];
+
+      let sectionCounter = 0;
+
+      for (const classGroup of currentClassesList) {
+        // Collect visible sections for this class group
+        const visibleTopics = [];
+
+        for (const topicGroup of classGroup.topics) {
+          const visibleSectionsInTopic = [];
+
+          for (const section of topicGroup.sections) {
+            if (sectionCounter < visibleLimit) {
+              const currentIdx = sectionCounter;
+              visibleSectionsInTopic.push({
+                ...section,
+                index: currentIdx,
+              });
+              flattenedSections.push({
+                ...section,
+                index: currentIdx,
+              });
+              sectionCounter++;
+            } else {
+              break;
+            }
+          }
+
+          if (visibleSectionsInTopic.length > 0) {
+            visibleTopics.push({
+              topicTitle: topicGroup.topicTitle,
+              pageUrl: topicGroup.pageUrl,
+              sections: visibleSectionsInTopic,
+            });
+          }
+
+          if (sectionCounter >= visibleLimit) break;
+        }
+
+        if (visibleTopics.length > 0) {
+          const classEl = document.createElement('div');
+          classEl.className = 'space-y-3';
+
+          // Cabecera de grupo: <Título de clase> con badge "N coincidencias"
+          const headerHtml = `
+            <div class="flex items-center justify-between gap-3 pb-1">
+              <h3 class="text-sm font-bold text-accent tracking-wide uppercase">${classGroup.classTitle}</h3>
+              <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-surface text-muted font-medium">
+                ${classGroup.totalMatches} coincidencia${classGroup.totalMatches === 1 ? '' : 's'}
+              </span>
+            </div>
+          `;
+
+          const topicsHtml = visibleTopics
+            .map((t) => {
+              const sectionsHtml = t.sections
+                .map(
+                  (s) => `
+                <a
+                  href="${s.secUrl}"
+                  data-section-index="${s.index}"
+                  class="block p-2.5 rounded-xl transition-colors hover:bg-surface cursor-pointer text-left"
+                >
+                  <div class="text-[13.5px] font-medium text-text mb-0.5">${s.secTitle}</div>
+                  <p class="text-xs text-muted leading-relaxed line-clamp-2">${s.secExcerpt}</p>
+                </a>
+              `
+                )
+                .join('');
+
+              return `
+              <div class="space-y-1 pl-1">
+                <div class="text-[13px] font-semibold text-text py-1 text-muted">
+                  ${t.topicTitle}
+                </div>
+                <div class="space-y-1">
+                  ${sectionsHtml}
+                </div>
+              </div>
+            `;
+            })
+            .join('');
+
+          classEl.innerHTML = headerHtml + topicsHtml;
+          resultsTree.appendChild(classEl);
+        }
+
+        if (sectionCounter >= visibleLimit) break;
+      }
+
+      // Mostrar u ocultar botón "Mostrar más"
+      const totalAllSections = currentClassesList.reduce((acc, c) => acc + c.totalMatches, 0);
+      if (moreContainer) {
+        if (flattenedSections.length < totalAllSections) {
+          moreContainer.classList.remove('hidden');
+        } else {
+          moreContainer.classList.add('hidden');
+        }
+      }
+
+      // Eventos para hover del mouse
+      resultsTree.querySelectorAll('[data-section-index]').forEach((item) => {
+        item.addEventListener('mouseenter', () => {
+          selectedIndex = Number(item.getAttribute('data-section-index'));
+          updateSelection();
+        });
+      });
+
+      updateSelection();
+    }
+
+    async function performSearch(query) {
+      const trimmed = query.trim();
+      currentQuery = trimmed;
+      resetState();
+
+      if (!trimmed) {
+        return;
+      }
+
+      const pf = await loadPagefind();
+      if (!pf) {
+        if (statusText) {
+          statusText.textContent =
+            'La búsqueda funciona solo en la versión publicada (npm run build).';
+          statusText.classList.remove('hidden');
+        }
+        return;
+      }
+
+      const searchResponse = await pf.search(trimmed);
+      const rawResults = searchResponse.results || [];
+
+      if (rawResults.length === 0) {
+        if (summaryEl) {
+          summaryEl.textContent = `Sin resultados para «${trimmed}»`;
+          summaryEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      // Cargar datos de todos los resultados encontrados
+      const loadedData = await Promise.all(rawResults.map((r) => r.data()));
+
+      // Agrupar por clase -> temas -> secciones
+      const classesMap = new Map();
+      let totalSectionsCount = 0;
+      let totalTopicsCount = 0;
+
+      for (const data of loadedData) {
+        const classTitle = data.meta?.clase || 'General';
+        const topicTitle = data.meta?.tema || data.meta?.title || 'Tema';
+        const pageUrl = data.url;
+
+        if (!classesMap.has(classTitle)) {
+          classesMap.set(classTitle, {
+            classTitle,
+            topicsMap: new Map(),
+            totalMatches: 0,
+          });
+        }
+        const classObj = classesMap.get(classTitle);
+
+        if (!classObj.topicsMap.has(pageUrl)) {
+          classObj.topicsMap.set(pageUrl, {
+            topicTitle,
+            pageUrl,
+            sections: [],
+          });
+          totalTopicsCount++;
+        }
+        const topicObj = classObj.topicsMap.get(pageUrl);
+
+        const subList =
+          Array.isArray(data.sub_results) && data.sub_results.length > 0
+            ? data.sub_results
+            : [{ title: topicTitle, url: pageUrl, excerpt: data.excerpt || '' }];
+
+        for (const sub of subList) {
+          const secUrl = buildSectionUrl(sub.url || pageUrl, trimmed);
+          const secTitle = sub.title || topicTitle;
+          const secExcerpt = sub.excerpt || data.excerpt || '';
+
+          topicObj.sections.push({
+            secTitle,
+            secUrl,
+            secExcerpt,
+          });
+          classObj.totalMatches++;
+          totalSectionsCount++;
+        }
+      }
+
+      // Convertir Map a estructura de lista para renderizado
+      currentClassesList = Array.from(classesMap.values()).map((c) => ({
+        classTitle: c.classTitle,
+        totalMatches: c.totalMatches,
+        topics: Array.from(c.topicsMap.values()),
+      }));
+
+      const totalClassesCount = currentClassesList.length;
+
+      // Resumen primera línea: "N coincidencias en M temas de K clases"
+      if (summaryEl) {
+        summaryEl.textContent = `${totalSectionsCount} coincidencia${totalSectionsCount === 1 ? '' : 's'} en ${totalTopicsCount} tema${totalTopicsCount === 1 ? '' : 's'} de ${totalClassesCount} clase${totalClassesCount === 1 ? '' : 's'}`;
+        summaryEl.classList.remove('hidden');
+      }
+
+      visibleLimit = 30;
+      renderTree();
+    }
+
+    // Eventos
+    openBtn?.addEventListener('click', openModal);
+    closeBtn?.addEventListener('click', closeModal);
+
+    moreBtn?.addEventListener('click', () => {
+      visibleLimit += 30;
+      renderTree();
+    });
+
+    backdrop?.addEventListener('click', (e) => {
+      if (e.target === backdrop) closeModal();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      // Tab para atrapar el foco dentro del modal
+      if (e.key === 'Tab' && !backdrop?.classList.contains('hidden')) {
+        const dialog = document.getElementById('search-dialog');
+        const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+        const focusables = Array.from(dialog?.querySelectorAll(focusableSelector) || []).filter(
+          (el) => !el.hasAttribute('disabled') && el.offsetParent !== null
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey) {
+            if (document.activeElement === first || !dialog?.contains(document.activeElement)) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last || !dialog?.contains(document.activeElement)) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+
+      // Ctrl+K o "/" para abrir
+      if (
+        (e.ctrlKey && e.key === 'k') ||
+        (e.key === '/' &&
+          document.activeElement !== input &&
+          !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName || ''))
+      ) {
+        e.preventDefault();
+        openModal();
+      } else if (e.key === 'Escape' && !backdrop?.classList.contains('hidden')) {
+        e.preventDefault();
+        closeModal();
+      } else if (!backdrop?.classList.contains('hidden')) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          if (flattenedSections.length > 0) {
+            selectedIndex = (selectedIndex + 1) % flattenedSections.length;
+            updateSelection();
+          }
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          if (flattenedSections.length > 0) {
+            selectedIndex =
+              (selectedIndex - 1 + flattenedSections.length) % flattenedSections.length;
+            updateSelection();
+          }
+        } else if (e.key === 'Enter') {
+          if (selectedIndex >= 0 && flattenedSections[selectedIndex]) {
+            e.preventDefault();
+            window.location.href = flattenedSections[selectedIndex].secUrl;
+          }
+        }
+      }
+    });
+
+    let debounceTimer;
+    input?.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        performSearch(e.target.value);
+      }, 150);
+    });
+  })();
+</script>
