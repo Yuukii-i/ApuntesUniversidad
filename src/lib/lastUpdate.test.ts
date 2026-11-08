@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { getLastUpdate, formatDateEs } from './lastUpdate';
 
 describe('lastUpdate helpers', () => {
-  it('getLastUpdate("web-intro") returns a valid Date', () => {
-    const d = getLastUpdate('web-intro');
+  it('getLastUpdate("ingenieria-de-software") returns a valid Date', () => {
+    const d = getLastUpdate('ingenieria-de-software');
     expect(d).toBeInstanceOf(Date);
     expect(isNaN(d.getTime())).toBe(false);
   });
