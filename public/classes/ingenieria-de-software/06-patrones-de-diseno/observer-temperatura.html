@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 220px; display: block; }
+  .node-box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.5; rx: 12; transition: stroke 0.25s, stroke-width 0.25s; }
+  .node-box.active { stroke: var(--accent); stroke-width: 2.5; }
+  .label { fill: var(--muted); font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .temp-val { fill: var(--text); font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; text-anchor: middle; }
+  .digital-val { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 22px; font-weight: 700; text-anchor: middle; }
+  .analog-val { fill: var(--text); font-size: 14px; font-weight: 600; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2.5; stroke-dasharray: 5 4; opacity: 0.55; }
+  .pulse { fill: var(--accent); opacity: 0; }
+  #mercury { transition: y 0.45s ease, height 0.45s ease; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 220" aria-label="Animación del patrón Observer entre Temperatura y termómetros">
+  <path id="cable-top" class="cable" d="M 190 110 C 290 110, 310 55, 420 55" />
+  <path id="cable-bot" class="cable" d="M 190 110 C 290 110, 310 165, 420 165" />
+  <circle id="pulse-top" class="pulse" r="6" cx="190" cy="110" />
+  <circle id="pulse-bot" class="pulse" r="6" cx="190" cy="110" />
+
+  <rect id="box-subject" class="node-box" x="30" y="62" width="160" height="96" />
+  <text class="label" x="110" y="90">Temperatura</text>
+  <text id="subject-temp" class="temp-val" x="110" y="132">15 °C</text>
+
+  <rect id="box-digital" class="node-box" x="420" y="14" width="230" height="82" />
+  <text class="label" x="535" y="38">Termómetro Digital</text>
+  <text id="digital-temp" class="digital-val" x="535" y="74">15 °C</text>
+
+  <rect id="box-analog" class="node-box" x="420" y="124" width="230" height="82" />
+  <text class="label" x="520" y="148">Termómetro Analógico</text>
+  <text id="analog-temp" class="analog-val" x="520" y="180">15 °C</text>
+  <rect x="606" y="140" width="10" height="42" rx="5" fill="none" stroke="var(--muted)" stroke-width="1.5" />
+  <rect id="mercury" x="608" y="162" width="6" height="20" rx="3" fill="var(--accent)" />
+  <circle cx="611" cy="186" r="8" fill="var(--accent)" />
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const p = parent && parent.document && parent.document.documentElement;
+      if (!p) return;
+      const cs = getComputedStyle(p);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach((v) => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    if (parent && parent.document && parent.document.documentElement) {
+      new MutationObserver(syncTheme).observe(parent.document.documentElement, {
+        attributes: true, attributeFilter: ['data-theme', 'class', 'style']
+      });
+    }
+  } catch (_) {}
+
+  const temps = [15, 20, 28, 12];
+  let idx = 0;
+  const $ = (id) => document.getElementById(id);
+  const cableTop = $('cable-top'), cableBot = $('cable-bot');
+  const pulseTop = $('pulse-top'), pulseBot = $('pulse-bot');
+  const boxSub = $('box-subject'), boxDig = $('box-digital'), boxAna = $('box-analog');
+  const txtSub = $('subject-temp'), txtDig = $('digital-temp'), txtAna = $('analog-temp');
+  const mercury = $('mercury');
+
+  function runCycle() {
+    idx = (idx + 1) % temps.length;
+    const t = temps[idx];
+    txtSub.textContent = t + ' °C';
+    boxSub.classList.add('active');
+    setTimeout(() => boxSub.classList.remove('active'), 500);
+
+    const lenTop = cableTop.getTotalLength(), lenBot = cableBot.getTotalLength();
+    const start = performance.now(), dur = 950;
+    pulseTop.style.opacity = '1'; pulseBot.style.opacity = '1';
+
+    function step(now) {
+      const p = Math.min(1, (now - start) / dur);
+      const pt1 = cableTop.getPointAtLength(p * lenTop);
+      const pt2 = cableBot.getPointAtLength(p * lenBot);
+      pulseTop.setAttribute('cx', pt1.x); pulseTop.setAttribute('cy', pt1.y);
+      pulseBot.setAttribute('cx', pt2.x); pulseBot.setAttribute('cy', pt2.y);
+      if (p < 1) {
+        requestAnimationFrame(step);
+      } else {
+        pulseTop.style.opacity = '0'; pulseBot.style.opacity = '0';
+        txtDig.textContent = t + ' °C'; txtAna.textContent = t + ' °C';
+        const h = Math.round(10 + ((t - 10) / 22) * 26);
+        mercury.setAttribute('y', String(182 - h));
+        mercury.setAttribute('height', String(h));
+        boxDig.classList.add('active'); boxAna.classList.add('active');
+        setTimeout(() => { boxDig.classList.remove('active'); boxAna.classList.remove('active'); }, 600);
+      }
+    }
+    requestAnimationFrame(step);
+  }
+  setInterval(runCycle, 3200);
+  setTimeout(runCycle, 700);
+</script>
+</body>
+</html>

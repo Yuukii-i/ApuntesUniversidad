@@ -1,0 +1,626 @@
+---
+title: "Patrones de diseño"
+order: 6
+---
+
+import Demo from '../../../components/Demo.astro';
+
+Los **Patrones de Diseño** son soluciones recurrentes para problemas de diseño al momento de programar. El término se popularizó enormemente en 1994 con el famoso libro *"Design Patterns: Elements of Reusable Object-Oriented Software"*. Este libro fue escrito por Erich Gamma, Richard Helm, Ralph Johnson y John Vlissides; es de estos cuatro que nace la **"Gang of Four"** o **"GoF"**.
+
+## ¿Para qué sirven?
+
+- **Reúso de diseño**: Al enfrentarnos a problemas de diseño, es muy probable que alguien ya haya pasado por eso, y ya exista una solución. Al aplicar un patrón existente estamos evitando "reinventar" la rueda.
+- **Fácil comunicación**: Los patrones nos otorgan un lenguaje centralizado, lo que facilita mucho la comunicación y el entendimiento entre desarrolladores. Por ejemplo, al ver una clase llamada `cls::DocumentBuilderFactory` ya sabemos exactamente qué hace.
+- **Facilitación de rediseño**: Su objetivo primordial es hacer que nuestro código esté preparado para incorporar cambios futuros. Es por esto mismo que tratar de incorporar patrones de diseño en clases o secciones de código que ya sabemos que no cambiarán no es recomendable, ya que estaríamos haciendo lo que se conoce como *Over Engineering*.
+
+## Las 3 Familias de Patrones
+
+| Nombre | Trabajo | Ejemplos |
+| :--- | :--- | :--- |
+| **Creacionales** | Se encargan de la creación de objetos | Abstract Factory, Factory Method, Singleton, Builder, Prototype. |
+| **Estructurales** | Se enfocan en cómo las clases y objetos se componen para formar estructuras más grandes | Proxy, Adapter, Facade, Decorator, Bridge, Composite, Flyweight. |
+| **Comportamentales** | Definen cómo se comunican los objetos y cómo se reparten las responsabilidades | Strategy, Observer, Template Method, Visitor, Chain of Responsibility, Command, Interpreter. |
+
+## Patrón Factory
+
+Imaginemos que estamos desarrollando un sistema que utiliza canales de comunicación. A lo largo del programa tenemos distintas funciones; dentro de cada una de ellas se crea un canal TCP usando la instrucción `new TCPChannel()`:
+
+```java
+void f() {
+    TCPChannel c = new TCPChannel();
+    // ...
+}
+void g() {
+    TCPChannel c = new TCPChannel();
+    // ...
+}
+void h() {
+    TCPChannel c = new TCPChannel();
+    // ...
+}
+```
+
+Ahora, imagina que un día te dicen que el programa tiene que aceptar UDP además de TCP. Esto genera un problema: actualmente todas las clases crean TCP mediante `kw::new` explícito; si quisieras hacer el cambio, tendrías que ir clase a clase borrando y escribiendo. Imagina que mañana quieres volver a añadir otro protocolo, ¿realmente conviene ir cambiando clase a clase?
+
+### La solución
+
+En vez de que cada clase cree un objeto TCP, crearemos una nueva clase encargada únicamente de crear un objeto TCP y retornarlo.
+
+```java
+interface Channel {
+    void send(String data); // Ejemplo de método común
+}
+
+class TCPChannel implements Channel {
+    public void send(String data) { /* Lógica TCP */ }
+}
+
+class UDPChannel implements Channel {
+    public void send(String data) { /* Lógica UDP */ }
+}
+```
+
+```java
+class ChannelFactory {
+    // Ahora el método fábrica estático recibe el tipo de canal
+    public static Channel create(String tipo) {
+        if (tipo.equalsIgnoreCase("UDP")) {
+            return new UDPChannel();
+        } else if (tipo.equalsIgnoreCase("TCP")) {
+            return new TCPChannel();
+        }
+        // Buena práctica: manejar el caso donde el tipo no existe
+        throw new IllegalArgumentException("Tipo de canal desconocido: " + tipo);
+    }
+}
+```
+
+Ahora cada clase solamente llama al método `fn::create()` de `cls::Channel`, en vez de crear cada objeto a mano:
+
+{/* REVISAR: En el PDF dice "llama al metodo create() de Channnel", pero en el código el método estático create() pertenece a la clase ChannelFactory. */}
+
+```java
+void f() {
+    // Esta función sigue usando TCP
+    Channel c = ChannelFactory.create("TCP");
+    // ...
+}
+
+void g() {
+    // Esta función ahora usa UDP
+    Channel c = ChannelFactory.create("UDP");
+    // ...
+}
+```
+
+Esta implementación permite cambiar de manera fácil el objeto que crean los métodos. Si mañana decides añadir un protocolo nuevo además de TCP y UDP, solo necesitas crear su clase Factory respectiva y llamarla con `fn::.create()` desde la clase que la usará.
+
+## Patrón Adapter
+
+Imaginemos que estamos creando un sistema que permite controlar proyectores multimedia en distintas salas; el sistema central está diseñado para comunicarse siempre con una interfaz llamada `cls::Proyector` que tiene un método `fn::encender()`:
+
+```java
+interface Proyector {
+    void encender();
+}
+```
+
+El problema es que esta interfaz espera que todos los proyectores tengan el método `fn::encender()`. Cada fabricante envía sus proyectores con su propio método para encender, el cual no podemos modificar directamente:
+
+```java
+class SamsungProjector {
+    public void turnon() {
+        System.out.println("Samsung encendido");
+    }
+}
+
+class LGProjector {
+    public void enable(int timer) {
+        System.out.println("LG encendido con temporizador: " + timer);
+    }
+}
+```
+
+### La solución
+
+Creamos una clase "adaptadora" (*adapter*), la cual se encargará de traducir nuestra función `fn::encender()` a lo que sea que cada proveedor espera:
+
+```java
+class AdaptadorProyectorSamsung implements Proyector {
+    private SamsungProjector proyector;
+
+    public AdaptadorProyectorSamsung(SamsungProjector proyector) {
+        this.proyector = proyector;
+    }
+
+    public void encender() {
+        proyector.turnon(); // Mapea encender() a turnon()
+    }
+}
+
+class AdaptadorProyectorLG implements Proyector {
+    private LGProjector proyector;
+
+    public AdaptadorProyectorLG(LGProjector proyector) {
+        this.proyector = proyector;
+    }
+
+    public void encender() {
+        // Adaptamos el método inyectando el temporizador que exige LG
+        proyector.enable(10);
+    }
+}
+```
+
+Cada *adapter* llama a la función específica de los proyectores, escondiendo el proceso detrás de la función `fn::encender()`. Esto nos permite que, si mañana decides comprar un proyector de otra marca, el sistema no se rompa, ya que no importa qué función de encender utilice el nuevo proyector: solo tendrás que crear un *adapter* que implemente la interfaz común.
+
+## Patrón Strategy
+
+Imaginemos que estamos desarrollando una biblioteca de estructuras de datos y tenemos una clase `cls::MyList`; dentro de esa lista existe el método `fn::sort()` que funciona mediante Quicksort. El problema es que la clase tiene una implementación rígida del algoritmo Quicksort: si mañana tus usuarios quieren utilizar distintos algoritmos de ordenamiento, ya sea porque Quicksort no les conviene o por cualquier otra razón, tendrás que ir y modificar código ya existente y funcional dentro de la clase `cls::MyList`, lo que viola el principio *Open/Closed* y puede traer *bugs*.
+
+### La solución
+
+**Strategy** nos propone "parametrizar" los algoritmos que usa la clase; la idea es encapsular cada algoritmo en su propia clase independiente (estrategias), y hacer que la clase, en este caso `cls::MyList`, utilice el algoritmo de ordenamiento de la estrategia que tenga asignada.
+
+{/* MOVIDO: desde debajo del bloque de código de SortStrategy hacia arriba para introducirlo */}
+
+Creamos una clase abstracta (o interfaz) principal, luego cada clase implementa esa clase/interfaz y aplica su propia lógica de ordenamiento:
+
+```java
+// La interfaz abstracta que todas las estrategias deben seguir
+abstract class SortStrategy {
+    abstract void sort(MyList list);
+}
+
+// Estrategia concreta 1
+class QuickSortStrategy extends SortStrategy {
+    void sort(MyList list) {
+        // ... Código del QuickSort ...
+        System.out.println("Lista ordenada usando QuickSort");
+    }
+}
+
+// Estrategia concreta 2
+class ShellSortStrategy extends SortStrategy {
+    void sort(MyList list) {
+        // ... Código del ShellSort ...
+        System.out.println("Lista ordenada usando ShellSort");
+    }
+}
+```
+
+```java
+class MyList {
+    // datos de una lista...
+    private SortStrategy strategy;
+
+    public MyList() {
+        // Podemos definir una estrategia por defecto al instanciar
+        this.strategy = new QuickSortStrategy();
+    }
+
+    // Este método permite cambiar la estrategia de ordenación en tiempo de ejecución
+    public void setSortStrategy(SortStrategy strategy) {
+        this.strategy = strategy;
+    }
+
+    public void sort() {
+        // Ordena la lista usando la estrategia actual
+        strategy.sort(this);
+    }
+}
+```
+
+La clase `cls::MyList` tiene una referencia a la interfaz o clase principal de las estrategias. Al querer ordenar la lista solo llamamos a `fn::sort()`, el cual internamente llama al algoritmo de esa estrategia:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        MyList miLista = new MyList();
+
+        // Usa la estrategia por defecto (QuickSort)
+        miLista.sort();
+
+        // Si la lista crece mucho, el usuario puede inyectar otra
+        miLista.setSortStrategy(new ShellSortStrategy());
+        miLista.sort(); // Ahora se ordena usando ShellSort
+    }
+}
+```
+
+Ahora, cuando alguien no quiera usar Quicksort, no habrá necesidad de cambiar todo el código o la lógica; solo tendrás que cambiar el tipo de estrategia que utilizará la clase `cls::MyList`. Además, si mañana decides añadir otro algoritmo de ordenamiento, solo tendrás que crear una nueva clase que implemente la interfaz/clase principal e implemente su propia versión de `fn::sort()`.
+
+## Patrón Observer
+
+Imaginemos que estamos trabajando en un sistema de una estación meteorológica. Tenemos una clase central llamada `cls::Temperatura` y diversos tipos de clases `cls::Termometro` (digital, analógico, etc.). Cada vez que la temperatura cambia, estos termómetros deben ser actualizados. El problema es que no queremos acoplar la clase `cls::Temperatura` con los termómetros, ya que estaríamos mezclando la lógica de datos con la interfaz de usuario; además, el sistema sería muy rígido, ya que cuando quisiéramos agregar un nuevo tipo de termómetro, tendríamos que modificar el código de `cls::Temperatura`.
+
+### La solución
+
+**Observer** soluciona este problema utilizando una relación de "uno-a-muchos": nuestro sujeto será la clase `cls::Temperatura`, mientras que los observadores serán las clases `cls::Termometro`.
+
+Creamos una interfaz general para los observadores y una clase específica única para el sujeto `cls::Termometro`; el único objetivo de la clase `cls::Subject` es mantener una lista de quiénes son los observadores y cómo notificarles:
+
+{/* REVISAR: En el PDF dice "para el sujeto Termometro", pero según el párrafo anterior y el código, el sujeto es Temperatura (que hereda de Subject) y los termómetros son los observadores. */}
+
+```java
+// Interfaz para los observadores (Termómetros)
+public interface Observer {
+    void update(Subject s);
+}
+```
+
+```java
+// Clase base para manejar las suscripciones
+class Subject {
+    private List<Observer> observers = new ArrayList<>();
+
+    public void addObserver(Observer o) {
+        observers.add(o);
+    }
+
+    public void notifyObservers() {
+        for (Observer o : observers) {
+            o.update(this); // Llama al método update de cada observador
+        }
+    }
+}
+```
+
+La clase `cls::Temperatura` hereda a `cls::Subject`; ahora, cada vez que la temperatura cambie mediante el método `fn::setTemp()`, se dispara el método `fn::notifyObservers()`, el cual será el encargado de avisarle a cada uno de los observadores que la temperatura cambió:
+
+```java
+// La clase concreta con los datos
+class Temperatura extends Subject {
+    private double temp;
+
+    public double getTemp() {
+        return temp;
+    }
+
+    public void setTemp(double temp) {
+        this.temp = temp;
+        notifyObservers(); // Al cambiar el dato, notifica a todos los termómetros
+    }
+}
+```
+
+Cada clase `cls::Termometro` implementa la interfaz común con el método `fn::update()`:
+
+```java
+class TermometroCelsius implements Observer {
+    public void update(Subject s) {
+        // Obtiene el estado actualizado directamente del sujeto
+        double temp = ((Temperatura) s).getTemp();
+        System.out.println("Temperatura Celsius: " + temp);
+    }
+}
+
+class TermometroFahrenheit implements Observer {
+    public void update(Subject s) {
+        double temp = ((Temperatura) s).getTemp() * 1.8 + 32;
+        System.out.println("Temperatura Fahrenheit: " + temp);
+    }
+}
+```
+
+Finalmente, desde el `cls::Main` se crean las clases y se añaden los observadores a la lista del sujeto:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Temperatura t = new Temperatura(); // Nuestro sujeto
+
+        // Añadimos dos observadores
+        t.addObserver(new TermometroCelsius());
+        t.addObserver(new TermometroFahrenheit());
+
+        // Al cambiar la temperatura una sola vez, ¡ambos termómetros se actualizan!
+        t.setTemp(100.0);
+    }
+}
+```
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/observer-temperatura.html"
+  title="Patrón Observer: notificación de Temperatura a termómetros"
+  height={240}
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ UN PAGINA HTML EMBEBIDA CON UNA ANIMACION MUY SIMPLE QUE MUESTRA COMO CUANDO CAMBIA LA TEMPERATURA SE ENVIA UNA SEÑAL A LOS OBSERVADORES, PARA EL EJEMPLO SOLO AÑADE EL TERMOMETRO DIGITAL Y ANALOGICO, LA ANIMACION DEBE MOSTRAR LAS CLASES CONECTADAS POR UN CABLE, LA CLASE TEMPERATURA SERA UN NUMERO COMO 15C O 20C (celsius) QUE CAMBIA, AL CAMBIAR POR EL CABLE VIAJA LA INFORMACION Y AMBOS SE ACTUALIZAN)" */}
+
+## Patrón Composite
+
+Imaginemos que estamos programando un gestor de archivos y carpetas, donde el sistema puede trabajar tanto con archivos simples como con carpetas; las carpetas pueden contener otras carpetas o archivos dentro, y esas carpetas también pueden tener más carpetas dentro... El cliente quiere calcular el tamaño total de una carpeta o directorio y mostrar el árbol completo, por lo que necesitamos que tanto los archivos como las carpetas se recorran de manera uniforme. El problema es que, sin un buen diseño, el código estará lleno de condicionales rígidas como `if (elemento instanceof Archivo)` o `else if (elemento instanceof Carpeta)`. Si mañana quieres agregar un nuevo tipo de elemento, estarás obligado a modificar el código del cliente.
+
+### La solución
+
+**Composite** propone crear una interfaz común, tanto para los elementos simples como para los compuestos:
+
+```java
+public interface Elemento {
+    String nombre();
+    long tamano();
+    void mostrar(String sangria);
+}
+```
+
+Los archivos, o elementos no compuestos, serán nuestras "hojas" (*leafs*); implementarán la interfaz, pero como no tienen hijos su tamaño es simplemente el peso de sus bytes:
+
+```java
+public class Archivo implements Elemento {
+    private final String nombre;
+    private final long bytes;
+
+    public Archivo(String nombre, long bytes) {
+        this.nombre = nombre;
+        this.bytes = bytes;
+    }
+
+    public String nombre() { return nombre; }
+    public long tamano() { return bytes; }
+    public void mostrar(String sangria) {
+        System.out.println(sangria + nombre + " (" + bytes + " bytes)");
+    }
+}
+```
+
+Al llamar a la función `fn::tamano()` solo devuelve sus propios bytes.
+
+Nuestra carpeta será nuestro compuesto (*Composite*); a diferencia de las hojas, el *composite* guarda una lista de sus hijos:
+
+```java
+import java.util.*;
+
+public class Carpeta implements Elemento {
+    private final String nombre;
+    // La magia del Composite: la carpeta contiene "Elementos", no le importa si
+    private final List<Elemento> hijos = new ArrayList<>();
+
+    public Carpeta(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public void agregar(Elemento e) {
+        hijos.add(e);
+    }
+
+    public String nombre() { return nombre; }
+
+    public long tamano() {
+        long total = 0;
+        for (Elemento e : hijos) {
+            total += e.tamano(); // Llamada polimórfica
+        }
+        return total;
+    }
+
+    public void mostrar(String sangria) {
+        System.out.println(sangria + nombre + "/");
+        for (Elemento e : hijos) {
+            e.mostrar(sangria + "  "); // Recursión para mostrar la estructura
+        }
+    }
+}
+```
+
+{/* REVISAR: En la captura de código de la clase Carpeta el comentario "// La magia del Composite: la carpeta contiene \"Elementos\", no le importa si" aparece cortado en el borde derecho de la imagen original. */}
+
+Tiene una lista privada con sus hijos guardados como la interfaz para que puedan entrar sin importar su tipo; al llamar a `fn::tamano()` se calcula el tamaño en bytes de cada hijo y solo se retorna al terminar el cálculo.
+
+Desde el `cls::Main` se simula la creación del árbol; el cliente solo necesita interactuar con la interfaz, lo que hace que no necesite saber qué tipo de elemento es el que está utilizando:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Carpeta proyecto = new Carpeta("proyecto");
+        Carpeta docs = new Carpeta("docs");
+
+        docs.agregar(new Archivo("guia.pdf", 120));
+        proyecto.agregar(new Archivo("config.yml", 20));
+        proyecto.agregar(new Archivo("Main.java", 12));
+        proyecto.agregar(docs); // Agregamos una carpeta dentro de otra carpeta
+
+        // El cliente solo interactúa con la abstracción "Elemento"
+        Elemento raiz = proyecto;
+
+        System.out.println("Tamaño total: " + raiz.tamano()); // Sumará todo automáticamente
+        raiz.mostrar(""); // Mostrará el árbol completo
+    }
+}
+```
+
+Con esto, si mañana decides añadir un nuevo elemento, como lo podría ser un acceso directo, no necesitarás añadir ningún tipo de condicionales.
+
+## Patrón Command
+
+Imaginemos que estamos diseñando un software para un Control Remoto inteligente; el control te permite encender luces, abrir cortinas y operar distintos dispositivos de tu hogar. El objetivo es que se puedan cambiar las acciones de los botones sin tener que modificar el código interno; además, si a futuro quisieras recuperar una función eliminada, no podrías.
+
+Si decides hacer un diseño rígido, la clase `cls::Boton` conocerá únicamente clases como `cls::Luz` o `cls::Cortina`. Esto nos obligará a usar condicionales `kw::if` o incluso `kw::switch`; cuando quieras incorporar una nueva función te verás en la obligación de modificar el código fuente del botón.
+
+### La solución
+
+**Command** plantea encapsular cada petición en un objeto independiente, separando los responsables en 3 actores: **Invocador**, **Comando concreto** y **Receptor**.
+
+El invocador será nuestra clase `cls::Boton`; solo conoce la interfaz común y ejecuta el mismo comando sin saber qué hace por dentro:
+
+```java
+public interface Command {
+    void execute();
+}
+```
+
+```java
+public class Boton {
+    private Command accion;
+
+    public Boton(Command accion) {
+        this.accion = accion;
+    }
+
+    public void pulsar() {
+        accion.execute();
+    }
+
+    // Permite cambiar la acción del botón dinámicamente
+    public void configurar(Command nueva) {
+        this.accion = nueva;
+    }
+}
+```
+
+Nuestros receptores serán todos los dispositivos que queramos controlar, ya sean luces, cortinas, televisores, etc.:
+
+```java
+// El Receptor (La clase concreta del dispositivo)
+public class Luz {
+    public void encender() {
+        System.out.println("Luz encendida");
+    }
+}
+```
+
+Estos receptores tienen una clase concreta, especialmente creada para ellos. La única función de estas clases es actuar como un intermediario entre el invocador y el receptor:
+
+```java
+// El Comando Concreto
+public class EncenderLuz implements Command {
+    private final Luz luz;
+
+    public EncenderLuz(Luz luz) {
+        this.luz = luz;
+    }
+
+    public void execute() {
+        luz.encender(); // Delega el trabajo al receptor
+    }
+}
+```
+
+Dentro del `cls::Main` le asignamos la acción al botón, en este caso la acción de `EncenderLuz(living)`; el botón ejecuta `fn::pulsar()` sin saber qué está haciendo realmente. Luego, si quisiéramos que ese mismo botón cierre las cortinas, solo tendríamos que asignarle esa nueva función:
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        Luz living = new Luz();
+        Command accion = new EncenderLuz(living);
+
+        // Creamos el botón pasándole el comando ya configurado
+        Boton boton1 = new Boton(accion);
+        boton1.pulsar(); // Imprime: "Luz encendida"
+
+        // El botón puede recibir otro Command (como AbrirCortina)
+    }
+}
+```
+
+## Patrón Abstract Factory
+
+Imaginemos que estamos desarrollando una aplicación de escritorio multiplataforma la cual debe funcionar tanto en Windows como en macOS. Esta aplicación utiliza distintos componentes visuales como botones y casillas de verificación; para respetar la compatibilidad, estos botones deben tener una apariencia compatible con el sistema operativo respectivo. Además, puede que en un futuro agreguemos compatibilidad con nuevos sistemas operativos.
+
+Si la aplicación crea directamente las clases específicas de cada plataforma usando `new BotonWindows()` o `new BotonMac()`, el código se llenará de condicionales por todas partes, y será muy fácil equivocarse y mezclar un botón de Windows con una casilla de macOS.
+
+### La solución
+
+Para solucionarlo, **Abstract Factory** actuará como una evolución del patrón Factory visto anteriormente: tendremos una interfaz fábrica que tendrá métodos para crear cada producto, y luego cada fábrica concreta se encargará de crear una familia de productos relacionados.
+
+Interfaces genéricas para botones y casillas, solo tienen el método `fn::dibujar()`:
+
+```java
+public interface Boton {
+    void dibujar();
+}
+
+public interface Casilla {
+    void dibujar();
+}
+```
+
+Los productos concretos son grupos o familias de elementos que pertenecen al mismo grupo; en este caso tenemos el `cls::BotonWindows` y la `cls::CasillaWindows` como los participantes de la familia Windows:
+
+```java
+// --- Familia Windows ---
+public class BotonWindows implements Boton {
+    public void dibujar() { System.out.println("Boton estilo Windows"); }
+}
+public class CasillaWindows implements Casilla {
+    public void dibujar() { System.out.println("Casilla estilo Windows"); }
+}
+
+// --- Familia macOS ---
+public class BotonMac implements Boton {
+    public void dibujar() { System.out.println("Boton estilo macOS"); }
+}
+public class CasillaMac implements Casilla {
+    public void dibujar() { System.out.println("Casilla estilo macOS"); }
+}
+```
+
+Crearemos también la interfaz fábrica, la cual se encargará de crear las familias/grupos de elementos; por ejemplo, la fábrica Windows se encarga de crear un `cls::BotonWindows` y también una `cls::CasillaWindows`, evitando completamente mezclarse con cosas de otro OS:
+
+```java
+public interface FabricaGUI {
+    Boton crearBoton();
+    Casilla crearCasilla();
+}
+
+public class FabricaWindows implements FabricaGUI {
+    public Boton crearBoton() { return new BotonWindows(); }
+    public Casilla crearCasilla() { return new CasillaWindows(); }
+}
+
+public class FabricaMac implements FabricaGUI {
+    public Boton crearBoton() { return new BotonMac(); }
+    public Casilla crearCasilla() { return new CasillaMac(); }
+}
+```
+
+Finalmente, la `cls::Aplicacion` será la encargada de crear los elementos concretos; como se puede ver, no hay ninguna mención ni de macOS ni de Windows, lo que la hace completamente genérica:
+
+```java
+public class Aplicacion {
+    private final Boton boton;
+    private final Casilla casilla;
+
+    public Aplicacion(FabricaGUI fabrica) {
+        // La aplicación confía en que la fábrica le dará componentes compatibles
+        boton = fabrica.crearBoton();
+        casilla = fabrica.crearCasilla();
+    }
+
+    public void mostrar() {
+        boton.dibujar();
+        casilla.dibujar();
+    }
+}
+```
+
+Dentro del `cls::Main` creamos una fábrica de Windows y luego se la mandamos a la `cls::Aplicacion`; al llamar a la función `fn::mostrar()`, esta también llamará a la creación de los elementos:
+
+{/* REVISAR: En el PDF dice que "al llamar a la funcion mostrar() esta tambien llamara a la creacion de los elementos", pero en el código la creación ocurre en el constructor de Aplicacion y mostrar() llama a dibujar(). */}
+
+```java
+public class Main {
+    public static void main(String[] args) {
+        // Supongamos que detectamos que estamos en un entorno Windows
+        FabricaGUI fabrica = new FabricaWindows();
+
+        Aplicacion app = new Aplicacion(fabrica);
+        app.mostrar();
+        // Resultado:
+        // Boton estilo Windows
+        // Casilla estilo Windows
+    }
+}
+```
+
+El resultado es un sistema adaptable sin ninguna condicional, que funciona puramente en base a la fábrica definida al crear el objeto `cls::FabricaGUI`.
+
+## Datos extra de los Patrones de Diseño
+
+Todo en la ingeniería de software tiene un costo: los patrones de diseño inevitablemente añaden complejidad extra al proyecto. Tomando como ejemplo el patrón Strategy, teníamos una clase `cls::MyList` que funcionaba y, a pesar de ser rígida, era muy simple y fácil de entender; luego de implementar el patrón Strategy terminamos con 4 clases, lo que probablemente dificultará el entendimiento a un programador novato.
+
+### El problema de la Paternite
+
+John Ousterhout acuñó el término **Paternite**, una especie de "enfermedad" la cual él define como una "inflamación" del código provocada por el uso excesivo y apresurado de los patrones de diseño. Ocurre cuando los programadores se emocionan y empiezan a aplicar patrones de diseño en todos lados, incluso en partes del código que no lo necesitan.
+
+La regla de oro es que **los patrones de diseño son sinónimo de diseño orientado al cambio**. Por lo tanto, si estás escribiendo cualquier función o código cuya probabilidad de cambio en el futuro sea casi nula, no valdrá la pena implementar patrones de diseño; es decir, solo debes utilizar patrones de diseño si es que esa parte del código necesitará ser expandida o cambiada en el futuro.
