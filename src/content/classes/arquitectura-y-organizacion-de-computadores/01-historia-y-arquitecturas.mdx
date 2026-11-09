@@ -1,0 +1,195 @@
+---
+title: "Historia y Arquitecturas"
+order: 1
+---
+
+La diferencia entre la **arquitectura** y la **organización** de un computador es principalmente que la arquitectura se refiere a *"qué es lo que hace"* el computador, como la cantidad de instrucciones que puede entender así como las maneras en que puede acceder a memoria; en cambio, la organización es *"el cómo lo hace"*: tiene que ver con la estructura funcional interna, como la jerarquía de memoria y las entradas y salidas.
+
+## Historia y Arquitecturas
+
+Charles Babbage inventó la **"Máquina analítica"**; fue diseñada para ser flexible y programable, mediante el uso de tarjetas perforadas (como la máquina de Turing), y era capaz de calcular raíces, funciones trigonométricas e integrales.
+
+Ada Lovelace, asistente de Babbage, describió la máquina asociándole la capacidad de pensar; como ella era la encargada de programar la máquina, es considerada la **primera programadora de la historia**.
+
+John von Neumann reconoció que aplicó los principios lógicos de Babbage. Von Neumann publicó un artículo revolucionario en el que proponía el concepto de **almacenamiento de programas**: hasta este punto todas las computadoras leían instrucciones desde medios externos que requerían trabajo humano; Von Neumann propuso que la máquina pudiera leer estos programas desde memoria.
+
+En su diseño los datos e instrucciones residen en la misma memoria y tienen el mismo formato binario; para su computador, `0010 101` podría ser tanto un dato como una instrucción dependiendo del contexto. Debido a esto, Von Neumann separó su computador en 3 componentes principales, los cuales se comunican mediante buses:
+
+- **Memoria**: almacena los datos para leer y escribir.
+- **La CPU**: ejecuta las operaciones sobre los datos y procesa algoritmos.
+- **Los sistemas de entrada y salida**: se encargan de recibir los datos y entregar resultados.
+
+Para esto los componentes utilizan 3 buses:
+
+- **Bus de datos**: es donde viajan la información e instrucciones.
+- **Bus de direcciones**: es donde la CPU indica en qué espacio de memoria quiere leer y escribir.
+- **Bus de control**: es el encargado de coordinar todo, por ejemplo avisar si la operación es de lectura o escritura.
+
+También existió la **arquitectura Harvard**; a diferencia de la de Von Neumann, esta utiliza 2 memorias diferentes: una memoria se encarga de guardar las instrucciones y la otra se encarga de guardar datos. Las ventajas de esta arquitectura son:
+
+- **Flexibilidad en formatos**: al existir dos memorias diferentes, se pueden almacenar instrucciones y datos que no necesariamente tengan el mismo largo.
+- **Diseño asimétrico**: la arquitectura permite utilizar memorias de distinto tamaño.
+- **Variedad de tecnologías**: es posible desarrollar las memorias de distinta forma, permitiendo que se adapten mejor a su tarea en velocidad y efectividad.
+- **Sin cuello de botella**: al existir dos memorias, las instrucciones y los datos no deben pelear por el mismo bus.
+
+Actualmente esta arquitectura se utiliza en sistemas embebidos, diferenciando RAM de ROM.
+
+Entonces, si Harvard es más rápida, ¿por qué hoy en día se usa mayoritariamente la de Von Neumann?
+
+**Von Neumann**:
+
+- Más eficiente en el espacio, ya que no existen dos memorias; esto permite que el espacio libre se utilice dinámicamente entre datos y programas.
+- Simplicidad de diseño: requiere un solo bus de datos y direcciones.
+- Posee un solo tipo de instrucciones para acceder a la memoria y una misma forma de acceder tanto a datos como a instrucciones.
+- Permite desarrollar una CPU con menos instrucciones pero más flexible.
+
+Además existen más modelos que nacieron de la necesidad de hacer máquinas que pudieran hacer más cosas al mismo tiempo:
+
+Los **modelos multiprocesador** tienen varios procesadores, los cuales tienen su propia memoria local, la que guarda una porción de la memoria principal; estos comparten el acceso a la memoria principal y los dispositivos de entrada y salida. Esto permite paralelismo real, con todos los procesadores trabajando al mismo tiempo. Su desventaja es que no todos los programas se pueden paralelizar, y además el sistema debe asegurarse de que la memoria local de cada procesador coincida con la memoria principal.
+
+Los **sistemas distribuidos** son redes de computadores que tienen sus propios componentes pero se comunican entre sí mediante una red de conexión. Su ventaja es que, al igual que el multiprocesador, estos permiten el paralelismo y tienen una gran escalabilidad. Su desventaja es que, al igual que el multiprocesador, muchas tareas no pueden ser paralelizadas y además sufren problemas de *overhead* al comunicarse exclusivamente por red; esto además genera problemas de incongruencia, ya que los equipos están separados físicamente.
+
+El **computador vectorial** es el principio que está detrás de las GPU modernas; en esta arquitectura una lista única de instrucciones controla varias unidades de procesamiento. Se podría decir que es un director de orquesta controlando varios músicos a la vez.
+
+## Lenguaje de Transferencia de Registros (RTL)
+
+Es la forma estándar en la que se describe el cómo se mueve la información dentro de circuitos de procesador:
+
+- `<-`: Este símbolo representa la transferencia de datos y se lee siempre de derecha a izquierda; se lee como *"Toma este valor de la derecha y cópialo en el elemento de la izquierda"*. Importante que se **copia**, por lo que el componente de la izquierda no pierde su información, ej.:
+  `MAR <- PC` significa: El registro `var::MAR` recibe una copia del número que tiene `var::PC`, pero `var::PC` no pierde su información.
+  {/* REVISAR: Posible lapsus: en la explicación dice "por lo que el componente de la izquierda no pierde su información", pero en "MAR <- PC" el elemento que se copia y no pierde su información es el de la derecha (PC). */}
+- `M[Componente]`: La letra `M` con los corchetes representa la memoria principal; lo que está dentro de los corchetes es la dirección específica. Ej.:
+  `MDR <- M[MAR]` significa: Ve a la memoria principal `M`, busca la casilla cuyo número indica el `var::MAR` y cópialo en el `var::MDR`.
+- **Sumas y restas (`+1`, `-1`)**: Representan operaciones de incremento o decremento; esto significa que al valor actual del registro le estamos sumando 1 o quitando 1. Por ejemplo, si el `var::PC` está apuntando a la dirección `00` y le hacemos un `PC <- PC + 1`, esto haría que ahora `var::PC` apunte a la siguiente dirección.
+
+## La CPU y sus componentes
+
+La CPU es el componente principal del computador y se considera el cerebro; es por esto que la CPU tiene tres grandes responsabilidades:
+
+- **Ejecutar operaciones y algoritmos**: para esto, se procesa la instrucción, se leen los datos almacenados temporalmente y se guarda el resultado; las partes encargadas del proceso matemático son la **ALU** (Unidad aritmético lógica) y la **FPU** (Unidad de punto flotante).
+- **Controlar el flujo de programa**: para saber qué instrucción debe ejecutar a continuación utiliza el *Instruction pointer* y mecanismos de salto.
+- **Controlar los circuitos internos**: maneja componentes como la ALU, los multiplexores y registros mediante buses internos y señales de control.
+
+Dentro de la CPU existe un bloque llamado **Control & Decode** encargado de procesar las instrucciones; este recibe una instrucción en forma de bits y la traduce: sus salidas son señales de control físicas para que los circuitos ejecuten esa instrucción paso a paso.
+
+Ya que la CPU no puede estar yendo a buscar datos a la memoria RAM a cada rato, existen los **registros**, los cuales son bloques de memoria interna ultrarrápidos; estos se dividen en dos categorías:
+
+### Los registros visibles
+
+Son aquellos que se pueden referenciar directamente en las instrucciones del programa. Deben haber ni muy pocos ni muchos: si hay muy pocos la CPU tiene que hacer muchos "viajes" a la RAM; si hay muchos la CPU se vuelve innecesariamente compleja. Estos registros deben tener suficiente memoria para guardar una palabra de datos completa.
+
+### Los registros de control y estado
+
+Son invisibles para el programa común, pero vitales para controlar el funcionamiento de la CPU. Los más críticos son:
+
+- **Program Counter**: contiene la dirección exacta de la próxima instrucción que se debe captar (*fetch*).
+- **Instruction Register**: contiene la última instrucción que se debe captar y que se está ejecutando.
+- **Memory Address Register**: contiene la dirección de memoria en la que la CPU quiere leer o escribir.
+- **Memory Buffer/Data Register**: contiene la palabra de datos que se va a escribir o la que se acaba de leer de ella.
+
+### El registro de estado o Program Status Word
+
+Contiene bits individuales o *flags*, las cuales avisan sobre el resultado de la última operación, como por ejemplo:
+
+- **Signo (`N`)**: se activa si el resultado es negativo.
+- **Cero (`Z`)**: se activa si el resultado fue exactamente cero.
+- **Carry**: se activa si sobró un bit en una suma o faltó en una resta.
+- **Igual**: se activa al comparar dos cosas que son iguales.
+- **Overflow**: indica si un resultado fue demasiado grande para caber en el registro.
+- **Interrupciones**: sirve para habilitar o inhabilitar que dispositivos externos interrumpan la CPU.
+- **Supervisor**: indica si la CPU está en modo administrador o usuario, lo cual restringe instrucciones peligrosas y el acceso a ciertas áreas de la memoria.
+
+### El ciclo de instrucción
+
+El procesador se encuentra en un bucle infinito conocido como el **ciclo de instrucción**, el cual consta de dos grandes etapas:
+
+- **Fetch**: el procesador va a buscar la instrucción a la memoria principal.
+- **Ejecución**: realiza la operación que indicaba la instrucción.
+
+### El ciclo Fetch paso a paso
+
+1. `MAR <- PC`: El contador de programa le entrega al *Memory Address Register* la dirección exacta de la instrucción que quiere buscar.
+2. `MDR <- M[MAR]`: Se realiza una operación de lectura; el contenido guardado en esa dirección de memoria viaja por el bus de datos y se almacena temporalmente en el *Memory Data Register*.
+3. `IR <- MDR`: Como la instrucción ya está en el *Memory Data Register*, esta se copia al *Instruction Register*; aquí es donde la Unidad de Control se encargará de decodificarla.
+4. `PC <- PC + 1`: Automáticamente el *Program Counter* se incrementa en uno para quedar apuntando a la siguiente dirección.
+
+### El ciclo de instrucción completo ICC
+
+En arquitecturas más avanzadas el ciclo no es solo buscar y ejecutar; el estado se gestiona mediante fases representadas por códigos binarios:
+
+- `00` **Fetch**: Busca la instrucción en la memoria.
+- `01` **Indirecto**: Si la instrucción utiliza direccionamiento indirecto, se lee la dirección real del operando.
+- `10` **Ejecución**: Se ejecuta la instrucción correspondiente, como sumar, saltar, etc.
+- `11` **Interrupción**: Si se ha producido una interrupción habilitada por hardware o software, la CPU suspende lo que está haciendo para ir a atenderla.
+
+### La unidad de control microprogramada
+
+Esto es literalmente un procesador dentro del procesador, el cual no guarda datos; sigue el mismo ciclo *fetch* y ejecución que el procesador grande, pero este ya tiene datos guardados, los cuales le dicen cómo hacer operaciones como `kw::ADD` y `kw::AND`. Este contiene un **Generador de temporización**, el cual se encarga de que todo se mantenga sincronizado: este genera marcas de tiempo exactas para que todas las operaciones fluyan correctamente y no se "choquen". Además existen las **salidas de control**, las cuales se encargan de enviar pulsos eléctricos reales hacia el resto del computador; estas señales son las que le dicen a un registro que abra sus puertas, a la ALU que sume, o a la memoria que guarde un dato. Además existen los **indicadores**, los cuales reciben retroalimentación externa, como si el resultado fue cero, negativo, entre otros.
+
+### Formatos de instrucción
+
+Las instrucciones que ejecuta la CPU tienen un formato general estructurado de la forma: `<código de operación>[<operando>,[<operandos>]]`.
+
+- El **código de operación** indica la acción que se realizará y los **operandos** indican sobre qué datos o registros se va a trabajar; el tamaño de estos campos está directamente asociado al largo de la palabra de la memoria.
+
+Para comprender el funcionamiento a nivel interno asumamos un sistema de 16 bits:
+
+En este sistema de 16 bits, si los datos se representan sin signos, el rango numérico abarca de 0 hasta 65.535 o $0 \le N \le 2^{16} - 1$.
+
+Si los datos se representan con signos utilizando el formato de complemento a dos, el rango va desde -32.768 hasta 32.767 o también $-2^{15} \le N \le 2^{15} - 1$.
+
+Las direcciones de memoria suelen estar asociadas a un solo Byte; cuando un dato es más grande, se deben utilizar direcciones de memoria consecutivas. Bajo el formato **Big Endian** la porción más significativa del dato se guarda primero: si se quisiera guardar el valor hexadecimal `3E71h` en la dirección `500h`, primero se guardaría la porción `3E` en `500h` y después se guardaría `71` en `501h`.
+
+## Simuproc
+
+Es una arquitectura simulada que simula los componentes y registros fundamentales de 16 bits:
+
+- **Registros de control**: `var::PC`, `var::MAR`, `var::MDR`, `var::IR`.
+- **Registros de uso general y aritmética**:
+  - `var::AX` (Acumulador): es el registro principal dedicado a operaciones aritméticas; este trabaja las instrucciones matemáticas y además guarda el resultado de las operaciones.
+  - `var::BX` y `var::CX` son registros de uso general, que permiten almacenar información y manipular datos de manera temporal, sin modificar la información crítica que está en `var::AX`.
+- **Registros de pila**:
+  - `var::BP`: Define la dirección base o fondo de la pila; cuando está vacío el puntero de la pila inicia asumiendo este valor.
+  - `var::SP`: Contiene la dirección de memoria que apunta al tope del *stack*; es dinámico y se actualiza a medida que entran o salen datos.
+
+### Operaciones aritméticas
+
+- `kw::ADD`: el objetivo de la suma es tomar el valor actual de `var::AX` y sumarle un dato en la memoria, de forma `(AX <- AX + M[DIR])`.
+
+### Saltos JMP y JNZ
+
+Por defecto la CPU avanza casilla por casilla, pero las instrucciones de salto alteran esta secuencia para definir una nueva dirección para el `var::PC`:
+
+- `kw::JMP` o salto incondicional: es equivalente a un `kw::GOTO`; la CPU ejecuta `PC <- IR(DIR)`, lo que hará que para el próximo ciclo *fetch* busque instrucciones desde esta nueva dirección.
+- `kw::JNZ` o salto condicional: es igual que el `kw::JMP` pero, a diferencia de este, se basa en *flags* para decidir si saltará o no; este revisa el registro de estado para revisar, por ejemplo, si el *flag* `Z` es cero, lo que significaría que la operación anterior dio 0: si el resultado fue 0 se ejecuta un `kw::JMP` normal; si el resultado no fue 0 no se ejecuta ningún salto.
+  {/* REVISAR: Posible confusión entre JNZ (Jump if Not Zero) y JZ (Jump if Zero): cuando la operación anterior da 0 el flag Z se activa en 1 (no 0), y JNZ salta cuando el resultado NO fue 0 (Z = 0). */}
+
+### Manejo de la pila
+
+Para trabajar con la pila, se utilizan las operaciones `kw::POP` y `kw::PUSH`; para esto se trabaja con el registro `var::SP` (*Stack Pointer*) para saber dónde está el tope.
+
+**PUSH:**
+
+- `PUSH reg` (**Apilar**):
+  - `MAR <- SP`: El `var::MAR` se prepara para escribir en la dirección que indica el tope del *stack*.
+  - `MDR <- reg`: El `var::MDR` recibe el valor del registro que queremos guardar.
+  - `M[MAR] <- MDR`: El registro queda almacenado físicamente en el tope del *stack* en la memoria.
+  - `SP <- SP + 1`: Se actualiza el tope del *stack* para no sobreescribir este dato la próxima vez.
+
+**POP:**
+
+- `POP reg` (**Desapilar**):
+  - `SP <- SP - 1`: El puntero retrocede un espacio para apuntar a la última posición del *stack* donde hay un dato válido.
+  - `MAR <- SP` y `MDR <- M[MAR]`: Se extrae el dato de la memoria.
+  - `reg <- MDR`: El registro de la CPU recibe el valor que estaba guardado en la pila.
+
+{/* REVISAR: En la página 2 del PDF, la primera captura bajo "PUSH:" incluye tanto "PUSH reg (Apilar)" como "POP reg (Desapilar)", y justo debajo bajo "POP:" se vuelve a insertar la captura de "POP reg (Desapilar)". Se transcribió cada bloque bajo su encabezado correspondiente. */}
+
+En ambos casos `var::reg` es un registro genérico, el cual podría ser `var::AX`, `var::BX` o `var::CX`.
+
+### Subrutinas CALL y RET
+
+Al llamar una función mientras se programa, la CPU debe saber cómo volver al punto exacto donde estaba una vez que termine; esto permite anidamiento como recursión:
+
+- `kw::CALL`: primero se ejecuta un `PUSH(PC)` para guardar la dirección de la instrucción a la que se debe volver, luego se ejecuta un `PC <- IR(DIR)`, lo que hace que ahora el `var::PC` apunte a una nueva instrucción.
+- `kw::RET`: simplemente ejecuta un `POP(PC)`; esto saca la dirección que se había puesto en el *stack* y la devuelve al `var::PC`, así en el siguiente ciclo *Fetch* el procesador retorna al programa que dejó esperando.

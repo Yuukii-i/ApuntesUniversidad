@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 240px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.5; rx: 10; transition: stroke 0.25s, stroke-width 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.5; }
+  .lbl { fill: var(--muted); font-size: 11px; font-weight: 600; text-anchor: middle; }
+  .bits { fill: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 14px; font-weight: 700; text-anchor: middle; }
+  .gp { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 700; text-anchor: middle; opacity: 0; transition: opacity 0.25s; }
+  .gp.show { opacity: 1; }
+  .wire { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 4 3; opacity: 0.35; transition: stroke 0.25s, opacity 0.25s; }
+  .wire.active { stroke: var(--accent); stroke-dasharray: none; opacity: 1; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 240" aria-label="Simulación de Carry Lookahead sumando 0101 + 0011">
+  <!-- Columnas 3, 2, 1, 0 arriba -->
+  <rect id="c3" class="box" x="55" y="16" width="125" height="76" />
+  <text class="lbl" x="117" y="35">Col 3 (0 + 0)</text>
+  <text id="gp3" class="gp" x="117" y="56">g3=0, p3=0</text>
+  <text id="s3" class="bits" x="117" y="78">S3 = ?</text>
+
+  <rect id="c2" class="box" x="205" y="16" width="125" height="76" />
+  <text class="lbl" x="267" y="35">Col 2 (1 + 0)</text>
+  <text id="gp2" class="gp" x="267" y="56">g2=0, p2=1</text>
+  <text id="s2" class="bits" x="267" y="78">S2 = ?</text>
+
+  <rect id="c1" class="box" x="355" y="16" width="125" height="76" />
+  <text class="lbl" x="417" y="35">Col 1 (0 + 1)</text>
+  <text id="gp1" class="gp" x="417" y="56">g1=0, p1=1</text>
+  <text id="s1" class="bits" x="417" y="78">S1 = ?</text>
+
+  <rect id="c0" class="box" x="505" y="16" width="125" height="76" />
+  <text class="lbl" x="567" y="35">Col 0 (1 + 1)</text>
+  <text id="gp0" class="gp" x="567" y="56">g0=1, p0=0</text>
+  <text id="s0" class="bits" x="567" y="78">S0 = ?</text>
+
+  <!-- Conexiones paralelas hacia la unidad Lookahead -->
+  <line id="w3" class="wire" x1="117" y1="92" x2="117" y2="136" />
+  <line id="w2" class="wire" x1="267" y1="92" x2="267" y2="136" />
+  <line id="w1" class="wire" x1="417" y1="92" x2="417" y2="136" />
+  <line id="w0" class="wire" x1="567" y1="92" x2="567" y2="136" />
+
+  <!-- Unidad Carry Lookahead -->
+  <rect id="cla" class="box" x="55" y="136" width="575" height="58" />
+  <text class="lbl" x="342" y="156">Unidad Carry Lookahead (Cálculo paralelo instantáneo)</text>
+  <text id="cla-txt" class="bits" x="342" y="178">Analizando entradas...</text>
+
+  <text id="status" class="lbl" x="342" y="220">0101 (5) + 0011 (3)</text>
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const p = parent && parent.document && parent.document.documentElement;
+      if (!p) return;
+      const cs = getComputedStyle(p);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach((v) => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    if (parent && parent.document && parent.document.documentElement) {
+      new MutationObserver(syncTheme).observe(parent.document.documentElement, {
+        attributes: true, attributeFilter: ['data-theme', 'class', 'style']
+      });
+    }
+  } catch (_) {}
+
+  const $ = (id) => document.getElementById(id);
+  const sums = ['S0 = 0', 'S1 = 0', 'S2 = 0', 'S3 = 1'];
+  let phase = -1;
+
+  function step() {
+    phase = (phase + 1) % 3;
+    if (phase === 0) {
+      [0, 1, 2, 3].forEach((i) => {
+        $('c' + i).classList.add('active');
+        $('gp' + i).classList.add('show');
+        $('w' + i).classList.remove('active');
+        $('s' + i).textContent = 'S' + i + ' = ?';
+      });
+      $('cla').classList.remove('active');
+      $('cla-txt').textContent = 'Paso 1: Todas las columnas obtienen gi y pi al mismo tiempo';
+      $('status').textContent = '0101 (5) + 0011 (3) → cálculo simultáneo de generación y propagación';
+    } else if (phase === 1) {
+      [0, 1, 2, 3].forEach((i) => {
+        $('c' + i).classList.remove('active');
+        $('w' + i).classList.add('active');
+      });
+      $('cla').classList.add('active');
+      $('cla-txt').textContent = 'C3 = g2 + (p2·g1) + (p2·p1·g0) + 0 = 0 + 0 + (1·1·1) = 1';
+      $('status').textContent = 'Paso 2: Lookahead predice C1=1, C2=1 y C3=1 en paralelo sin esperar';
+    } else {
+      [0, 1, 2, 3].forEach((i) => {
+        $('c' + i).classList.add('active');
+        $('s' + i).textContent = sums[i];
+      });
+      $('cla-txt').textContent = 'Carries entregados en paralelo → Resultado: 1000 (8)';
+      $('status').textContent = 'Suma completada sin efecto dominó: 0101 + 0011 = 1000';
+    }
+  }
+  step();
+  setInterval(step, 2200);
+</script>
+</body>
+</html>

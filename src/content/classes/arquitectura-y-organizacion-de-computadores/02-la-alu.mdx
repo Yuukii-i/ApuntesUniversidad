@@ -1,0 +1,618 @@
+---
+title: "La ALU"
+order: 2
+---
+
+import Figure from '../../../components/Figure.astro';
+import Demo from '../../../components/Demo.astro';
+
+La unidad aritmético lógica constituye la sección de la computadora encargada de ejecutar físicamente todas las operaciones aritméticas y las operaciones lógicas sobre los datos. Su importancia radica en que todos los otros elementos que componen el sistema informático tienen el propósito de llevar los datos hacia la ALU para ser procesados.
+
+A nivel de arquitectura interna la ALU está fundamentada en el uso de dispositivos lógicos de lógica digital simple (puertas lógicas); para interactuar de manera coordinada con el procesador y la memoria, la ALU posee salidas y entradas rigurosamente definidas en bloques:
+
+- **Entradas**: Recibe instrucciones a través de las **Señales de control** (*Control Signals*) y recibe los datos a procesar desde los **Registros de Operandos** (*Operand Registers*).
+- **Salidas**: Una vez completada la operación, envía los datos procesados a los **Registros de Resultados** (*Result Registers*), y emite **Banderas** (*Flags*) para indicar el estado del resultado.
+
+## Representación de números enteros
+
+Para el procesamiento y almacenamiento de los datos en computadores, no se cuenta con el beneficio de usar símbolos especiales como el signo menos o el punto decimal; es debido a esto que los números deben ser representados únicamente en binarios.
+
+Es por esto que para representar **Magnitud y Signo** utilizamos el bit más significativo (el que está más a la izquierda) como un bit de signo; entonces, si el bit de signo es 0 el número es positivo, si es 1 el número es negativo. Este método presenta dos inconvenientes críticos:
+
+1. Al realizar sumas y restas el sistema tiene que considerar tanto los signos como las magnitudes relativas de los números.
+2. Este sistema produce dos representaciones diferentes del número 0 (`-0` y `+0`).
+   Por ejemplo entonces, para representar el número 5:
+   - `+5 = 0101` (el primer 0 indica positivo, y `101` es el valor de 5).
+   - `-5 = 1101` (el primer 1 indica negativo, y `101` es el valor de 5).
+   El problema radica en el doble cero como se ve aquí: el `+0` se representa como **0000**, mientras que el `-0` se representa como **1000**.
+
+Pero existe una alternativa más eficiente conocida como **Complemento a Dos**; esta alternativa también utiliza el bit más significativo como bit de signo, pero difiere en la manera en la que se interpretan los demás bits: su gran ventaja es que solamente tiene una representación del número cero.
+
+Para obtener los números negativos y eliminar así las dos representaciones del cero, se utiliza la siguiente regla:
+
+- Se debe tomar el complemento booleano de cada bit del número positivo correspondiente (es decir, invertir los 1 y 0) y sumar 1 al patrón de bits resultante.
+  Por ejemplo, para escribir el número 5:
+  - `+5 = 0101` (al igual que antes, 0 indica positivo y `101` es el número 5).
+  - `-5 = 1011` (en este caso se invierten los valores de cada posición; 1 indica que es negativo).
+  La diferencia principal es que ahora el cero solo tiene una representación: **0000**.
+
+Ahora el procedimiento paso a paso:
+
+Si queremos escribir el número -18:
+
+1. Tenemos que empezar por su versión positiva +18 en 8 bits, en este caso sería: **00010010**.
+2. Se aplica el complemento a nivel de bits, invirtiendo 0s y 1s, lo que da como resultado: **11101101**.
+3. Se le suma 1 al resultado **11101101 + 1 = 11101110**; este número final vendría siendo -18.
+
+En el caso de que se quiera aumentar la longitud de bits de un número (por ejemplo para pasar un dato de 4 bits a un registro de 8), deberemos mover el bit de signo a la posición de más a la izquierda, y a su vez rellenar todos los espacios nuevos con una copia de este mismo; es decir, los números positivos se rellenarán de 0s, y los negativos de 1s.
+
+Ej.:
+
+Queremos extender el número 3 de 4 bits a 8 bits:
+
+1. Empezamos por el número original en 4 bits, que vendría siendo = **0011**.
+2. Tomamos el bit de signo (0) y rellenamos hacia la izquierda; el resultado sería = **00000011**.
+
+Ahora si queremos extender el número -3:
+
+1. Empezamos por el número original en 4 bits, que sería: `1100`.
+2. Tomamos su bit de signo (1) y lo extendemos hacia la izquierda, resultando en = **11111100**.
+
+{/* REVISAR: En complemento a dos de 4 bits, -3 se representa como 1101 (y extendido a 8 bits como 11111101); 1100 corresponde a -4 (o al complemento a uno de +3 sin sumar 1). */}
+
+Para representar punto fijo (decimales) la ALU asume que cualquier número es un entero; esto lo hace poniéndole un `,` imaginario a la derecha.
+
+Ej.: al número 3, `0011`, se le agregaría un punto a la derecha: `0011.`; esto lo convierte en un entero.
+
+Es responsabilidad del programador decirle al sistema el cómo debe interpretar cada secuencia de bits, si es que quiere números decimales.
+
+## Aritmética de Enteros (Suma y Resta)
+
+### Regla de desbordamiento (Overflow)
+
+Al sumar dos números que comparten el mismo signo, es decir ambos positivos o ambos negativos, ocurre un desbordamiento (*Overflow*) siempre y cuando el resultado muestre el signo opuesto. Esto indica que el resultado no es capaz de caber en los bits disponibles.
+
+Ej.: Tenemos 4 bits y queremos sumar +5 y +4 (Complemento a Dos):
+
+- El número +5 en binario es: **0101**.
+- El número +4 en binario es: **0100**.
+- Si hacemos la suma de **0101 + 0100** esto nos da: **1001**.
+
+Como se puede ver, el resultado de la suma nos dio **1001**, el cual empieza por un 1; para la computadora esto significa un número negativo, específicamente el -7. Al haber sumado dos números positivos y el resultado ser negativo, la computadora detecta automáticamente que hubo un *Overflow*.
+
+### Regla de la Sustracción (Resta)
+
+Para no tener que crear un circuito complejo solo para poder restar, el computador reutiliza su capacidad para sumar; es por esto que al restar un número (sustraendo) de otro (minuendo), se toma el Complemento a Dos del sustraendo y se lo suma al minuendo.
+
+Ej.: Queremos calcular 2 - 7 (Minuendo = 2, Sustraendo = 7):
+
+- El número 2 (`var::M`) es **0010**.
+- El número 7 (`var::S`) es **0111**.
+- Se aplica Complemento de Dos al sustraendo, para pasar de 7 a -7, lo que da como resultado: **1001**.
+- Ahora se aplica una suma normal de ambos números: **0010** (el 2) + **1001** (el -7).
+- Esto nos dará como resultado **1011** en Complemento a Dos, el cual representa el número -5.
+
+Entonces en resumen, en vez de hacer **(2) - (7)**, estamos haciendo: **(2) + (-7)**.
+
+### Hardware para Sumas y Restas
+
+Hasta ahora todo esto ha sido la lógica del cómo funcionan las sumas y restas, pero al llevarlo a la vida real, tenemos que trabajarlo a través de compuertas lógicas ordenadas de formas específicas; a continuación se presenta un **Sumador Total (Full Adder)**:
+
+<Figure
+  src="/classes/arquitectura-y-organizacion-de-computadores/02-la-alu/sumador-total-full-adder.png"
+  alt="Diagrama lógico de un Sumador Total (Full Adder) con compuertas XOR, AND y OR"
+  side="full"
+/>
+
+- `var::A` y `var::B`: representan un valor de entrada.
+- `var::S`: Representa el resultado de la suma.
+- `var::Cout`: representa el *Carry-out*, o sobrante.
+- `var::Cin`: Representa el `var::Cout` que llegó de la operación anterior.
+
+Realicemos una suma simple:
+
+Queremos sumar 1 + 1, asumiendo que esta es la primera columna de una suma (no hay `var::Cin`): `A = 1`, `B = 1`, `Cin = 0`.
+
+**Las compuertas XOR serán las encargadas de realizar la suma**
+
+- **XOR**: Recibe ambos valores `var::A` y `var::B`; la regla lógica de una compuerta `kw::XOR` es que la salida es 1 únicamente cuando las entradas son diferentes. En este caso $A = B$, por lo que el resultado es 0.
+- **XOR**: El 0 que obtuvimos en `kw::XOR` se junta con el `var::Cin` en esta compuerta lógica; como ambos son iguales nuevamente ($0$ y $\text{Cin} = 0$) el resultado es nuevamente 0.
+
+**Las compuertas AND y OR serán las encargadas de saber si hay acarreo**
+
+- **AND**: Esta compuerta recibe la señal directa de `var::A` y `var::B`; las puertas `kw::AND` solo devuelven 1 si es que ambas entradas son 1. En este caso `A = 1`, `B = 1`, por lo que la salida será 1.
+- **AND**: Esta compuerta recibe el resultado de nuestra compuerta `kw::XOR` y además el `var::Cin`; al recibir ambos valores 0, el resultado es 0.
+- **OR**: Esta compuerta recibe los resultados de `kw::AND` y `kw::AND`; en este caso `kw::AND` obtuvo como resultado 1, `kw::AND` obtuvo como resultado un 0. La regla de la compuerta `kw::OR` es que arrojará 1 siempre y cuando reciba una señal 1 en cualquiera de sus entradas, por lo que el resultado será 1.
+
+El sumador total obtuvo como resultado `S = 0` y Acarreo `Cout = 1`; si leemos el acarreo seguido del resultado obtenemos **10**, lo cual es el resultado aritmético correcto de 1 + 1 en binario.
+
+Como vimos en la sección anterior, los sumadores solo son capaces de trabajar con una columna de números a la vez; si quisiéramos convertir el sumador anterior en un restador, tendríamos que añadir una nueva compuerta `kw::XOR` justo antes de la entrada `var::B`: esto actuaría como un inversor el cual además inyectaría un 1 en el `var::Cin`.
+
+### Retardo de acarreo y Aceleración del Carry (Lookahead)
+
+El principal cuello de botella de un sumador es el tiempo que se demora el acarreo en viajar desde el primer bit de la izquierda hasta el de la derecha. Imaginemos que vamos a sumar **1111** y **0001**:
+
+{/* REVISAR: En el PDF dice "desde el primer bit de la izquierda hasta el de la derecha", aunque en el punto siguiente explica que la suma y el acarreo parten desde el bit de la derecha hacia la izquierda. */}
+
+- Al sumar 1 + 1 a la derecha resulta en 0 y el *carry* se convierte en 1; este *carry* tendrá que sumarse al siguiente bit, el cual va a volver a dar 0 y así sucesivamente; finalmente terminaremos con: **1 0000**. A pesar de que pueda no parecer mucho, este efecto dominó de acarreos puede tomar unos 100 nanosegundos, lo cual es una cantidad considerable para procesadores modernos que ejecutan aproximadamente 316.000.000.000 (en el caso de un Ryzen 7 7800X3D).
+
+A la solución de este problema se le conoce como **Lookahead** o **Aceleración del Carry**, el cual "predice" el acarreo independientemente del resultado de la suma paso a paso; esto se hace mediante variables matemáticas llamadas "generación" y "propagación":
+
+- **Generación ($g_i$)**: Ocurre cuando ambos bits son 1; cuando lo son, la etapa genera un acarreo obligatoriamente, sin importar si recibe uno de la etapa anterior.
+- **Propagación ($p_i$)**: Ocurre si al menos uno de los bits es 1; esta etapa no genera un acarreo, pero si lo recibe, funciona como un puente que "deja pasar".
+
+**Ejemplo**: Vamos a sumar **0101 (5)** y **0011 (3)** y calcularemos el acarreo que llegará a la última columna ($C_3$), la cual sería la columna de 0 y 0. El sistema primero analizará todas las columnas al instante inicial:
+
+- **Columna 0 (Primera de la derecha)**: Suma 1 + 1. Genera acarreo ($g_0 = 1$), Propaga ($p_0 = 0$).
+- **Columna 1**: Suma 0 + 1. No genera ($g_1 = 0$), Propaga ($p_1 = 1$).
+- **Columna 2**: Suma 1 + 0. No genera ($g_2 = 0$), Propaga ($p_2 = 1$).
+- **Columna 3 (Primera columna de la izquierda)**: Suma 0 + 0. No genera ($g_3 = 0$), Propaga ($p_3 = 0$).
+
+**Ahora para calcular el acarreo en ($C_3$):**
+
+En un sumador lento, la columna 3 tendría que esperar el cálculo de la columna 0, 1 y 2 por completo; gracias a *lookahead* podemos aplicar la siguiente fórmula:
+
+$$
+C_3 = g_2 + (p_2 \cdot g_1) + (p_2 \cdot p_1 \cdot g_0) + (p_2 \cdot p_1 \cdot p_0 \cdot C_0)
+$$
+
+Reemplazamos con los valores que obtuvimos:
+
+$$
+C_3 = 0 + (1 \cdot 0) + (1 \cdot 1 \cdot 1) + 0
+$$
+
+$$
+C_3 = 0 + 0 + 1 + 0 = 1
+$$
+
+Con esto el hardware es capaz de determinar que la columna 3 recibirá un acarreo de 1, acelerando muchísimo el proceso.
+
+A continuación se adjuntan 2 simulaciones para entender mejor el cómo funcionan ambos sistemas:
+
+<Demo
+  src="/classes/arquitectura-y-organizacion-de-computadores/02-la-alu/retardo-carry.html"
+  title="Simulación Retardo Carry"
+  height={240}
+/>
+
+<Demo
+  src="/classes/arquitectura-y-organizacion-de-computadores/02-la-alu/carry-lookahead.html"
+  title="Simulación Carry Lookahead"
+  height={260}
+/>
+
+{/* REVISAR: En la página 4 del PDF aparecen los íconos de dos archivos HTML adjuntos en OneNote ("animacion_retardo_d..." / "Simulacion Retardo Carry" y "simulacion_carry_loo..." / "Simulacion Carry Lookahead") que no quedan incrustados al exportar a PDF; se reconstruyeron ambas simulaciones interactivas con los ejemplos de la sección. */}
+
+## Aritmética de Enteros (Multiplicación y división)
+
+### Multiplicación sin signo
+
+La multiplicación de enteros binarios sin signos imita el cómo funciona la multiplicación manual con lápiz y papel, en la que se trabaja columna a columna generando "productos parciales" que luego se suman. Para lograr esto la ALU utiliza un circuito sumador de $n$ bits conectado a una lógica de control conocida como *"Shift and Add"*.
+
+Para esto se utilizan 4 variables:
+
+- `var::M` (Multiplicando)
+- `var::Q` (Multiplicador)
+- `var::A` (Acumulador)
+- `var::C` (Carry)
+
+**Ej.:**
+
+La lógica es la siguiente: Tomaremos como ejemplo los valores **1011** (11 en decimal) y **1101** (13 en decimal); estos valores los vamos a multiplicar. Para este caso nuestro `var::M` será `1011` y nuestro `var::Q` será `1101`; para visualizarlo mejor sería: $1011 \times 1101$, o también $M \times Q$. A continuación se presenta la resolución paso a paso:
+
+Primero tendremos que preparar nuestros datos:
+
+| Variable | Valor |
+| :--- | :--- |
+| `var::M` (Multiplicando) | `1011` |
+| `var::Q` (Multiplicador) | `1101` |
+| `var::A` (Acumulador) | `0000` (siempre empieza en 0) |
+| `var::C` (Carry) | `0` |
+
+La regla de la multiplicación nos dice que el hardware tendrá que realizar $n$ ciclos, siendo $n$ la cantidad de bits que tienen nuestros valores; en este caso nuestros números tienen 4 bits, por lo que se realizarán 4 ciclos.
+
+Durante cada uno de estos ciclos ocurrirán exactamente los siguientes pasos:
+
+1. Se toma el bit más a la derecha de `var::Q`, conocido como $Q_0$:
+   - a. Si este valor es 1, tendremos que sumar `var::M` a `var::A` ($M + A$).
+   - b. Si este valor es 0, saltaremos la suma.
+2. Independiente de lo que ocurra en el paso anterior ocurrirá el desplazamiento (*Shift*). Para entender mejor el desplazamiento tenemos que ver nuestros valores de la siguiente forma:
+
+| `C` | `A` | `Q` |
+| :---: | :---: | :---: |
+
+Al hacer un desplazamiento todos los bits se van a mover un espacio hacia la derecha: el bit de `var::C` "caerá" en el primer bit de `var::A`, el último bit de `var::A` "caerá" en el primer bit de `var::Q`. Ej.:
+
+| Paso | `C` | `A` | `Q` | Números "Caídos" de `Q` |
+| :--- | :---: | :---: | :---: | :---: |
+| Paso 1 | `1` | `1110` | `1010` | `~~~~~` |
+| Paso 2 | `0` | `1111` | `0101` | `~~0~~` |
+| Paso 3 | `0` | `0111` | `1010` | `~~1~~` |
+
+Como se puede ver, los números "caen" hacia la derecha; ahora veremos el ejemplo anterior en acción:
+
+| Variable | Valor |
+| :--- | :--- |
+| `var::M` (Multiplicando) | `1011` |
+| `var::Q` (Multiplicador) | `1101` |
+| `var::A` (Acumulador) | `0000` (siempre empieza en 0) |
+| `var::C` (Carry) | `0` |
+
+- **Ciclo 1**:
+  El bit $Q_0$ es 1 (`1101`), esto significa que tendremos que sumar $A = A + M \mid 0000 + 1011 = 1011$.
+  Ahora realizaremos el *Shift*:
+
+  | Etapa | `C` | `A` | `Q` |
+  | :--- | :---: | :---: | :---: |
+  | Estado actual | `0` | `1011` | `1101` |
+  | Shift | `0` | `0101` | `1110` |
+  | Resultado | `0` | `0101` | `1110` |
+
+- **Ciclo 2**:
+  El bit $Q_0$ ahora es 0 (`1110`), esto significa que no tendremos que hacer ninguna suma; pasamos directo al *Shift*:
+
+  | Etapa | `C` | `A` | `Q` |
+  | :--- | :---: | :---: | :---: |
+  | Estado actual | `0` | `0101` | `1110` |
+  | Shift | `0` | `0010` | `1111` |
+  | Resultado | `0` | `0010` | `1111` |
+
+- **Ciclo 3**:
+  El bit $Q_0$ ahora es 1 (`1111`), esto significa que tendremos que sumar $A = A + M \mid 0010 + 1011 = 1101$.
+  Ahora el *Shift*:
+
+  | Etapa | `C` | `A` | `Q` |
+  | :--- | :---: | :---: | :---: |
+  | Estado actual | `0` | `1101` | `1111` |
+  | Shift | `0` | `0110` | `1111` |
+  | Resultado | `0` | `0110` | `1111` |
+
+- **Ciclo 4 y final**:
+  El bit $Q_0$ ahora es 1 (`1111`), lo que significa que tendremos que sumar $A = A + M \mid 0110 + 1011 = 1\ 0001$; como se puede ver, en este caso nuestra suma nos generó un valor de 5 bits, que no cabe en nuestros 4 bits, esto significa que nuestro *Carry* ahora guarda un 1.
+  Ahora el *Shift*:
+
+  | Etapa | `C` | `A` | `Q` |
+  | :--- | :---: | :---: | :---: |
+  | Estado actual | `1` | `0001` | `1111` |
+  | Shift | `0` | `1000` | `1111` |
+  | Resultado | `0` | `1000` | `1111` |
+
+Como ya se cumplieron los $n$ ciclos podemos armar nuestro resultado final; para eso vamos a juntar `var::A` y `var::Q` en ese orden. Nuestro resultado entonces es:
+
+| `A` | `Q` | Resultado |
+| :---: | :---: | :---: |
+| `1000` | `1111` | `1000 1111` |
+
+Este resultado en decimal es exactamente 143, lo cual es el resultado aritmético correcto de $11 \times 13$.
+
+### Multiplicación con signo (Algoritmo de Booth)
+
+El método anterior se rompe si intentamos multiplicar números negativos representados en Complemento a Dos; esto es debido a que el bit significativo y los pesos alteran el producto parcial directo.
+
+Para solucionar esto el **algoritmo de Booth** nos propone mirar dos bits a la vez en vez de uno solo: El bit actual $Q_0$ y un bit extra imaginario llamado $Q_{-1}$ que inicia en 0. Al igual que con la multiplicación sin signo, estos bits serán los que nos dirán qué tendremos que hacer:
+
+- Si el par es `10` vamos a restar `var::M` de `var::A`.
+- Si el par es `01` vamos a sumar `var::M` con `var::A`.
+- Si el par es `00` o `11` no haremos nada.
+
+Sin importar el paso anterior siempre haremos *Shift* hacia la derecha; a diferencia de la multiplicación sin signo nuestro orden se verá así:
+
+| `A` | `Q` | $Q_{-1}$ |
+| :---: | :---: | :---: |
+
+Para la multiplicación con signo no podremos aplicar la lógica de *Shift* que aplicamos con sin signo. La regla nos dice que el bit más significativo de `var::A` (el de más a la izquierda) se copiará hacia la derecha; el resto ocurre normal: el bit de más a la derecha de `var::A` caerá en `var::Q` y el bit más a la derecha de `var::Q` caerá en $Q_{-1}$.
+
+Un ejemplo visual:
+
+| Paso | `A` | `Q` | $Q_{-1}$ |
+| :--- | :---: | :---: | :---: |
+| Paso 1 | `1101` | `0011` | `0` |
+| Paso 2 | `1110` | `1001` | `1` |
+| Paso 3 | `1111` | `0100` | `1` |
+
+Finalmente, al igual que con multiplicación sin signo, nuestros ciclos estarán determinados por los bits que tengan nuestros números.
+
+**Ej.:**
+
+Para este ejemplo vamos a multiplicar **7 (0111)** por **3 (0011)**; al igual que con la multiplicación sin signo el primer paso será preparar nuestros datos:
+
+| Variable | Valor |
+| :--- | :--- |
+| `var::M` | `0111` |
+| `-M` | `1001` (-7, es el complemento a dos de 7) |
+| `var::Q` | `0011` |
+| `var::A` | `0000` (empieza en 0) |
+| $Q_{-1}$ | `0` (empieza en 0) |
+
+Como nuestros valores son de 4 bits tendremos que realizar un total de 4 ciclos.
+
+- **Ciclo 1**:
+  Vamos a evaluar nuestros dos bits $Q_0$ y $Q_{-1}$, en este caso son `1` y `0`; la regla nos dice que con el par `10` tendremos que restar `var::M` de `var::A`. Para esto utilizaremos `-M` como vimos anteriormente en resta de enteros, esto nos queda: $A = A + (-M) \mid 0000 + 1001 = 1001$.
+  Ahora realizaremos el *Shift*:
+
+  | Etapa | `A` | `Q` | $Q_{-1}$ |
+  | :--- | :---: | :---: | :---: |
+  | Estado Actual | `1001` | `0011` | `0` |
+  | Shift | `1100` | `1001` | `1` |
+  | Resultado | `1100` | `1001` | `1` |
+
+- **Ciclo 2**:
+  Nuevamente evaluamos el par $Q_0, Q_{-1}$, en este caso es `11` por lo que no tendremos que hacer nada; pasamos directo al *Shift*:
+
+  | Etapa | `A` | `Q` | $Q_{-1}$ |
+  | :--- | :---: | :---: | :---: |
+  | Estado Actual | `1100` | `1001` | `1` |
+  | Shift | `1110` | `0100` | `1` |
+  | Resultado | `1110` | `0100` | `1` |
+
+- **Ciclo 3**:
+  Nuevamente vamos a evaluar nuestro par $Q_0, Q_{-1}$, en este caso tenemos `01`, lo que nos indica que tendremos que hacer una suma donde $A = A + M \mid 1110 + 0111 = 1\ 0101$ (En este caso se ignora el acarreo de salida porque así funciona Complemento a Dos).
+  Ahora pasamos al *Shift*:
+
+  | Etapa | `A` | `Q` | $Q_{-1}$ |
+  | :--- | :---: | :---: | :---: |
+  | Estado Actual | `0101` | `0100` | `1` |
+  | Shift | `0010` | `1010` | `0` |
+  | Resultado | `0010` | `1010` | `0` |
+
+- **Ciclo 4 y final**:
+  Por último vamos a volver a evaluar nuestro par $Q_0, Q_{-1}$, en este caso es `00` por lo que no haremos nada y pasaremos directo al *Shift*:
+
+  | Etapa | `A` | `Q` | $Q_{-1}$ |
+  | :--- | :---: | :---: | :---: |
+  | Estado Actual | `0010` | `1010` | `0` |
+  | Shift | `0001` | `0101` | `0` |
+  | Resultado | `0001` | `0101` | `0` |
+
+Para finalizar vamos a concatenar `var::A` y `var::Q` en ese orden para conseguir nuestro resultado:
+
+| `A` | `Q` | Resultado |
+| :---: | :---: | :---: |
+| `0001` | `0101` | `0001 0101` |
+
+Al convertir este número a decimal obtenemos 21, lo cual es el resultado correcto de multiplicar $7 \times 3$.
+
+## Punto flotante
+
+La notación de punto fijo tiene limitaciones severas: es incapaz de representar números decimales o gigantescos; es por esto que la solución de las computadoras es el **Punto Flotante**.
+
+En decimal nosotros utilizamos la notación científica, representada por $X = \pm R \times 10^{\pm N}$; en binario esto es distinto, se representa de la forma $X = \pm q \times 2^{\pm N}$.
+
+Como la memoria es el factor más limitante en las computadoras no nos basta con guardar un número decimal entero, es por esto que debemos realizar algo llamado **Normalización**.
+
+### La normalización
+
+La regla matemática de la normalización nos dice que nuestro objetivo será ajustar el número para que sea mayor a 1 pero menor a 2 ($1 \le q < 2$); como en el sistema binario solo existen el 1 y el 0, el único número que va a cumplir con este criterio es el número 1, es por esto que tendremos que mover la coma.
+
+Imaginemos que tenemos el número binario `1101,01` (13,25 en decimal); para poder normalizarlo tendremos que dejar este número dentro del rango ($1 \le q < 2$), para esto vamos a mover la coma 3 espacios hacia la izquierda, lo que dará como resultado `1,10101`. Ahora la parte entera de nuestro número decimal es 1, lo cual cumple con la regla de la normalización; con esto ahora la computadora es capaz de olvidar nuestra parte entera y guardar solo la parte decimal, lo que quedaría como `10101`. Es gracias a la normalización que la computadora puede siempre asumir que todo número de punto flotante guardado tiene un 1 delante.
+
+### La estructura de un Número de Punto Flotante (Formato típico en 32 bits)
+
+Un número de punto flotante se separa en 3 secciones:
+
+- **Signo (1 bit)**: al igual que en números enteros, el primer bit indica el signo del número, siendo 1 para negativos y 0 para positivos.
+- **Exponente sesgado (8 bits)**: Es aquí donde entra lo visto anteriormente; al normalizar un número, tenemos que mover su coma para que su estructura sea la que el computador espera. Gracias al estándar **IEEE 754**, se estableció que el sesgo base de cualquier número es siempre 127; a este número le vamos a sumar la cantidad de espacios que movimos nuestra coma (su exponente):
+  - En el ejemplo anterior vimos cómo normalizar el número 13,25 en binario; en ese caso tuvimos que mover la coma 3 espacios, lo que nos dio un exponente de 3 representado como $1{,}10101 \times 2^3$. Entonces, si quisiéramos saber el sesgo de este número decimal, tendríamos que sumarle 3 a 127, lo que daría como resultado 130.
+  - Ahora veamos el caso contrario: tenemos el número `0,00011`; ahora no podemos mover la coma hacia la izquierda porque no existen 1s en esa dirección, por lo que tendremos que hacer el caso contrario, es decir, vamos a mover la coma exactamente 4 espacios a la derecha, lo que nos dará como resultado $1{,}1 \times 2^{-4}$.
+    Ahora para calcular su sesgo tendremos que restarle 4 a 127, lo que nos dará como resultado 123.
+- **Mantisa o Significando (23 bits)**: Aquí es donde se van a almacenar todos los números decimales binarios de nuestro número normalizado; es decir, viendo los ejemplos anteriores, vamos a guardar solo `10101` (en el caso del primer ejemplo) o `1` (en el caso del segundo ejemplo).
+
+Ahora como ejemplo vamos a guardar el número $\pi = 3{,}141592$:
+
+1. El primer paso será convertir todo nuestro número de decimal a binario:
+   - Para la parte entera, sabemos que 3 en binario es `11`.
+   - Para la parte decimal será más difícil: vamos a tomar solo la parte decimal ($0{,}141592$) y la vamos a multiplicar por 2; si el número alcanza o supera el 1 anotaremos un 1, si no anotaremos un 0 y seguiremos multiplicando:
+     1. $0{,}141592 \times 2 = 0{,}283184$ ($\text{No llega a } 1 \to \text{Anotamos } \mathbf{0}$)
+     2. $0{,}283184 \times 2 = 0{,}566368$ ($\text{No llega a } 1 \to \text{Anotamos } \mathbf{0}$)
+     3. $0{,}566368 \times 2 = 1{,}132736$ ($\text{Llega a } 1 \to \text{Anotamos } \mathbf{1}\text{, y nos quedamos con } 0{,}132736$)
+     4. $0{,}132736 \times 2 = 0{,}265472$ ($\text{No llega a } 1 \to \text{Anotamos } \mathbf{0}$)
+     5. $0{,}265472 \times 2 = 0{,}530944$ ($\text{No llega a } 1 \to \text{Anotamos } \mathbf{0}$)
+     6. $0{,}530944 \times 2 = 1{,}061888$ ($\text{Llega a } 1 \to \text{Anotamos } \mathbf{1}\text{, y nos quedamos con } 0{,}061888$)
+   - Si seguimos con este proceso eventualmente llegaremos al número `0010010000111111010`, el cual representará nuestra parte decimal.
+2. Ahora que tenemos nuestro número decimal en binario vamos a buscar su signo; en este caso es positivo por lo que su signo será `0`. Hasta ahora nuestro número se ve así:
+
+   | Signo | Sesgo | Mantisa |
+   | :---: | :---: | :---: |
+   | `0` | `-` | `-` |
+
+3. El siguiente paso será normalizar nuestro número y además calcular el sesgo. Recordemos que nuestro número decimal en binario se ve así:
+   - $\to \mathbf{11{,}0010010000111111010}$
+   Para normalizarlo tendremos que mover la coma hasta que la parte entera esté entre 1 y 2; en este caso solo tendremos que moverlo una vez, lo que nos deja con: $\mathbf{1{,}10010010000111111010 \times 2^1}$.
+   Ahora que tenemos nuestro número normalizado solo nos queda calcular su sesgo utilizando la fórmula vista anteriormente: $1 + 127 = 128$; ahora solo queda convertirlo en binario: $128 = 10000000$. Ahora nuestro número se ve así:
+
+   | Signo | Sesgo | Mantisa |
+   | :---: | :---: | :---: |
+   | `0` | `10000000` | `-` |
+
+4. Para terminar solo nos queda la mantisa, la cual ya tenemos. Anteriormente convertimos la parte decimal de $\pi$ en binario lo que nos dio como resultado `0010010000111111010`; además al calcular el sesgo quedamos que nuestro número normalizado se ve así: $\mathbf{1{,}10010010000111111010 \times 2^1}$. Gracias a esta normalización el computador no necesita guardar ese 1 que tenemos en la parte entera, así que nuestro número queda como: **10010010000111111010**. Esta será nuestra mantisa, lo que nos dará como resultado:
+
+   | Signo | Sesgo | Mantisa |
+   | :---: | :---: | :---: |
+   | `0` | `10000000` | `10010010000111111010` |
+
+Esto el computador lo leerá como:
+
+- Número positivo (signo `0`)
+- Exponente 1 (al calcular el sesgo de forma inversa)
+- Parte decimal `10010010000111111010`
+
+Al juntar todo esto el computador será capaz de rearmar el número como:
+
+`+(signo) 1(el uno que asume gracias a la normalización),10010010000111111010 x 2^1(El exponente que consigue gracias al Sesgo)`
+
+Quedando finalmente como $\mathbf{+1{,}10010010000111111010 \times 2^1}$, lo que es lo mismo que $\pi = 3{,}141592$.
+
+### Suma y Resta de Punto Flotante
+
+A diferencia de las operaciones con números enteros, no es posible solamente operar sobre las mantisas de dos números de punto flotante ya que existe el sesgo; tratar de sumar dos mantisas sin considerar el sesgo, una forma de entenderlo mejor es la siguiente:
+
+Imagina que tienes 1 decena de manzanas y 1 mil manzanas; si ignoramos todo lo demás se podría decir que estamos tratando de sumar 1 + 1, pero esto no es así, ya que las cantidades son diferentes: por un lado tenemos 1 grupo de 10 manzanas, por el otro 1 grupo de mil manzanas; es incorrecto decir 1 + 1 ya que no son compatibles sus tamaños.
+
+Es aquí donde entra el primer paso de la suma y resta de Punto Flotante: vamos a tener que comparar los exponentes de ambos números.
+
+- **Paso 1: Comparación de exponentes**:
+  Para poder empezar a sumar o restar dos números de Punto Flotante tendremos que hacer que ambos estén en el mismo "idioma"; siguiendo la analogía de antes, donde teníamos 1 decena y 1 mil manzanas, tendremos que hacer que el más pequeño se acerque al más grande; en este caso tendremos que pasar de 1 decena a 0,01 mil manzanas, esto lo haremos modificando su exponente.
+  Tomemos como ejemplo los siguientes números:
+  - $\to X = 1{,}100 \times 2^2$
+  - $\to Y = 1{,}010 \times 2^1$
+  Como podemos ver $X$ es más grande que $Y$; para solucionar esto tendremos que desplazar todo $Y$ una cantidad $N$ de espacios hacia la derecha, $N$ siendo:
+  $N = \text{Exponente mayor}(X) - \text{Exponente menor}(Y) \mid 2 - 1 = 1$. Para este caso tendremos que desplazar todo $Y$ en un espacio a la derecha de la siguiente forma:
+
+  | Etapa | Dígito que viene (Imaginario) | `D1,` | `D2` | `D3` | `D4` | Dígito perdido (imaginario) |
+  | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+  | Antes | `0` | `1` | `0` | `1` | `0` | `-` |
+  | Después | `-` | `0` | `1` | `0` | `1` | `0` |
+
+  Habiendo hecho esto, tendremos que sumarle $N$ al exponente de $Y$, lo que nos dejará con:
+  - $\to X = 1{,}100 \times 2^2$
+  - $\to Y = 0{,}101 \times 2^2$
+  Ahora ambos números están en el mismo exponente y ya podemos trabajar con ellos.
+
+- **Paso 2 (Suma)**:
+  En el caso de la suma el siguiente paso es tan simple como sumar la mantisa de ambos números; para nuestro ejemplo sería de la siguiente forma:
+
+  $$
+  \begin{array}{rl}
+  1{,}100 & \text{(Mantisa de } X\text{)} \\
+  +0{,}101 & \text{(Mantisa de } Y \text{ alineada)} \\
+  \hline
+  \mathbf{10{,}001} &
+  \end{array}
+  $$
+
+  Como podemos ver ya tenemos nuestro resultado, pero este resultado que obtuvimos no cumple con las reglas de la Normalización, lo que nos lleva al paso 3.
+
+- **Paso 2 (Resta)**:
+  En el caso de la resta las cosas cambian: a diferencia de los números enteros que utilizaban Complemento a Dos para reutilizar los sumadores del procesador, en resta de Punto Flotante tendremos que **Sí o Sí** utilizar restadores dedicados; es importante mencionar que el orden de sucesos en la resta no es igual que en la suma (se explicará más adelante).
+  - **Primer paso Resta**:
+    El primer paso en la resta siempre será invertir el signo del sustraendo donde: $X(\text{Minuendo}) - Y(\text{Sustraendo})$, lo que matemáticamente convertirá nuestra operación en: $X + (-Y)$.
+  - **Segundo paso Resta**:
+    Luego de invertir el signo del sustraendo, tendremos que comprobar si tenemos dos números del mismo signo o si tienen signos diferentes:
+    - Si tienen signos diferentes (`-` con `+`; `+` con `-`) vamos a comparar ambas mantisas; estamos buscando identificar qué número es mayor y cuál es menor, una vez sepamos cuál es cuál podremos seguir la fórmula: $\text{Mayor} - \text{Menor}$.
+    - Si tienen signos iguales (`+` con `+`; `-` con `-`) ocurre que esto ya no es una resta técnicamente: al invertir el signo del sustraendo y quedar con dos números del mismo signo se convierte en una suma, ya que: $1 + 1 = 2 \mid -1 - 1 = -2$.
+    Como se mencionó anteriormente la resta se realizará mediante Restadores dedicados y no utilizando Sumadores como en Complemento a Dos; este procedimiento de resta imita el cómo funciona la resta a lápiz y papel donde se utilizan "préstamos".
+  - **Tercer paso Resta (Exclusivo para signos diferentes)**:
+    El paso final de la resta es asignarle un signo a nuestro resultado; para esto utilizaremos el signo del número Mayor (que encontramos antes durante la comparación).
+
+- **Paso 3: Normalización**:
+  Una vez terminada la Suma o Resta solo nos quedará normalizar el valor; esto lo haremos exactamente como se explicó anteriormente, esto teniendo en cuenta que nuestro resultado "heredará" el exponente del número mayor: como tuvimos que igualar el exponente en el paso 1, el resultado tendrá este mismo exponente, en este caso $2^2$.
+
+**IMPORTANTE**
+
+Como se mencionó anteriormente las sumas y restas no siguen el mismo orden lógico; a continuación se detallan los pasos para cada uno:
+
+| Pasos para la Suma | Pasos para la Resta (Signos iguales) | Pasos para la Resta (Signos distintos) |
+| :--- | :--- | :--- |
+| 1. Se comparan los exponentes.<br/>2. Se igualan los exponentes.<br/>3. Se realiza la suma.<br/>4. Se normaliza el resultado. | 1. Se invierte el signo del sustraendo.<br/>2. Se comparan exponentes.<br/>3. Se igualan exponentes.<br/>4. Se realiza la resta como suma.<br/>5. Se normaliza el resultado. | 1. Se invierte el signo del sustraendo.<br/>2. Se comparan exponentes.<br/>3. Se igualan exponentes.<br/>4. Se encuentra el mayor y el menor.<br/>5. Se realiza mayor - menor.<br/>6. El resultado recibe el signo del mayor.<br/>7. Se normaliza el resultado. |
+
+Esta comparación es solo para fines de cálculo a mano; en hardware real la única diferencia es que la resta pasa primero por el proceso de invertir signo, luego de eso ambas operaciones ocurren igual.
+
+### Multiplicación de punto flotante
+
+A diferencia de la suma y resta de dos números de punto flotante, la multiplicación no necesita igualar los exponentes, pero estos igualmente son importantes a la hora del cálculo; los pasos de la multiplicación son los siguientes:
+
+- **Paso 1**: El primer paso es comprobar si cualquiera de los dos números es cero; en el caso de que alguno lo sea la operación se omite completamente y se otorga como resultado el 0.
+- **Paso 2**: Luego de realizar la comprobación de 0s, la ALU suma los exponentes de ambos números, esto con el objetivo de encontrar el exponente del resultado, pero esto genera un problema: al sumar los exponentes de ambos números (representado como $127 + e$) tendremos un sesgo "duplicado"; es por esto que además de realizar la suma de exponentes tendremos que realizar una resta fija de 127 para así eliminar esta duplicación.
+  - **Paso 2.5**: La ALU se encarga de mirar este nuevo exponente y comprobar si es que no se provoca un desbordamiento *Underflow* o un *Overflow*.
+- **Paso 3**: Una vez calculado el exponente del resultado toca la multiplicación como tal; para este paso la ALU toma la mantisa de ambos números y les vuelve a poner el 1 en frente (ese 1 que el procesador omitía gracias a la normalización). Luego de eso el procedimiento es el mismo que en la multiplicación de números enteros donde usábamos el método *Add and Shift*, con la diferencia que temporalmente ignoraremos las comas.
+  - **Paso 3.5**: Una vez terminada la multiplicación, volveremos a ubicar la coma basándonos en el exponente calculado en el paso 2.
+- **Paso 4**: Ahora con el resultado nuevamente en decimales y con su exponente solo tendremos que aplicar normalización si corresponde.
+- **Paso 5**: Finalmente el hardware redondeará el número resultante en caso de que este exceda los 23 bits disponibles para la mantisa.
+
+Es importante aclarar que el cálculo del signo resultante se realiza usando las reglas matemáticas básicas sobre los signos en multiplicación (Signos iguales dan resultado positivo, Signos contrarios dan signo negativo).
+
+Ahora para el ejemplo vamos a multiplicar $3{,}0 \times 5{,}0$ en binario:
+
+- **Número $X$ ($3{,}0$)**: denotado como $\mathbf{1{,}1 \times 2^1}$ en notación científica.
+  - Su bit de signo es `0` (Positivo).
+  - Su exponente es $2^1$, es decir: $127 + 1 = 128$.
+  - Su mantisa sin el 1 de la normalización es `10000...`
+- **Número $Y$ ($5{,}0$)**: denotado como $\mathbf{1{,}01 \times 2^2}$ en notación científica.
+  - Su bit de signo es `0` (Positivo).
+  - Su exponente es $2^2$, es decir: $127 + 2 = 129$.
+  - Su mantisa sin el 1 de la normalización es `01000...`
+
+Resolución paso a paso:
+
+- **Paso 1 (comprobación de 0s)**: En este caso ambos números son distintos de cero, la operación continúa.
+- **Paso 2 (Suma de exponentes)**: Los exponentes son:
+  - $X = 128$
+  - $Y = 129$
+  Como se mencionó anteriormente, al realizar la suma terminaremos con un sesgo "duplicado"; por eso, corregiremos restándole 127 al resultado:
+  - $\to 128 + 129 = 257;\ 257 - 127 = 130$, es decir, nuestro resultado tendrá el exponente $2^3$.
+  - **Paso 2.5 (Comprobar Overflow o Underflow)**: Para que ocurra un desbordamiento en Punto Flotante de 32 bits (nuestro caso) los límites son:
+    - $\to$ *Positive Overflow limit*: Para que ocurra un desborde positivo, el exponente debe superar $(2 - 2^{-23}) \times 2^{128}$ o $10^{+38}$ en decimal.
+    - $\to$ *Negative Overflow limit*: Para que ocurra un desborde negativo, el exponente debe ser menor que $-(2 - 2^{-23}) \times 2^{128}$.
+    - $\to$ *Positive Underflow*: Para que ocurra un subdesbordamiento positivo (el número es demasiado pequeño, es decir se acerca mucho a 0) el número debe ser menor que $2^{-126}$, aunque se puede extender hasta $2^{-149}$ gracias a la inclusión de números subnormales en el estándar.
+    - $\to$ *Negative Underflow*: Contrario al caso anterior, esto ocurre cuando el número negativo se acerca demasiado a cero desde abajo; el número debe ser mayor a $-2^{-127}$ para que ocurra.
+    En caso de que cualquiera de estos casos se cumpliera el sistema convertirá ese número a **Infinito** ($+\infty, -\infty$) según corresponda, aplicando reglas matemáticas lógicas sobre él como $5 + (+\infty) = +\infty$. En nuestro caso eso no ocurre así que continuamos.
+- **Paso 3 (Multiplicación)**: Como ya se explicó anteriormente cómo se multiplicaban los números enteros el cálculo se simplificará:
+  - Primero le devolveremos el 1 ignorado por normalización a ambos números, quedando como:
+    - $\to X = 1{,}1$
+    - $\to Y = 1{,}01$
+  - Ahora se realiza una multiplicación normal ignorando las comas, de forma: $11 \times 101 = 1111$.
+  - **Paso 3.5 (Posicionar la coma)**: Ahora que tenemos el resultado, utilizaremos nuestro exponente calculado en el paso 2 para ubicar la coma, obteniendo como resultado: `1,111`.
+- **Paso 4 (Normalización)**: En nuestro caso nuestro resultado `1,111` ya está normalizado, por lo que no hay que hacer nada.
+- **Paso 5 (Redondeo)**: En caso de que nuestra mantisa tuviera más de 23 bits tendríamos que redondearlo; este no es el caso para nuestro ejemplo.
+
+Finalmente, sabiendo que multiplicamos dos números con el mismo signo, el resultado es positivo, quedando de la siguiente forma:
+
+| Signo | Exponente | Mantisa |
+| :---: | :---: | :---: |
+| `0` | `10000010` | `11100000000000000000000` |
+
+### Bits de Guarda (Guard Bits) y Redondeo
+
+Como vimos durante la suma y resta, al existir diferencia de exponentes era necesario igualar estos exponentes mediante el movimiento de la coma; esto genera un problema y es que si nuestro número cabe justo en los 23 bits de la mantisa, este movimiento de la coma hará que la información a la derecha se "caiga". Es por esto que el hardware expande la mantisa temporalmente añadiendo los **Bits de Guarda**.
+
+- **Ejemplo**:
+  Imaginemos que tenemos un procesador reducido, en el cual solo se permiten mantisas de 4 bits. Vamos a restar $X - Y$:
+  - $X = 1{,}000 \times 2^1$
+  - $Y = 1{,}111 \times 2^{-3}$
+  Para poder restar respetando las reglas, tendremos que igualar sus exponentes, o sea que tendremos que pasar de $2^{-3}$ a $2^1$, lo cual sería igual a mover $Y$ 4 bits hacia la derecha.
+
+- **SIN bits de guarda**: Al mover $Y$ 4 bits a la derecha ocurre lo siguiente:
+
+  | `D1,` | `D2` | `D3` | `D4` | Bits perdidos |
+  | :---: | :---: | :---: | :---: | :---: |
+  | `1` | `1` | `1` | `1` | |
+  | `0` | `1` | `1` | `1` | `1` |
+  | `0` | `0` | `1` | `1` | `11` |
+  | `0` | `0` | `0` | `1` | `111` |
+  | `0` | `0` | `0` | `0` | `1111` |
+
+  Donde $D_n = \text{Dígito}$, con $D_1$ como el que acompaña a la coma.
+  Como podemos ver, perdimos toda la información de $Y$; ahora al realizar la resta pasa lo siguiente:
+  $1{,}000\ (X) - 0{,}000\ (Y) = 1{,}000$.
+  Logramos perder toda la información de $Y$ haciendo que la operación no sea exitosa.
+
+- **CON bits de guarda**: Ahora veamos cómo se soluciona este problema; nuevamente tendremos que mover $Y$ 4 bits hacia la derecha para poder igualar los exponentes, pero ahora el hardware asignará nuevo espacio temporal para proteger nuestros datos:
+
+  | `D1,` | `D2` | `D3` | `D4` | `Bg1` | `Bg2` | `Bg3` | `Bg4` |
+  | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
+  | `1` | `1` | `1` | `1` | `-` | `-` | `-` | `-` |
+  | `0` | `1` | `1` | `1` | `1` | `-` | `-` | `-` |
+  | `0` | `0` | `1` | `1` | `1` | `1` | `-` | `-` |
+  | `0` | `0` | `0` | `1` | `1` | `1` | `1` | `-` |
+  | `0` | `0` | `0` | `0` | `1` | `1` | `1` | `1` |
+
+  Donde $D_n = \text{dígito}$, con $D_1$ como el que acompaña la coma; $Bg_n = \text{Bit de guarda}$.
+  Como podemos ver, esta vez no se perdió la información de $Y$; ahora podremos realizar la resta sin miedo a errores:
+  $1{,}0000000(X) - 0{,}0001111(Y) = \mathbf{0{,}1110001}$.
+  Finalmente este resultado será redondeado para caber dentro de la mantisa nuevamente.
+
+Ahora en el mundo real, nuestro procesador no trabaja con 4 bits de mantisa, ni tampoco es conveniente tener tantos bits de guarda; es por esto que la mayoría de las ALU implementan el siguiente sistema:
+
+- **Bit de Guarda (*Guard Bit*)**: Es el primer bit adicional; funciona igual que los bits de guarda vistos en el ejemplo anterior.
+- **Bit de Redondeo (*Round Bit*)**: El segundo bit adicional; es utilizado para tener más contexto al decidir desempates matemáticos.
+- **Bit Pegajoso (*Sticky Bit*)**: Es el tercer y último bit disponible; pasando este punto todos los números empiezan a perderse. Para resolver esto el Bit Pegajoso actúa como una "trampa": deja pasar los bits hasta que uno de esos bits sea igual a 1; en ese momento el Bit Pegajoso cambia y se queda "pegado" en 1 sin importar los bits que vengan.
+
+Finalmente hablaremos del redondeo: siempre que obtengamos un resultado que supere la cantidad de bits disponibles tendremos que redondear el resultado para que este pueda caber; el estándar IEEE propone 3 tipos de redondeo para distintos casos:
+
+- **Redondeo al más cercano (*Round to nearest*)**: Este es el tipo de redondeo por defecto y el que debe ser usado para casi todos los cálculos generales, científicos y financieros; su propósito es minimizar el error de redondeo acumulado. La regla exige que el número tendrá que ser redondeado hacia el número par más cercano, lo que balancea los errores hacia arriba y abajo en cálculos largos.
+  Ej.:
+  - Tenemos el valor `+1,10110` y nuestro procesador solo permite 3 decimales (de forma `1,xxx`); este valor está atrapado entre `1,101` y `1,110`. Ambos valores están a la misma distancia de nuestro valor a redondear, por lo que la regla dice que tendremos que ir al que sea par, el cual en este caso sería `1,110` (termina en 0, es decir, es par).
+- **Redondeo hacia cero (*Round toward 0* / truncamiento)**:
+
+{/* REVISAR: El apunte original termina de forma inconclusa tras el ítem "Redonde hacia cero (Round toward 0 / truncamiento):", sin incluir su descripción ni el tercer tipo de redondeo mencionado en "el estándar IEEE propone 3 tipos de redondeo". */}
