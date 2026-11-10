@@ -1,0 +1,145 @@
+---
+title: "Arquitectura de software"
+order: 8
+---
+
+## Fundamentos y Decisiones Arquitecturales
+
+Para empezar, sirve imaginar la arquitectura de un programa como los cimientos de un edificio: son aquellas decisiones que, una vez tomadas, son muy difíciles y costosas de revertir.
+
+### ¿Entonces qué es la arquitectura de software?
+
+A diferencia del diseño detallado, la arquitectura opera a una escala mayor. Se encarga de la organización de los componentes principales del sistema y el cómo estos se relacionan, es decir, definimos la distribución de responsabilidades, establecemos límites claros entre módulos y tomamos decisiones de cómo se comunicarán las partes, cómo se guardarán los datos y cómo se desplegará el sistema.
+
+### El "por qué" de la arquitectura
+
+La idea no es hacer que el código se vea bonito, sino que buscamos satisfacer necesidades específicas del negocio, conocidas como **Atributos de Calidad**. Imagina que tienes un sistema y quieres hacer un cambio, es importante preguntarte: ¿Esta modificación afectará otras partes del sistema?, ¿Puede seguir funcionando si hay una falla parcial?, ¿Puedo hacer pruebas rápidas sin tener que levantar una base de datos? Todas estas preguntas apuntan a la arquitectura del sistema; decidir quién se encarga de hacer qué cosa es lo que ayuda a responder estas preguntas.
+
+Sin embargo, en la arquitectura no existen soluciones perfectas; tal como vimos en patrones de diseño, toda elección tiene un costo y compromiso, y la decisión debe ser justificada bajo un escenario de calidad real. Por ejemplo:
+
+- Separar el código en capas te da límites y responsabilidades claras, pero también te obliga a escribir más interfaces y traducir datos de una capa a la otra.
+- Elegir microservicios permite que distintas partes de la app funcionen de forma independiente, pero esto también introduce latencia, fallos de red y además hace que observar datos distribuidos se vuelva un dolor de cabeza.
+- Usar mensajes asíncronos te ayuda a desacoplar procesos en el tiempo, pero te obliga a lidiar con mensajes duplicados y problemas de consistencia de datos.
+
+Este problema y debate de decisión no es nuevo; en 1992 Andrew Tanenbaum (creador de MINIX y escritor de libros de ciencias de la computación) defendía que los sistemas operativos debían usar un "microkernel". Primero definamos lo que es un Kernel:
+
+Un Kernel se puede entender como el puente que existe entre el sistema operativo y el PC como objeto físico; se encarga de comunicar los programas que usas directamente con tu CPU, RAM, GPU, etc. Dentro de los Kernels existen dos tipos que sobresalen:
+
+- El **Kernel Monolítico** es aquel donde todos los servicios del sistema (Drivers, sistema de archivos, planificación de tareas, gestión de memoria) funcionan dentro de un mismo espacio de memoria; es rápido, pero si un módulo falla se cae todo el sistema.
+  Algunos ejemplos famosos que usan Kernel Monolítico son: consolas como PlayStation 2, 4 y 5, la Xbox original, todos los Windows 9x, Linux, Unix, la Steam Deck y más.
+- El **Microkernel** tiene solo lo mínimo necesario e indispensable (comunicación básica y hardware); todo el resto funciona de manera externa. Esto lo hace más lento, pero también más resistente a fallas.
+  Algunos ejemplos famosos de sistemas que usan Microkernel son: la Nintendo Switch y 3DS, la PlayStation 3, todos los sistemas operativos de Apple (Apple iOS, macOS, watchOS), dispositivos Qualcomm, todos los procesadores Intel CPU tienen dentro un Intel Management Engine el cual corre MINIX 3, y más.
+
+Volviendo al tema, Andrew Tanenbaum defendía que los sistemas operativos debían usar Microkernel, que es exactamente lo que él usó en MINIX, debido a que él prefería aislar los servicios para poder separar responsabilidades. Linus Torvalds (creador de Linux y Git), por otro lado, defendía el núcleo Monolítico, debido a que era más rápido y fácil de trabajar con él.
+
+Para cada tipo de los kernels mencionados se puede dar un ejemplo para demostrar que no existe una solución única y que toda decisión trae consigo sacrificios:
+
+**La PlayStation 2 (Kernel Monolítico):** priorizaba velocidad bruta. Al elegir un Kernel Monolítico, los desarrolladores tenían acceso casi directo al hardware de la consola; esto permitió que, a pesar de ser la consola más débil de su generación, los desarrolladores lograran sacar juegos que exprimían al máximo la consola.
+Sin embargo, el sacrificio fue la complejidad: al funcionar todo dentro del mismo núcleo, programar para esta consola era una pesadilla; cualquier error por más pequeño que fuera al manipular memoria podía causar que el juego crasheara. Por ejemplo, gestionar mal un archivo de audio en la memoria no dejaba al juego sin sonido, sino que crasheaba todo.
+
+**La Nintendo Switch (y 3DS):** ambas consolas tienen un sistema operativo microkernel. Esto les permitió que todos los servicios funcionaran por separado: tanto la conexión a internet, captura de pantalla, el menú y los juegos corren como servicios separados. Esto permite que salir al menú mientras juegas no crashee todo el sistema; si acaso ocurre algún error, el sistema simplemente reinicia ese servicio sin apagar la consola.
+Pero aislar todo tiene un precio, el cual es el alto costo de la interacción: como los juegos no pueden hablar directamente con el hardware, estos deben enviar mensajes mediante variables primitivas al kernel principal, introduciendo latencia y haciendo que los desarrolladores tengan que optimizar más los juegos.
+
+## La Deuda Arquitectural
+
+La deuda arquitectural es la acumulación de errores de diseño, límites rígidos y decisiones estructurales desactualizadas que hacen que un sistema sea difícil de cambiar, escalar y/o mantener. No debe ser confundida con la deuda técnica, la cual puede entenderse como hacer una función desordenada la cual traerá problemas más adelante. Esta deuda nace debido a que una decisión que hoy puede parecer razonable, eventualmente podría convertirse en un límite para cambios futuros.
+
+El software es complejo y es inevitable que crezca y se vuelva un desorden; es por esto que un buen diseño arquitectural no busca adivinar el futuro, sino prepararse para este, tomando decisiones que creen fronteras estables, hagan explícitos ciertos riesgos y además ayuden al sistema a mantener la capacidad de adaptarse.
+
+## Arquitectura por Capas
+
+La arquitectura por capas organiza el software agrupando sus componentes según sus responsabilidades, estableciendo que las capas solo tienen permiso de comunicarse con la capa que tienen debajo (en flujo hacia abajo), aunque existen excepciones en las que se permite saltar capas pero de manera controlada, y normalmente para leer datos y hacer consultas sencillas.
+
+Normalmente las responsabilidades se dividen en tres capas fundamentales:
+
+- **Presentación:** Maneja las entradas y salidas, interpreta códigos HTTP y define el formato de los datos.
+- **Aplicación/Negocio:** Contiene las reglas invariantes y los casos de uso reales, es decir, aquí vive la lógica pura del programa.
+- **Persistencia:** Se encarga exclusivamente del almacenamiento y consultas a los repositorios de datos.
+
+<Figure
+  src="/classes/ingenieria-de-software/08-arquitectura-de-software/arquitectura-tres-capas.png"
+  alt="Diagrama de arquitectura de tres capas y servidores: presentación (React, Angular, Vue), aplicación (Spring Boot, Django, Express) y base de datos (PostgreSQL, MySQL, MongoDB, Firebase)"
+  caption="Separación en tres capas: presentación, aplicación y base de datos."
+/>
+
+Un error común en programadores novatos es mezclar todo en el mismo bloque: un controlador web que recibe peticiones HTTP, hace consultas a una base de datos, hace cálculos y al mismo tiempo genera código HTML. La mejor forma de saber si tu código está bien separado es hacerte la pregunta: ¿Puedo probar las reglas de negocio sin abrir el navegador y levantar un server?
+
+### La diferencia entre Capas (Layers) y Niveles (Tiers)
+
+Es importante no mezclar los términos: una capa es una división lógica del código, mientras que un nivel se refiere a la separación física de ejecución o despliegue.
+
+## Patrón MVC (Model View Controller)
+
+Es uno de los patrones arquitecturales más famosos, nacido dentro del entorno Smalltalk (un lenguaje de programación), y se basa en la idea de que la lógica central no tiene por qué saber cómo se dibuja la pantalla.
+
+- El **Model** representa el estado o comportamiento, es decir, las reglas de negocio del sistema. Es común equivocarse y pensar que el Model es la base de datos.
+- El **View** es la representación visual de lo que se le muestra al usuario, ya sea una interfaz o página web. Pueden existir múltiples vistas; por ejemplo, un reloj analógico y uno digital muestran la hora igualmente: ninguno cambia cómo funciona la hora, solo cambian su presentación.
+- El **Controller** interpreta las interacciones del usuario y coordina qué acciones debe tomar el Model.
+
+MVC y arquitectura por capas no se excluyen: son totalmente compatibles y suelen combinarse en el desarrollo web. Veamos un ejemplo de una página web que permite reservar libros:
+
+1. El navegador envía una petición (`POST /reservas`) indicando qué libro y qué cantidad quiere.
+2. El **Controlador** web valida que el formato de los datos sea correcto y construye la solicitud.
+3. El Controlador delega la tarea al **Servicio** de aplicación (el Modelo), el cual evalúa las reglas de negocio reales (ej. "no reservar más ejemplares de los disponibles").
+4. Si las reglas se cumplen, el Servicio le pide a la capa de **Persistencia** (Repositorio) que guarde y modifique el almacenamiento.
+5. Finalmente, el Controlador recibe el resultado y devuelve una **Vista** de éxito o un error adecuado al usuario.
+
+## Web tradicional vs Single Page Application (SPA)
+
+Normalmente en aplicaciones web, el renderizado y la construcción visual ocurren directamente en el servidor. Cuando el navegador del usuario solicita una ruta, el servidor procesa la petición y responde devolviendo un documento HTML completo. En este modelo, el servidor mantiene el control principal de la presentación; esto provoca que cualquier navegación o envío de formulario haga que la página cargue nuevamente.
+
+Por el contrario, en una Single Page Application, la interfaz gráfica se ejecuta por completo en el navegador y se encarga de actualizar solo partes específicas de la página. La SPA se comunica con el servidor mediante una API, enviando y recibiendo datos estructurados en lugar de documentos HTML completos. Al trabajar con SPA, el navegador del usuario es quien asume la responsabilidad de manejar la interfaz de usuario, navegación interna, carga de datos asíncrona y gestión de errores de red; aun así, el servidor es quien tiene las reglas de negocio. Es común validar datos en el cliente para dar avisos rápidos; sin embargo, las reglas definitivas siempre deben mantenerse protegidas y validadas en el servidor.
+
+Usar SPA no te obliga a usar microservicios o MVC; solo se refiere al cómo se maneja la interfaz del frontend. Finalmente, la decisión entre HTML en servidor y SPA recae en qué tanta separación se busca entre frontend y backend, qué tan importante es la interacción dinámica y aceptar que desarrollar con SPA requiere configurar más herramientas y gestionar el estado local.
+
+## Escalamiento Horizontal vs Vertical
+
+El término escalamiento suele usarse en conjunto a servidores; se refiere a cómo haremos crecer el sistema físico (computadores, servidores, etc.). El escalamiento vertical es cuando mejoramos los sistemas ya existentes para ser más potentes, es decir, más RAM, mejor procesador, almacenamientos más rápidos y grandes, etc.
+
+Mientras que el escalamiento horizontal se refiere a comprar más equipos para poder repartir la carga.
+
+<Figure
+  src="/classes/ingenieria-de-software/08-arquitectura-de-software/escalamiento-vertical-vs-horizontal.png"
+  alt="Diagrama comparativo entre escalamiento vertical (Scaling up, aumentar recursos de un servidor) y escalamiento horizontal (Scaling out, añadir más servidores)"
+  caption="Escalamiento vertical (Scaling up) versus escalamiento horizontal (Scaling out)."
+/>
+
+## Monolito vs Microservicios
+
+### Sistema Monolítico
+
+Un sistema monolítico es aquel que se construye y despliega como una única unidad. Existe un mito el cual dice que los sistemas monolíticos son sinónimo de código desordenado; la realidad es que un monolito puede estar tan ordenado como un sistema de microservicios. Estos sistemas pueden ser escalados tanto horizontalmente como verticalmente; sin embargo, el monolito no permite aprovechar todas las ventajas de un escalamiento horizontal ya que el sistema es una única unidad la cual no puede ser separada.
+
+Además, a medida que un monolito crece, pueden aparecer problemas: un solo despliegue te obliga a reconstruir y validar muchas partes del sistema, un módulo con mucha demanda puede hacer que otros módulos sean más lentos y un cambio pequeño puede tener efectos inesperados.
+
+<Figure
+  src="/classes/ingenieria-de-software/08-arquitectura-de-software/sistema-monolitico.png"
+  alt="Diagrama de un sistema monolítico donde todos los módulos conviven dentro de una única unidad conectada a una sola base de datos"
+  caption="Arquitectura de un sistema monolítico con una base de datos centralizada."
+/>
+
+### Sistema Microservicios
+
+Por otro lado, los sistemas de microservicios organizan el sistema alrededor de las capacidades del negocio, permitiendo que cada servicio se despliegue y ejecute por su cuenta. En este contexto, "micro" no se refiere a cantidad de código, sino al cómo se divide el sistema. Un ejemplo típico de sistema de microservicios es Netflix: Netflix no funciona como un bloque rígido, sino que se divide en muchos servicios pequeños; algunos servidores de Netflix se encargan de manejar los inicios de sesión, otros la creación de cuentas, otros el proceso de pago y otros se encargan del streaming. Esto permite que si el servidor de inicio de sesión se cae, todos los usuarios ya logueados pueden seguir viendo películas o series sin siquiera darse cuenta de que hay problemas de inicio de sesión. Esto además permite que cada servicio escale de forma individual: si notas que los servidores de streaming se están sobrecargando puedes escalar verticalmente, mientras que si notas que los servidores de inicio de sesión suelen caerse puedes escalar horizontalmente para mejorar su disponibilidad.
+
+<Figure
+  src="/classes/ingenieria-de-software/08-arquitectura-de-software/sistema-microservicios.png"
+  alt="Diagrama de un sistema de microservicios donde cada servicio funciona de manera independiente con su propia base de datos"
+  caption="Arquitectura de microservicios con servicios y almacenamientos independientes."
+/>
+
+De aquí es que nacen dos tipos de llamadas a través de la red:
+
+- **Las llamadas síncronas (HTTP):** Un servicio solicita información a otro y se queda esperando la respuesta para poder continuar. Esto introduce latencia, posibles fallos de red y obliga a manejar contratos versionados e idempotencia (qué pasa si el sistema responde dos veces).
+- **Las llamadas asíncronas:** Un servicio solicita información a otro y, en vez de quedarse esperando, este sigue trabajando en otras cosas mientras el otro servicio procesa la solicitud. En este modelo es muy común utilizar el patrón Publicación/Suscripción, donde un evento es emitido y distribuido a varios suscriptores interesados, sin que el publicador conozca a cada suscriptor; esto permite crear sistemas donde un cambio genera varias notificaciones.
+
+A pesar de todas las ventajas, el hecho de que cada servicio sea dueño y controle su propio modelo de datos trae problemas de consistencia. En un monolito cualquier transacción a una base de datos es inmediata y simple. En microservicios una sola operación distribuida requiere varias confirmaciones, lo que te obliga a diseñar acciones de compensación si un paso falla. Es por esto que diseñar un sistema de microservicios tiene un alto costo operativo y de coordinación técnica, ya que debes asegurarte de gestionar timeouts de red, trazas correlacionadas e infraestructura para despliegues complejos.
+
+## Tabla comparativa de los modelos vistos
+
+| Criterio | Capas | MVC | Monolito | Microservicios |
+| :--- | :--- | :--- | :--- | :--- |
+| **Problema central** | Separación lógica | Interacción con UI | Despliegue simple | Autonomía de servicios |
+| **Unidad típica** | Módulos | Model/View/Controller | Un despliegue | Varios despliegues |
+| **Comunicación** | Llamadas internas | Coordinación con UI | Llamadas internas | Red/Mensajes (asíncrono, síncrono) |
+| **Costo a vigilar** | Saltos/Acoplamiento | Modelo anémico | Crecimiento sin límites | Distribución |
