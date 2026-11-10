@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    user-select: none; pointer-events: none;
+  }
+  .wrap {
+    display: flex; align-items: center; gap: 24px; width: 100%; max-width: 640px; padding: 8px 16px; box-sizing: border-box;
+  }
+  .traffic {
+    background: var(--surface-2); border-radius: 18px; padding: 14px 12px;
+    display: flex; flex-direction: column; gap: 12px; align-items: center; flex-shrink: 0;
+  }
+  .light { width: 28px; height: 28px; border-radius: 50%; background: var(--muted); opacity: 0.22; transition: opacity 0.25s, background 0.25s, transform 0.25s; }
+  .light.red.on { background: #dc2626; opacity: 1; transform: scale(1.08); }
+  .light.yellow.on { background: #eab308; opacity: 1; transform: scale(1.08); }
+  .light.green.on { background: #16a34a; opacity: 1; transform: scale(1.08); }
+  .editor {
+    flex: 1; background: var(--surface-2); border-radius: 14px; padding: 16px 20px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13.5px; line-height: 1.55;
+    color: var(--text); min-height: 132px; display: flex; flex-direction: column; justify-content: space-between;
+  }
+  pre { margin: 0; white-space: pre-wrap; font-family: inherit; }
+  .cursor { display: inline-block; width: 7px; height: 15px; background: var(--accent); vertical-align: text-bottom; animation: blink 0.8s infinite; }
+  @keyframes blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  .status { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="traffic" aria-label="Semáforo TDD">
+    <div id="l-red" class="light red on"></div>
+    <div id="l-yellow" class="light yellow"></div>
+    <div id="l-green" class="light green"></div>
+  </div>
+  <div class="editor">
+    <pre><span id="code-text"></span><span class="cursor"></span></pre>
+    <div id="status-text" class="status">1. Rojo: Escribiendo el test antes del código...</div>
+  </div>
+</div>
+<script>
+  function syncTheme() {
+    try {
+      const p = parent && parent.document && parent.document.documentElement;
+      if (!p) return;
+      const cs = getComputedStyle(p);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach((v) => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    if (parent && parent.document && parent.document.documentElement) {
+      new MutationObserver(syncTheme).observe(parent.document.documentElement, {
+        attributes: true, attributeFilter: ['data-theme', 'class', 'style']
+      });
+    }
+  } catch (_) {}
+
+  const $ = (id) => document.getElementById(id);
+  const codeEl = $('code-text'), statusEl = $('status-text');
+  const setLight = (c) => {
+    $('l-red').classList.toggle('on', c === 'red');
+    $('l-yellow').classList.toggle('on', c === 'yellow');
+    $('l-green').classList.toggle('on', c === 'green');
+  };
+
+  const baseTest = '@Test\nvoid testSuma() {\n  assertEquals(5, sumar(2, 3));\n}\n\nint sumar(int a, int b) {\n  ';
+  const phases = [
+    { light: 'red', status: '1. Rojo: El test existe pero el código aún no pasa', from: '', to: baseTest + '// sin implementar\n}' },
+    { light: 'red', status: '2. Verde: Escribiendo valor fijo para que el test pase...', from: baseTest, to: baseTest + 'return 5;\n}', endLight: 'green', endStatus: '2. Verde: El test pasa con valor fijo' },
+    { light: 'yellow', status: '3. Amarillo: Refactorizando a lógica real y dinámica...', from: baseTest, to: baseTest + 'return a + b;\n}' },
+    { light: 'green', status: '4. Verde: Código limpio, test en verde y listo para deploy', from: baseTest + 'return a + b;\n}', to: baseTest + 'return a + b;\n}' }
+  ];
+
+  let pIdx = 0;
+  function runPhase() {
+    const ph = phases[pIdx];
+    setLight(ph.light);
+    statusEl.textContent = ph.status;
+    let i = ph.from.length;
+    codeEl.textContent = ph.from;
+
+    const timer = setInterval(() => {
+      if (i < ph.to.length) {
+        i += 2;
+        codeEl.textContent = ph.to.slice(0, i);
+      } else {
+        clearInterval(timer);
+        if (ph.endLight) setLight(ph.endLight);
+        if (ph.endStatus) statusEl.textContent = ph.endStatus;
+        setTimeout(() => {
+          pIdx = (pIdx + 1) % phases.length;
+          runPhase();
+        }, 1400);
+      }
+    }, 38);
+  }
+  runPhase();
+</script>
+</body>
+</html>

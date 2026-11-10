@@ -1,0 +1,187 @@
+---
+title: "Testing"
+order: 7
+---
+
+import Figure from '../../../components/Figure.astro';
+import Demo from '../../../components/Demo.astro';
+
+## ¿Qué son los tests y cuál es su objetivo?
+
+Los **tests de software** son procedimientos que verifican si un programa produce el resultado esperado al ser ejecutado con ciertos casos de pruebas. Estas pruebas pueden ser tanto manuales como automatizadas.
+
+Es importante tener en cuenta que los tests de software no pueden hacer que un programa sea 100% a prueba de *bugs*, como lo dijo Edsger W. Dijkstra: *"Los tests de software muestran la presencia de bugs, pero no su ausencia"*; esto significa que el principal objetivo de los tests es demostrar que el código funciona de manera esperada, mientras que su principal limitación es que siempre será imposible garantizar la ausencia de *bugs*.
+
+### Defectos (bugs) vs Fallas (failures)
+
+| Defecto | Falla |
+| :--- | :--- |
+| Es un error introducido directamente en el código fuente | Es el resultado o lo que se muestra debido al defecto |
+| Al calcular el área de un círculo escribes `area = pi * radio * radio * radio` | Debido al error de escritura en la fórmula, al calcular el área de un círculo se obtiene un resultado inesperado. |
+
+{/* GENERADO: "(PARA LA IA, TRANSFORMAR LO SIGUIENTE EN UN PEQUEÑO CODIGO)" */}
+
+### Verificación vs Validación
+
+| Verificación | Validación |
+| :--- | :--- |
+| ¿Estamos haciendo el sistema correctamente? | ¿Estamos creando el sistema correcto? |
+| Enfocado en si la implementación es la correcta | Enfocado en si el sistema resuelve la problemática inicial |
+
+Como vimos anteriormente, existe la **pirámide de testing**, la cual clasifica las pruebas según su alcance:
+
+<Figure
+  src="/classes/ingenieria-de-software/07-testing/piramide-testing.png"
+  alt="Pirámide de Testing: Pruebas Unitarias en la base, Pruebas de Integración en el medio y Pruebas de Sistema en la cúspide"
+  side="full"
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ, REUTILIZAR LA MISMA FOTO DE LA PIRAMIDE DE TESTING UTILIZADA ANTERIORMENTE)" */}
+
+{/* GENERADO: "(AÑADIR AQUÍ UN ARCHIVO HTML EMBEBIDO DONDE SE MUESTRE UNA ANIMACION QUE REPRESENTE LAS DIFERENCIAS ENTRE LOS DISTINTOS TIPOS DE TESTS, PRIMERO APARECE UN SIMPLE BLOQUE DE CODIGO (NO ES UN BLOQUE DE CODIGO DE LOS APUNTES COMO TAL, ES UNA REPRESENTACION PARA LA ANIMACION) MUESTRA COMO SE EJECUTA EL CODIGO Y LUEGO APARECE UN TICK VERDE, AL MISMO TIEMPO DEBAJO DE EL TEST UNITARIO, APARECE EL TEST DE INTEGRACION, DOS BLOQUES DE CODIGO, UNO HACE LO MISMO QUE EL TEST UNITARIO PERO LUEGO LE ENVIA UNA SEÑAL A OTRO BLOQUE DE CODIGO EL CUAL SE EJECUTA Y FINALMENTE SALE EL TICK VERDE. FINALMENTE, PARA EL TEST DE SISTEMA, SE MUESTRA UNA PERSONA SOLICITANDO ALGO, SE VE COMO LA PETICION VIAJA ENTRE CLASES REPRESENTADAS POR SIMPLES BLOQUES SIN NOMBRE, LA PETICION LLEGA A UNA BASE DE DATOS Y LUEGO LA SEÑAL SE DEVUELVE HASTA LLEGAR A LA PERSONA, LAS ANIMACIONES DEBEN PRESENTARSE AL MISMO TIEMPO, PARA HACER ESTO TIENES PERMISO DE CREAR LAS ANIMACIONES COMO ARCHIVOS HTML SEPARADOS, TODOS IRAN DEBAJO DE CADA PUNTO EXPLICATIVO DE LOS TESTS)" */}
+
+- Los **tests de unidad** se encargan de probar pedazos pequeños del código, como lo puede ser un método; su granularidad es pequeña, lo que permite que estas pruebas sean rápidas y tengan bajo costo de creación.
+
+<Demo
+  src="/classes/ingenieria-de-software/07-testing/test-unitario.html"
+  title="Test unitario: ejecución de un bloque aislado"
+  height={170}
+/>
+
+{/* GENERADO: "(AQUÍ ANIMACION DE TEST UNITARIO)" */}
+
+- Los **tests de integración** se encargan de probar cómo distintas partes del sistema se comunican entre sí, por ejemplo, el cómo de un método se pasa al otro.
+
+<Demo
+  src="/classes/ingenieria-de-software/07-testing/test-integracion.html"
+  title="Test de integración: comunicación entre dos bloques de código"
+  height={175}
+/>
+
+{/* GENERADO: "(AQUÍ ANIMACION DE TEST DE INTEGRACION)" */}
+
+- Los **tests de sistema** se encargan de probar toda la aplicación funcionando. Se suelen hacer en baja cantidad ya que son lentos y costosos de crear.
+
+<Demo
+  src="/classes/ingenieria-de-software/07-testing/test-sistema.html"
+  title="Test de sistema: flujo completo desde el usuario hasta la base de datos y de vuelta"
+  height={185}
+/>
+
+{/* GENERADO: "(AQUÍ ANIMACION DE TEST DE SISTEMA)" */}
+
+En los métodos ágiles los tests raramente se dejan para el final; lo normal es que sean automatizados y los escriba el propio desarrollador del código. En algunas prácticas como el **TDD** (*Test Driven Development*) los tests se escriben antes del código.
+
+Cumplen dos funciones vitales: actúan como **documentación viva** del sistema y ayudan a **detectar regresiones**, es decir, evitan que un código nuevo dañe una funcionalidad que antes operaba correctamente.
+
+## Pruebas Unitarias
+
+Como se mencionó anteriormente, las pruebas unitarias son tests automatizados enfocados en evaluar las unidades más pequeñas del código; en programación orientada a objetos, estas unidades pequeñas suelen ser las clases.
+
+Por convención, existe una relación directa: por cada clase de producción (`cls::C1`) se crea una clase de prueba correspondiente (`cls::T1`).
+
+### La anatomía de un test unitario
+
+En la creación de tests unitarios se sigue una estructura específica:
+
+- Los métodos de testing llevan una anotación o etiqueta como `@Test`, no reciben parámetros y convencionalmente su nombre lleva la palabra `test`.
+- **Contexto**: Es la primera parte del test; aquí se prepara el entorno para el testeo, puede ser creando variables, instanciando objetos, etc.
+- **Llamada al método**: Se llama al método que se quiere testear.
+- **Assert**: finalmente se utiliza `fn::assert` para comprobar si el resultado final es el esperado; si no lo es se arroja un error y el test se considera fallido.
+
+El siguiente código muestra la anatomía de un test en acción; la prueba es muy simple: queremos comprobar que un *stack* siempre se inicia vacío.
+
+1. Primero ponemos el `@Test`.
+2. Luego preparamos el entorno instanciando la clase `cls::Stack`.
+3. Luego comprobamos que el *stack* está vacío mediante la función `fn::isEmpty()`.
+4. Finalmente usamos `fn::assertTrue` para confirmar que la función `fn::isEmpty` devolvió `const::true`.
+
+```java
+import org.junit.Test;
+import static org.junit.Assert.assertTrue;
+
+public class StackTest {
+
+    // 1. Método de test: Lleva la anotación y su nombre comienza con "test"
+    @Test
+    public void testEmptyStack() {
+
+        // 2. Fixture (Contexto): Preparamos el escenario instanciando la clase
+        Stack<Integer> stack = new Stack<Integer>();
+
+        // 3. Llamada al método bajo test: Ejecutamos la acción que queremos probar
+        boolean empty = stack.isEmpty();
+
+        // 4. Comando assert: Verificamos si el resultado es el que esperábamos
+        assertTrue(empty);
+    }
+}
+```
+
+{/* REVISAR: En la captura de código de StackTest los comentarios de los pasos 2 y 4 muestran el fragmento "[cit" cortado en el borde derecho; se omitió ese texto truncado al transcribir el bloque. */}
+
+Para realizar estos tests se utilizan *Frameworks* dedicados al testing; el estándar de la industria suelen ser los *frameworks* de la familia **xUnit**, como por ejemplo **JUnit** para Java.
+
+Como norma general se debe tener un único `fn::assert` por test, separando distintos escenarios en pruebas distintas. Sin embargo, existen excepciones como agrupar múltiples `fn::assert` cuando se evalúa exactamente el mismo comportamiento lógico.
+
+### Los Principios FIRST
+
+Para que un test unitario se considere de buena calidad debe cumplir con cinco principios fundamentales:
+
+| Principio | Descripción |
+| :--- | :--- |
+| **Fast** | Deben ejecutarse en milisegundos |
+| **Independent** | El resultado de un test no debe depender del orden en el que se ejecuten los demás |
+| **Repeatable** | Siempre deben dar el mismo resultado, sin importar cuántas veces se ejecuten; es decir, no puede fallar unas veces y pasar otras |
+| **Self-Checking** | Deben determinar por sí mismos si fallaron o pasaron |
+| **Timely** | Deben escribirse lo antes posible en el ciclo de desarrollo |
+
+## Cobertura de Tests
+
+La **cobertura** es una métrica matemática que representa la cantidad de código que se está evaluando. Se calcula como:
+
+$$
+\text{Cobertura} = \frac{\text{Comandos ejecutados por el test}}{\text{Comandos del programa}}
+$$
+
+{/* GENERADO: "(AÑADIR AQUÍ FORMULA DEL CALCULO DE COBERTURA: Comandos ejecutados por el tests/Comandos del programa)" */}
+
+La meta ideal varía de proyecto a proyecto, pero generalmente se recomienda un mínimo del 60% de cobertura. Como referencia, una evaluación de proyectos internos de Google demostró que mantienen una media de cobertura del 78%.
+
+## Testabilidad y Mocks
+
+La **testabilidad** se refiere a qué tan fácil es someter tu código a pruebas. Algunos componentes como los *Servlets* de Java son difíciles de probar directamente porque arrastran dependencias complejas como objetos de una petición HTTP. La solución a este problema es extraer la regla del dominio y moverla a una clase independiente, lo que nos permite testear su lógica pura sin depender del entorno que la rodea.
+
+Aquí es donde entran los **Mocks**: un *mock* es un objeto que emula al objeto real, pero de manera simple y controlada. En vez de conectarte a un servidor para buscar datos, el *Mock* intercepta la llamada y devuelve datos falsos predeterminados, todo con el objetivo de testear únicamente la lógica, eliminando la variable externa que es la petición a un servidor.
+
+A pesar de que es posible crear los *mocks* por ti mismo, en la industria se usan *frameworks* como **Mockito**, los cuales automatizan y simplifican el procedimiento; en vez de escribir la clase tú mismo, solo tienes que usar comandos muy legibles como: `when(service.search(1234)).thenReturn(BookConst.ESM)`.
+
+## TDD: Test Driven Development
+
+El **TDD** es una práctica de programación propuesta por metodologías ágiles; la idea que propone es muy simple: siempre debes escribir el test automatizado antes de escribir la clase o el código de producción. Esto evita que los desarrolladores olviden implementar los tests, además incentiva a crear un código testeable; como el programador será su propio "primer cliente", esto mejorará la calidad del código y además permite alcanzar altas coberturas de código.
+
+**Ciclo TDD:**
+
+1. **Rojo**: Escribes el test para una funcionalidad que aún no existe; el código probablemente ni siquiera compile, pero esa es la idea de la primera etapa.
+2. **Verde**: Escribes el código estrictamente para que el test pase; es recomendable usar pasos pequeños, incluso si eso implica devolver un valor fijo con el objetivo de que el test pase, y luego poder avanzar a aplicar la lógica real y dinámica.
+3. **Amarillo**: Con el código funcionando y respaldado por un test en verde, ahora te dedicas a limpiarlo y mejorarlo. Puedes hacer cosas como tomar variables públicas y encapsularlas adecuadamente, sin miedo a romper el sistema porque si algo falla el test te avisará.
+
+<Demo
+  src="/classes/ingenieria-de-software/07-testing/ciclo-tdd.html"
+  title="Ciclo TDD: Rojo, Verde y Amarillo (Refactorización)"
+  height={200}
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ UN HTML EMBEBIDO, DEBE MOSTRAR UN SEMAFORO Y UN BLOQUE DE CODIGO (EL BLOQUE DE CODIGO NO ES INTERACTUABLE POR EL USUARIO, ES SOLO UNA REPRESENTACION) EL CODIGO DEBE SER MUY SIMPLE Y FACIL DE ENTENDER, LA ANIMACION DEBE MOSTRAR COMO EL SEMAFORO EMPIEZA EN ROJO CUANDO EL TEST NO PASA, LUEGO COMO APARECE EN VERDE CUANDO EL CODIGO ESTA HECHO A LA FUERZA PARA QUE EL TEST PASE, LUEGO DEBE PONERSE EN AMARILLO MIENTRAS EL CODIGO SE MODIFICA PARA SER FUNCIONAL Y DINAMICO, FINALMENTE LA ANIMACION TERMINA CON EL SEMAFORO EN VERDE Y EL CODIGO LISTO PARA UN DEPLOY. EL CODIGO DEBE SER SIMPLE, LA EXISTENCIA DEL CODIGO ES SOLO PARA MOSTRAR COMO FUNCIONA TDD, NO BASTA CON QUE EL CODIGO APAREZCA DE REPENTE, LA ANIMACION DEBE MOSTRAR COMO EL CODIGO SE ESTA ESCRIBIENDO, TAL COMO SI ALGUIEN LO ESTUVIERA HACIENDO DETRÁS DE ESCENAS, LA ANIMACION FUNCIONA POR SI SOLA, NO HAY BOTONES NI NADA QUE CLICKEAR, EXISTE SOLO PARA DAR UN EJEMPLO VISUAL DE COMO PROGRAMAR CON TDD)" */}
+
+## Tests de Integración
+
+Como se mencionó anteriormente, los **tests de integración** se encargan de testear cómo una funcionalidad o servicio completo del sistema funciona; a diferencia de los tests unitarios en los que se utilizan *mocks*, en los de integración se incluyen explícitamente clases y componentes de servicios externos, esto con el objetivo de testear esa parte del programa en un entorno real.
+
+En proyectos web, una prueba de integración típica abarca la interacción directa entre el modelo y la base de datos de la aplicación, evaluando cómo fluye la información entre ellos; es importante preparar y restablecer el entorno de la base de datos antes de hacer estas pruebas, ya que durante ellas se pueden borrar o añadir datos nuevos que no queremos que afecten otros tests o nuevas ejecuciones del mismo test.
+
+## Tests de Sistema (End-to-End)
+
+Los **tests de sistema** reciben muchos nombres; la idea principal es que abarcan todo el programa, simulando el cómo un usuario interactuaría con el sistema, pasando por la interfaz gráfica, el modelo, el servicio, la base de datos y todas las demás capas del proyecto. Son costosos y lentos de ejecutar, pero aportan información vital para el desarrollo del programa.
+
+Usualmente se utilizan *scripts* los cuales interactúan directamente con el HTML de la página web (en proyectos web). Este *script* instruye al navegador virtual a visitar URLs específicas, seleccionar elementos, simular escritura de teclado, hacer clic en botones de envío y afirmar que un mensaje de éxito sea visible en pantalla.
