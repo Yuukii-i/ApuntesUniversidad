@@ -1,0 +1,41 @@
+---
+import type { ClassArt, ClassColor } from '../lib/classStyle';
+import { getClassUpdatedISO, formatDateTimeEs } from '../lib/lastUpdate';
+import CoverArt from './CoverArt.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  color: ClassColor;
+  art: ClassArt;
+  topicCount: number;
+}
+
+const { id, title, color, art, topicCount } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+const href = `${baseUrl}/${id}/`;
+
+const updatedISO = getClassUpdatedISO(id);
+const formattedDate = formatDateTimeEs(updatedISO);
+const topicsText = topicCount === 1 ? '1 tema' : `${topicCount} temas`;
+---
+
+<a
+  href={href}
+  class="group block p-4 sm:p-5 -mx-4 sm:-mx-5 rounded-2xl hover:bg-surface focus-visible:bg-surface focus-visible:outline-none transition-colors"
+>
+  <div class="grid grid-cols-1 md:grid-cols-[1fr_13rem] gap-4 md:gap-6 items-center">
+    <div class="order-2 md:order-1">
+      <h2 class="text-2xl sm:text-3xl lg:text-[clamp(1.75rem,2.2vw,2.2rem)] font-semibold tracking-[-0.025em] leading-tight text-text group-hover:text-white dark:group-hover:text-white transition-colors">
+        {title}
+      </h2>
+      <div class="font-mono text-xs sm:text-[0.78rem] text-muted mt-2.5 tracking-normal">
+        {topicsText} &nbsp;·&nbsp; {formattedDate}
+      </div>
+    </div>
+
+    <div class="order-1 md:order-2 w-full max-w-[13rem] h-[6.2rem] rounded-xl overflow-hidden shrink-0">
+      <CoverArt art={art} color={color} variant="thumb" class="w-full h-full rounded-xl" />
+    </div>
+  </div>
+</a>

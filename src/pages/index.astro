@@ -1,39 +1,92 @@
 ---
 import Base from '../layouts/Base.astro';
-import ClassCard from '../components/ClassCard.astro';
-import { getClasses } from '../lib/content';
+import ClassRow from '../components/ClassRow.astro';
+import { getClasses, getClassTopics } from '../lib/content';
+import { getRecentTopics } from '../lib/lastUpdate';
 
 const classes = await getClasses();
+const recentTopics = getRecentTopics(6);
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+
+const classTopicsCounts = await Promise.all(
+  classes.map(async (c) => {
+    const topics = await getClassTopics(c.id);
+    return { id: c.id, count: topics.length };
+  })
+);
+const topicCountMap = new Map(classTopicsCounts.map((item) => [item.id, item.count]));
+
+function formatUpdateDate(iso: string): string {
+  const match = iso.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
+  if (!match) return '';
+  const months = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+  const month = months[parseInt(match[2], 10) - 1] ?? '';
+  const day = parseInt(match[3], 10);
+  const time = `${match[4]}:${match[5]}`;
+  return `${day} ${month} · ${time}`;
+}
 ---
 
-<Base title="Apuntes" description="Apuntes universitarios organizados por materia y tema">
-  <div class="space-y-8">
-    <div class="bg-surface p-8 rounded-xl">
-      <h1 class="text-3xl font-extrabold text-text mb-2">
-        Materias y Apuntes
+<Base title="Apuntes">
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_22rem] gap-12 lg:gap-24 pt-4 sm:pt-8 pb-16">
+    <!-- Columna Principal (Izquierda) -->
+    <div>
+      <div class="font-mono text-xs sm:text-sm uppercase tracking-[0.14em] text-muted mb-3 sm:mb-4">
+        Apuntes de informática
+      </div>
+      <h1 class="text-[clamp(3.5rem,7.4vw,9rem)] font-bold tracking-[-0.045em] leading-[0.95] text-text mb-4 sm:mb-6">
+        Apuntes<span class="text-accent">.</span>
       </h1>
-      <p class="text-muted text-base leading-relaxed max-w-2xl">
-        Colección de apuntes y notas de clases de informática. Selecciona una materia para explorar sus temas y contenido estructurado.
+      <p class="text-muted text-base sm:text-lg leading-relaxed max-w-[34rem] mb-10 sm:mb-14">
+        Página creada para guardar y compartir mis apuntes universitarios, enfocado en hacer que el material se sienta menos pesado
       </p>
+
+      {
+        classes.length === 0 ? (
+          <p class="text-muted">Todavía no hay clases.</p>
+        ) : (
+          <div class="space-y-4 sm:space-y-6">
+            {classes.map((c) => (
+              <ClassRow
+                id={c.id}
+                title={c.data.title}
+                color={c.data.color}
+                art={c.data.art}
+                topicCount={topicCountMap.get(c.id) ?? 0}
+              />
+            ))}
+          </div>
+        )
+      }
     </div>
 
-    {
-      classes.length === 0 ? (
-        <div class="bg-surface p-12 rounded-xl text-center">
-          <p class="text-muted text-lg">No hay materias disponibles actualmente.</p>
-        </div>
-      ) : (
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {classes.map((c) => (
-            <ClassCard
-              id={c.id}
-              title={c.data.title}
-              description={c.data.description}
-              accent={c.data.accent}
-            />
-          ))}
-        </div>
-      )
-    }
+    <!-- Columna Lateral (Derecha) -->
+    <aside class="pt-2 lg:pt-8">
+      <div class="font-mono text-xs sm:text-sm uppercase tracking-[0.14em] text-muted mb-6 sm:mb-8">
+        Últimas actualizaciones
+      </div>
+
+      <div class="space-y-6">
+        {recentTopics.map((item) => (
+          <a
+            href={`${baseUrl}/${item.classSlug}/${item.topicSlug}/`}
+            class="group block transition-colors"
+          >
+            <div class="font-mono text-xs text-muted mb-1 tracking-normal">
+              {formatUpdateDate(item.iso)}
+            </div>
+            <div class="text-sm sm:text-base font-medium text-text group-hover:text-accent transition-colors leading-snug">
+              {item.title}
+            </div>
+            <div
+              class="text-xs font-mono mt-1"
+              style={`color: var(--class-${item.classColor})`}
+            >
+              {item.classTitle}
+            </div>
+          </a>
+        ))}
+      </div>
+    </aside>
   </div>
 </Base>

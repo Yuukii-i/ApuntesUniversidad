@@ -1,3 +1,5 @@
 title: "Arquitectura y Organización de Computadores"
-description: "Historia y arquitecturas (Von Neumann y Harvard), lenguaje de transferencia de registros (RTL), componentes y ciclo de instrucción de la CPU, Simuproc, la ALU, representación y aritmética de enteros (complemento a dos, Lookahead, algoritmo de Booth) y punto flotante (IEEE 754, normalización, operaciones, bits de guarda y redondeo)."
+description: "Estudio de la estructura interna y funcionamiento del computador a nivel de hardware y microarquitectura. Comprende los modelos clásicos de procesamiento, el flujo de instrucciones mediante transferencia de registros y el diseño aritmético y lógico de la unidad central."
 order: 5
+color: teal
+art: chip

@@ -1,3 +1,5 @@
 title: "Ingeniería de Software"
-description: "Requerimientos, pruebas, mantenimiento, procesos de desarrollo tradicional y ágil (XP, Scrum, Kanban), historias de usuario, casos de uso, Lean Startup y MVP, modelos de software con UML y principios de abstracción y diseño."
+description: "Fundamentos del ciclo de vida del software, abarcando metodologías de desarrollo tradicionales y ágiles, gestión de requisitos y modelado formal. Examina principios de diseño orientado a objetos, patrones de arquitectura, estrategias de pruebas y criterios de calidad para sistemas mantenibles."
 order: 4
+color: orange
+art: diagram

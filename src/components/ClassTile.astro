@@ -1,0 +1,37 @@
+---
+import type { ClassArt, ClassColor } from '../lib/classStyle';
+import { getClassUpdatedISO, formatDateTimeEs } from '../lib/lastUpdate';
+import CoverArt from './CoverArt.astro';
+
+interface Props {
+  id: string;
+  title: string;
+  color: ClassColor;
+  art: ClassArt;
+  topicCount: number;
+}
+
+const { id, title, color, art, topicCount } = Astro.props;
+const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '') || '';
+const href = `${baseUrl}/${id}/`;
+
+const updatedISO = getClassUpdatedISO(id);
+const formatted = formatDateTimeEs(updatedISO).toUpperCase();
+const countLabel = topicCount === 1 ? '1 TEMA' : `${topicCount} TEMAS`;
+---
+
+<a
+  href={href}
+  class="group relative block aspect-[5/4] max-h-[38rem] min-h-[20rem] rounded-3xl overflow-hidden shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent transition-transform duration-200 hover:-translate-y-0.5"
+>
+  <CoverArt art={art} color={color} variant="tile" class="absolute inset-0 w-full h-full rounded-3xl" />
+
+  <div class="absolute left-6 bottom-6 right-6 z-10 pointer-events-none">
+    <h2 class="text-3xl sm:text-4xl lg:text-[clamp(2.2rem,2.8vw,2.8rem)] font-bold tracking-[-0.03em] leading-[1.05] text-text mb-3">
+      {title}
+    </h2>
+    <div class="font-mono text-xs sm:text-[0.74rem] uppercase tracking-wider text-muted">
+      {countLabel} &nbsp;·&nbsp; {formatted}
+    </div>
+  </div>
+</a>

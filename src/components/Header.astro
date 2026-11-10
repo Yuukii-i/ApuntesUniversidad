@@ -7,8 +7,13 @@ const rawPath = Astro.url.pathname.replace(/\/$/, '');
 const normalizedPath = rawPath || '/';
 const normalizedBase = baseUrl || '';
 
-const isHome = normalizedPath === normalizedBase || normalizedPath === '/';
-const isClases = normalizedPath === `${normalizedBase}/clases` || normalizedPath.startsWith(`${normalizedBase}/clases/`);
+const relativePath = normalizedBase && normalizedPath.startsWith(normalizedBase)
+  ? normalizedPath.slice(normalizedBase.length)
+  : normalizedPath;
+const segments = relativePath.split('/').filter(Boolean);
+
+const isHome = segments.length === 0;
+const isClases = segments.length > 0 && segments[0] !== '404';
 ---
 
 <header class="sticky top-0 z-30 bg-bg px-4 sm:px-6 py-3.5">

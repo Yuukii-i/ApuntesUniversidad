@@ -1,5 +1,8 @@
-import { defineCollection, z } from 'astro:content';
+import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { classSchema, topicSchema, CLASS_COLORS, CLASS_ARTS } from './lib/classStyle';
+
+export { classSchema, topicSchema, CLASS_COLORS, CLASS_ARTS };
 
 const classes = defineCollection({
   loader: glob({
@@ -7,12 +10,7 @@ const classes = defineCollection({
     pattern: '*/class.yaml',
     generateId: ({ entry }) => entry.replace(/\/class\.ya?ml$/, ''),
   }),
-  schema: z.object({
-    title: z.string(),
-    description: z.string(),
-    order: z.number(),
-    accent: z.string().optional(),
-  }),
+  schema: classSchema,
 });
 
 const topics = defineCollection({
@@ -21,12 +19,7 @@ const topics = defineCollection({
     pattern: '*/*.mdx',
     generateId: ({ entry }) => entry.replace(/\.mdx$/, ''),
   }),
-  schema: z.object({
-    title: z.string(),
-    order: z.number(),
-    summary: z.string().optional(),
-    tags: z.array(z.string()).optional(),
-  }),
+  schema: topicSchema,
 });
 
 export const collections = { classes, topics };
