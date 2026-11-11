@@ -1,0 +1,414 @@
+---
+title: "Los lenguajes de marcas"
+order: 1
+summary: "Los lenguajes de marcas son conjuntos de instrucciones conocidas como etiquetas o tags, estos les dicen a los navegadores web cómo deben mostrar los documentos web."
+tags: ["html", "seo", "semantica", "formularios"]
+minutes: 18
+---
+
+import Figure from '../../../components/Figure.astro';
+import Demo from '../../../components/Demo.astro';
+
+Los **lenguajes de marcas** son conjuntos de instrucciones conocidas como etiquetas o *tags*; estos les dicen a los navegadores web cómo deben mostrar los documentos web. Es gracias a ellos que podemos:
+
+- Formatear textos.
+- Mostrar gráficos.
+- Referenciar enlaces.
+- Agregar contenido multimedia.
+
+El navegador es el encargado de interpretar el código y renderizar la página, lo cual permite que cualquier navegador en cualquier sistema operativo pueda mostrarla.
+
+## HTML (Hypertext Markup Language)
+
+**HTML** fue desarrollado por Tim Berners-Lee basándose en **SGML** (*Standard Generalized Markup Language*), el cual nació entre los 60s y 70s como un sistema para separar el contenido de un documento del formateo visual.
+
+Hoy en día utilizamos **HTML5**, la cual integra nuevas características como soporte nativo para video y audio.
+
+## Elementos, etiquetas y atributos
+
+Cada código de marca es un elemento; la mayoría vienen en pares con una etiqueta de apertura y otra de cierre. Por ejemplo, para definir un título se usa `tag::title` y para cerrar se usa `</title>`.
+
+Además de las etiquetas por pares existen las **etiquetas vacías**, las cuales no necesitan una etiqueta de cierre; algunos ejemplos son:
+
+- `tag::hr` para crear barras horizontales.
+- `tag::br` para hacer un salto.
+- `tag::img` para imágenes.
+- `tag::meta` para la metadata de la página.
+- `tag::link` para conectar el código con archivos externos (no confundir con la etiqueta `tag::a`).
+
+Otro elemento importante son los **atributos**; estos se colocan dentro de las etiquetas para modificar o describir su propósito. Un ejemplo de esto es la etiqueta `attr::href` utilizada para indicar la dirección destino de un enlace web.
+{/* REVISAR: En el apunte dice "Un ejemplo de esto es la etiqueta <href>", aunque href es un atributo (normalmente usado dentro de la etiqueta <a> o <link>) y no una etiqueta. */}
+
+## Estructura de una página HTML
+
+Para que los navegadores puedan procesar la página correctamente, la primera línea del documento debe incluir la declaración `<!DOCTYPE html>`; esto se hace para poder declarar el tipo y versión de HTML que estamos usando, esto con el objetivo de que el navegador pueda saber cómo procesar y renderizar la página.
+
+Luego de esta declaración, un documento HTML se divide en dos grandes secciones:
+
+- **La sección `tag::head`**: contiene información sobre la página que normalmente no es visible para los usuarios. Aquí se coloca el título de la pestaña, la codificación de caracteres, información para redes sociales y buscadores, y otros recursos como fuentes o estilos CSS.
+- **La sección `tag::body`**: es el cuerpo de la página, es decir, el contenido que el usuario ve e interactúa. Aquí van los títulos, párrafos, imágenes, listas, tablas y componentes interactivos.
+
+### Profundización del head
+
+Como vimos anteriormente, el `tag::head` contiene información esencial para que el navegador configure la página correctamente; estos son algunos de sus componentes claves:
+
+- `attr::charset`: Define la codificación de caracteres, asegurando que símbolos como la "ñ" o las tildes no se vean como errores en la pantalla.
+- `attr::viewport`: Le dice al navegador cómo adaptar las dimensiones de la página, lo cual es fundamental para que el sitio sea responsivo y se vea bien en teléfonos móviles.
+- `tag::title` y `attr::description`: Definen el título de la pestaña y un resumen del contenido, ambos muy importantes para la forma en que los usuarios perciben la página antes de entrar.
+- `tag::link` y `tag::script`: Conectan la estructura de tu página web con recursos externos, como el diseño visual (CSS) y el comportamiento interactivo (JavaScript).
+
+A continuación un ejemplo de un `tag::head` con comentarios para entender mejor.
+
+```html
+<!DOCTYPE html> <!-- Indica al navegador que este documento es HTML5 -->
+<html lang="es"> <!-- La etiqueta raíz. 'lang="es"' ayuda a los lectores de pantalla y a los buscadores a saber el idioma. -->
+<head>
+    <!-- 1. Codificación de caracteres: Debe ir siempre de las primeras líneas.
+         Permite que el navegador entienda caracteres especiales como tildes, la 'ñ' o emojis. -->
+    <meta charset="UTF-8">
+
+    <!-- 2. Viewport (Diseño Responsivo): Le dice al navegador que ajuste el ancho de la página
+         al ancho del dispositivo (móvil, tablet, PC) y establece el zoom inicial en 1. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- 3. Título de la página: Es lo que ves en la pestaña del navegador y el título azul
+         que aparece en los resultados de Google. -->
+    <title>Ejemplo de Head HTML</title>
+
+    <!-- 4. Descripción: Un resumen breve de la página. Es el texto gris que aparece debajo
+         del título en los resultados de búsqueda (SEO). -->
+    <meta name="description" content="Esta es una página de ejemplo para entender la estructura de la etiqueta head en HTML.">
+
+    <!-- 5. Palabras clave: Términos relacionados con tu web (hoy en día Google le da poco peso,
+         pero sigue siendo buena práctica). -->
+    <meta name="keywords" content="HTML, head, ejemplo, tutorial, metadatos">
+
+    <!-- 6. Autor: Indica quién creó o mantiene la página web. -->
+    <meta name="author" content="Tu Nombre o Empresa">
+
+    <!-- 7. Favicon: El pequeño ícono (logo) que aparece en la pestaña del navegador, justo al lado del título. -->
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- 8. Hoja de estilos: Enlaza un archivo CSS externo para darle colores, fuentes y diseño a la página. -->
+    <link rel="stylesheet" href="estilos.css">
+
+    <!-- 9. Script (JavaScript): Enlaza un archivo JS. El atributo 'defer' es muy importante:
+         le dice al navegador que descargue el script pero no lo ejecute hasta que todo el HTML esté cargado. -->
+    <script src="script.js" defer></script>
+
+    <!-- 10. Open Graph (Redes Sociales): Estos metadatos controlan cómo se ve tu página
+         cuando compartes el enlace en Facebook, LinkedIn, WhatsApp, etc. -->
+    <meta property="og:title" content="Ejemplo de Head HTML">
+    <meta property="og:description" content="Aprende cómo funciona la etiqueta head de forma sencilla.">
+    <meta property="og:image" content="imagen-para- comparti.jpg">
+    <meta property="og:type" content="website">
+</head>
+```
+
+## La importancia del SEO
+
+El **SEO** (*Search Engine Optimization*) es el conjunto de prácticas orientadas a mejorar la visibilidad de una página en los resultados de motores de búsqueda como Google. Su objetivo principal es ayudar a que el buscador comprenda correctamente de qué trata la página; para lograr esto los buscadores como Google realizan un proceso en el cual deben descubrir que tu página existe, comprender su contenido, indexar la información en su base de datos, evaluar qué tan relevante es para una búsqueda específica y, finalmente, decidir en qué posición de los resultados mostrarla.
+
+Google no puede "ver" una página de la misma forma que un humano la ve, sino que analiza directamente su código HTML; así es como un buen uso de HTML mejora el SEO:
+
+- **Desde el `tag::head`**: Google revisa el título de la página y la descripción (*meta description*) para armar el resultado de búsqueda que le muestra al usuario. También lee la URL canónica y otras reglas de indexación para saber si debe incluir la página en su sistema.
+- **Desde el `tag::body`**: Google escanea la página buscando jerarquías claras mediante títulos y subtítulos. También evalúa el texto, analiza que se esté utilizando "HTML semántico" (etiquetas que describan el tipo de contenido), revisa el texto que tienen los enlaces y lee las descripciones ocultas de las imágenes.
+
+A continuación se presenta un ejemplo de esto mismo:
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/seo-resultados-google.png"
+  alt="Ejemplo de resultados de búsqueda en Google destacando Title tag, Meta description y Rich snippet"
+  side="full"
+/>
+
+## HTML Semántico
+
+Antiguamente las páginas se armaban agrupando todo en cajas genéricas; HTML5 introdujo las etiquetas "semánticas", las cuales le dicen al navegador qué función cumple cada parte de la página. Las más importantes son:
+
+- `tag::main`: Representa el contenido principal y único de la página. Una regla importante es que no debe anidarse dentro de otras etiquetas estructurales como `tag::article` o `tag::header`.
+- `tag::header` y `tag::footer`: Sirven para definir la cabecera (donde suele ir el logo) y el pie de página (donde van los derechos de autor), o también el inicio y fin de una sección.
+- `tag::nav`: Es el bloque exclusivo para la navegación, donde pones los enlaces principales de tu sitio.
+- `tag::section`: Agrupa el contenido en secciones temáticas dentro de tu documento.
+- `tag::article`: Se usa para piezas de contenido que tienen sentido por sí mismas, como una noticia, un post de un blog o un artículo.
+- `tag::aside`: Contiene información tangencial o secundaria, como barras laterales o notas adicionales.
+
+## Listas en HTML
+
+HTML nos permite crear listas, las cuales son esenciales para poder organizar la información de la página. Existen tres tipos principales:
+
+- **Lista no ordenada (`tag::ul`)**: Se usa cuando el orden de los elementos no es importante. El navegador los muestra habitualmente con viñetas (puntos). Cada elemento de la lista se encierra en una etiqueta `tag::li`.
+- **Lista ordenada (`tag::ol`)**: Se utiliza cuando el orden de los elementos sí tiene un significado (como un paso a paso). El navegador los presentará numerados automáticamente, y también se usa la etiqueta `tag::li` para cada ítem.
+- **Lista descriptiva (`tag::dl`)**: Representa pares de términos y descripciones (como en un diccionario). Utiliza `tag::dt` para indicar el término y `tag::dd` para su descripción correspondiente.
+
+A continuación se muestra cada lista con un ejemplo en código y el cómo se ve en una página real:
+
+### Lista no Ordenada
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/lista-no-ordenada.png"
+  alt="Resultado visual en el navegador de una lista no ordenada (ul) con viñetas"
+  side="right"
+/>
+
+```html
+<!-- ul: Renderiza un contenedor de lista con viñetas (puntos). -->
+<ul>
+    <!-- li: Renderiza cada elemento individual de la lista. -->
+    <li>Manzanas</li>
+    <li>Pan</li>
+    <li>Leche</li>
+</ul>
+```
+
+### Lista Ordenada
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/lista-ordenada.png"
+  alt="Resultado visual en el navegador de una lista ordenada (ol) numerada"
+  side="right"
+/>
+
+```html
+<!-- ol: Renderiza un contenedor de lista con números ordinales. -->
+<ol>
+    <!-- li: Renderiza cada elemento individual de la lista (el número se genera solo) -->
+    <li>Poner agua a hervir</li>
+    <li>Agregar el café molido</li>
+    <li>Dejar reposar y servir</li>
+</ol>
+```
+
+### Lista Descriptiva
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/lista-descriptiva.png"
+  alt="Resultado visual en el navegador de una lista descriptiva (dl) con términos y descripciones"
+  side="right"
+/>
+
+```html
+<!-- dl: Renderiza el contenedor principal de la lista descriptiva. -->
+<dl>
+    <!-- dt (Definition Term): Renderiza el término o palabra clave (suele verse en negrita). -->
+    <dt>HTML</dt>
+    <!-- dd (Definition Description): Renderiza la descripción del término (suele verse indentado a la derecha). -->
+    <dd>Lenguaje de marcado utilizado para crear la estructura de páginas web.</dd>
+
+    <dt>CSS</dt>
+    <dd>Lenguaje de diseño gráfico utilizado para definir la presentación visual de la web.</dd>
+</dl>
+```
+
+## El Elemento div
+
+`tag::div` es un elemento de bloque genérico el cual sirve para agrupar contenido; este elemento no tiene ningún tipo de semántica, es decir, no le da nada de información especial al buscador. Su utilidad principal es crear divisiones lógicas o visuales para luego poder aplicarles diseño con CSS.
+
+Es muy fácil llenar el código de `tag::div`s; lo importante es solo utilizarlo cuando no exista una etiqueta dedicada para esa sección de la página.
+
+A continuación se muestra su uso; es importante aclarar que los `tag::div` por sí solos no dan ningún tipo de diferencia visual: en el caso del ejemplo a continuación, las líneas `attr::class` fueron definidas anteriormente para darles un estilo específico a cada `tag::div`:
+
+```html
+<body>
+
+    <h1>El DIV como contenedor y agrupador</h1>
+
+    <!-- div: Agrupa este párrafo en un bloque para que el CSS lo pinte de rojo y le añada un borde. -->
+    <div class="caja-roja">
+        <p>Soy un texto normal, pero como estoy dentro de un <strong>div</strong>, el navegador me trata como un bloque rectangular con fondo y bordes.</p>
+    </div>
+
+    <!-- div: Agrupa un título y un párrafo para aplicarles juntos bordes redondeados y centrarlos. -->
+    <div class="caja-azul">
+        <h2>¡Hola!</h2>
+        <p>El div agrupa múltiples elementos (título y texto) para aplicarles un diseño en conjunto.</p>
+    </div>
+
+    <!-- div: Sirve para anidar (meter) unos divs dentro de otros, creando estructuras complejas. -->
+    <div class="caja-madre">
+        <p><strong>Soy un div padre (caja gris).</strong> Mira cómo puedo contener a otros divs dentro de mí:</p>
+
+        <div class="caja-roja">Soy un div hijo (rojo) dentro del gris.</div>
+        <div class="caja-azul">Soy otro div hijo (azul) dentro del gris.</div>
+
+    </div>
+
+</body>
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/div-contenedor-agrupador.png"
+  alt="Resultado visual del elemento div como contenedor y agrupador con clases de estilo"
+  side="full"
+/>
+
+## Formularios e Interacción del usuario
+
+Para que un usuario pueda mandar información (como registrarse o mandar un mensaje de contacto), se utiliza la etiqueta `tag::form`; dentro de este formulario utilizamos la etiqueta `tag::input` para poder capturar los datos ingresados por la persona.
+
+El comportamiento de un `tag::input` cambia completamente de su atributo `attr::type`. Algunos tipos comunes son:
+
+- **`text`**: Para textos cortos, como un nombre o apellido.
+- **`email`**: Valida automáticamente que el texto ingresado tenga el formato correcto de un correo electrónico.
+- **`password`**: Oculta los caracteres escritos (generalmente con asteriscos o puntos) por seguridad.
+- **`date`**: Muestra un calendario interactivo para seleccionar una fecha.
+- **`file`**: Permite al usuario explorar y subir un archivo desde su computadora.
+- **`submit`**: Crea el botón final que se presiona para enviar todos los datos del formulario.
+- Existen otros tipos compatibles con HTML5 como `number`, `checkbox`, `radio`, `range` y `color`.
+
+Además del comportamiento, podemos controlarlos con varios atributos útiles:
+
+- `attr::name`: Define el nombre del campo. Es fundamental porque funciona como la "clave" o identificador de ese dato específico al momento de enviarse.
+- `attr::placeholder`: Es el texto gris de guía que aparece dentro del campo antes de que el usuario escriba, por ejemplo: `str::"Tu nombre"`.
+- `attr::value`: Establece un valor precargado por defecto.
+- `attr::required`: Marca el campo como obligatorio, impidiendo que el formulario se envíe si está vacío.
+- `attr::min`, `attr::max`, `attr::step`: Sirven para limitar rangos numéricos o de fechas permitidas.
+
+A continuación se muestra el código de cada tipo de `tag::input` y además una página para visualizarlos.
+
+<Demo
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/tipos-de-input.html"
+  title="Formulario interactivo con los distintos tipos de input en HTML"
+  height="400"
+/>
+{/* REVISAR: En la página 2 del PDF aparece el ícono del archivo HTML adjunto en OneNote ("tipos de input") que no queda incrustado al exportar a PDF; se reconstruyó la página interactiva con todos los fieldsets del ejemplo. */}
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/inputs-texto.png"
+  alt="Resultado visual de los campos de formulario de tipo text, email y password"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- INPUTS DE TEXTO BÁSICOS                    -->
+<!-- ========================================== -->
+<fieldset>
+    <legend>Inputs de Texto</legend>
+
+    <!-- text: Renderiza un campo de texto de una sola línea para entrada libre -->
+    <label for="nombre">Nombre (text):</label>
+    <input type="text" id="nombre" name="nombre" placeholder="Escribe tu nombre">
+
+    <!-- email: Renderiza un campo de texto que valida automáticamente el formato de correo electrónico -->
+    <label for="correo">Correo electrónico (email):</label>
+    <input type="email" id="correo" name="correo" placeholder="ejemplo@correo.com">
+
+    <!-- password: Renderiza un campo de texto que oculta los caracteres (muestra asteriscos o puntos) -->
+    <label for="contrasena">Contraseña (password):</label>
+    <input type="password" id="contrasena" name="contrasena" placeholder="Tu contraseña">
+</fieldset>
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/inputs-numericos.png"
+  alt="Resultado visual de los campos de formulario de tipo number y range"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- INPUTS NUMÉRICOS Y DE RANGO                -->
+<!-- ========================================== -->
+<fieldset>
+    <legend>Inputs Numéricos</legend>
+
+    <!-- number: Renderiza un campo que solo acepta números, con flechas para incrementar/decrementar -->
+    <label for="edad">Edad (number):</label>
+    <input type="number" id="edad" name="edad" min="0" max="120">
+
+    <!-- range: Renderiza un control deslizante (slider) para seleccionar un valor dentro de un rango -->
+    <label for="satisfaccion">Nivel de satisfacción (range):</label>
+    <input type="range" id="satisfaccion" name="satisfaccion" min="1" max="10">
+</fieldset>
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/inputs-fecha-archivo.png"
+  alt="Resultado visual de los campos de formulario de tipo date y file"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- INPUTS DE FECHA Y ARCHIVO                  -->
+<!-- ========================================== -->
+<fieldset>
+    <legend>Inputs de Fecha y Archivo</legend>
+
+    <!-- date: Renderiza un selector de fecha (calendario) para elegir día, mes y año -->
+    <label for="fecha">Fecha de nacimiento (date):</label>
+    <input type="date" id="fecha" name="fecha">
+
+    <!-- file: Renderiza un botón para seleccionar y subir archivos desde tu dispositivo -->
+    <label for="archivo">Subir archivo (file):</label>
+    <input type="file" id="archivo" name="archivo" accept=".pdf,.jpg,.png">
+</fieldset>
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/inputs-seleccion.png"
+  alt="Resultado visual de los campos de formulario de tipo checkbox y radio"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- INPUTS DE SELECCIÓN MÚLTIPLE               -->
+<!-- ========================================== -->
+<fieldset>
+    <legend>Inputs de Selección</legend>
+
+    <!-- checkbox: Renderiza casillas de verificación que permiten seleccionar múltiples opciones -->
+    <label>Intereses (checkbox):</label>
+    <input type="checkbox" id="deportes" name="intereses" value="deportes">
+    <label for="deportes">Deportes</label>
+
+    <input type="checkbox" id="musica" name="intereses" value="musica">
+    <label for="musica">Música</label>
+
+    <input type="checkbox" id="lectura" name="intereses" value="lectura">
+    <label for="lectura">Lectura</label>
+
+    <!-- radio: Renderiza botones de opción que permiten seleccionar solo UNA opción de un grupo -->
+    <label>Género (radio):</label>
+    <input type="radio" id="masculino" name="genero" value="masculino">
+    <label for="masculino">Masculino</label>
+
+    <input type="radio" id="femenino" name="genero" value="femenino">
+    <label for="femenino">Femenino</label>
+
+    <input type="radio" id="otro" name="genero" value="otro">
+    <label for="otro">Otro</label>
+</fieldset>
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/01-los-lenguajes-de-marcas/input-color-submit.png"
+  alt="Resultado visual del selector de color (input type color) y el botón de envío (submit)"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- INPUT DE COLOR                             -->
+<!-- ========================================== -->
+<fieldset>
+    <legend>Input de Color</legend>
+
+    <!-- color: Renderiza un selector de color (paleta de colores) para elegir un código hexadecimal -->
+    <label for="color-favorito">Color favorito (color):</label>
+    <input type="color" id="color-favorito" name="color" value="#4CAF50">
+</fieldset>
+
+<!-- ========================================== -->
+<!-- BOTÓN DE ENVÍO                             -->
+<!-- ========================================== -->
+
+<!-- submit: Renderiza un botón que envía todos los datos del formulario al servidor -->
+<input type="submit" value="Enviar Formulario">
+```
+
+## Navegación y enlaces
+
+Para conectar múltiples páginas de un sitio web o enlazar a sitios externos utilizamos la etiqueta `tag::a`; esta etiqueta requiere obligatoriamente el atributo `attr::href`, el cual indica la ruta del archivo HTML, o la dirección del sitio web de destino. Es importante aclarar que esto es muy básico y hoy en día las empresas grandes casi no lo usan, ya que guardar un archivo HTML por usuario o sección de una aplicación ocuparía mucho espacio y además ralentizaría la experiencia de usuario.

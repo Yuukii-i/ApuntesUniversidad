@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --text: #ebe8f2;
+    --muted: #8d8a9a;
+    --accent: #a78bfa;
+    --surface: #17161e;
+    --surface-2: #1e1c27;
+  }
+  * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+  body { margin: 0; padding: 12px; background: transparent; color: var(--text); font-size: 13px; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface); padding: 10px 14px; border-radius: 12px; margin-bottom: 12px; }
+  .badge { font-family: monospace; font-size: 12px; padding: 4px 10px; border-radius: 8px; background: var(--surface-2); color: var(--accent); font-weight: 600; }
+  input[type="range"] { flex: 1; min-width: 140px; cursor: pointer; }
+  .stage-wrap { display: flex; justify-content: center; }
+  .stage { background: var(--surface); border-radius: 12px; padding: 12px; transition: width 0.25s ease; width: 100%; }
+  .cards { display: grid; gap: 8px; }
+  .card { background: var(--surface-2); border-radius: 8px; padding: 12px; text-align: center; font-family: monospace; font-size: 12px; }
+  .rule { margin-top: 8px; font-family: monospace; font-size: 11px; color: var(--muted); text-align: center; }
+</style>
+</head>
+<body>
+<div class="bar">
+  <span id="bp-name" class="badge">Mobile (320px a 768px)</span>
+  <input type="range" id="width-slider" min="320" max="1300" value="480">
+  <span id="px-val" class="badge">480px</span>
+</div>
+<div class="stage-wrap">
+  <div id="stage" class="stage">
+    <div id="cards" class="cards" style="grid-template-columns: 1fr;">
+      <div class="card">Bloque 1</div>
+      <div class="card">Bloque 2</div>
+      <div class="card">Bloque 3</div>
+      <div class="card">Bloque 4</div>
+    </div>
+    <div id="rule" class="rule">@media (min-width: 320px) and (max-width: 768px)</div>
+  </div>
+</div>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    const r = document.documentElement.style;
+    r.setProperty("--text", v("--text") || "#ebe8f2");
+    r.setProperty("--muted", v("--muted") || "#8d8a9a");
+    r.setProperty("--accent", v("--accent") || "#a78bfa");
+    r.setProperty("--surface", v("--surface") || "#17161e");
+    r.setProperty("--surface-2", v("--surface-2") || "#1e1c27");
+  }
+  syncTheme();
+  try { new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch {}
+
+  const slider = document.getElementById("width-slider");
+  const bpName = document.getElementById("bp-name");
+  const pxVal = document.getElementById("px-val");
+  const cards = document.getElementById("cards");
+  const rule = document.getElementById("rule");
+  const steps = [480, 860, 1100, 1260];
+  let idx = 0;
+  let timer = null;
+
+  function render(w) {
+    pxVal.textContent = w + "px";
+    if (w < 768) {
+      bpName.textContent = "Mobile (Teléfonos): 320px a 768px";
+      cards.style.gridTemplateColumns = "1fr";
+      rule.textContent = "@media (max-width: 768px) -> 1 columna";
+    } else if (w < 1024) {
+      bpName.textContent = "Tablet (Tabletas): 768px a 1024px";
+      cards.style.gridTemplateColumns = "repeat(2, 1fr)";
+      rule.textContent = "@media (min-width: 768px) and (max-width: 1024px) -> 2 columnas";
+    } else if (w < 1200) {
+      bpName.textContent = "Desktop (Computadoras): 1024px en adelante";
+      cards.style.gridTemplateColumns = "repeat(3, 1fr)";
+      rule.textContent = "@media (min-width: 1024px) -> 3 columnas";
+    } else {
+      bpName.textContent = "Large Desktop: 1200px en adelante";
+      cards.style.gridTemplateColumns = "repeat(4, 1fr)";
+      rule.textContent = "@media (min-width: 1200px) -> 4 columnas";
+    }
+  }
+
+  slider.addEventListener("input", () => {
+    if (timer) { clearInterval(timer); timer = null; }
+    render(Number(slider.value));
+  });
+
+  render(480);
+  timer = setInterval(() => {
+    idx = (idx + 1) % steps.length;
+    slider.value = String(steps[idx]);
+    render(steps[idx]);
+  }, 2400);
+</script>
+</body>
+</html>

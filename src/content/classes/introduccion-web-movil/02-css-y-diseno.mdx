@@ -1,0 +1,251 @@
+---
+title: "CSS y Diseño"
+order: 2
+summary: "CSS (Cascading Style Sheets) es el lenguaje que permite separar los contenidos de una página con su diseño."
+tags: ["css", "box-model", "accesibilidad", "rendimiento", "fetch"]
+minutes: 15
+---
+
+import Figure from '../../../components/Figure.astro';
+
+**CSS** (*Cascading Style Sheets*) es el lenguaje que permite separar los contenidos de una página con su diseño; es decir, si una página fuera una casa, HTML serían los cimientos y CSS serían los distintos tipos de paredes, puertas, pintura, tejas, ventanas, etc. Su principal ventaja es facilitar el mantenimiento, ya que puedes cambiar los colores o la tipografía de cientos de páginas web modificando un solo archivo CSS central.
+
+No todos los dispositivos tienen las mismas fuentes de texto instaladas; si tratas de usar una fuente que el usuario no tiene, el navegador pondrá una por defecto como Times New Roman. Para solucionar esto CSS3 introdujo la regla `@font-face`, la cual permite añadir fuentes externas; esto obliga al navegador a descargar la fuente para que el sitio se muestre correctamente.
+
+El rendimiento de una página web depende mucho de sus imágenes. Es recomendable usar formatos como **WebP** o **AVIF**, los cuales ofrecen excelente compresión sin perder mucha calidad de imagen. Además, para mejorar la carga en HTML se puede usar el atributo `loading='lazy'`, la cual solo cargará la imagen cuando sea necesario.
+
+<Figure
+  src="/classes/introduccion-web-movil/02-css-y-diseno/lazy-vs-eager-loading.png"
+  alt="Comparación visual entre la carga diferida (lazy loading) y la carga inmediata (eager loading)"
+  side="right"
+/>
+
+Aquí podemos ver la diferencia entre el *lazy loading* y el *eager loading* (respectivamente). En el *lazy loading* la página prioriza el texto antes que la imagen; de esta forma la imagen solo se cargará cuando el usuario haga *scroll* hacia ella, lo cual acelera mucho la carga de la página. En cambio, *eager loading* le da la misma prioridad al texto y a la imagen, lo que resulta en imágenes inmediatas de alta calidad pero sacrifica velocidad. Si imaginamos una página con 20 imágenes repartidas a lo largo de esta misma, *lazy loading* cargará de inmediato y solo descargará las imágenes que el usuario vea, ahorrando datos y memoria. *Eager loading* se demorará mucho más en cargar y es muy probable que descargue fotos que el usuario no verá.
+
+Una buena página web debe considerar todo tipo de usuarios; por ejemplo, los usuarios ciegos utilizan lectores de pantalla para poder "ver" el contenido. Estos lectores de pantalla son incapaces de procesar fotos o gráficos; es por esto que se recomienda usar atributos `attr::alt`, el cual permite darle algún tipo de descripción textual al contenido. Además de ayudar con la accesibilidad, si es que la página tuviera problemas para cargar el contenido, el `attr::alt` se vería de todas formas.
+
+A continuación se muestra un ejemplo de los 3 casos de una imagen:
+
+<Figure
+  src="/classes/introduccion-web-movil/02-css-y-diseno/imagen-normal.png"
+  alt="Caso 1: Imagen normal cargada correctamente donde el texto alt permanece oculto visualmente"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- CASO 1: IMAGEN NORMAL                      -->
+<!-- ========================================== -->
+<h2>Imagen normal</h2>
+
+<!-- img: Renderiza la imagen. Si carga correctamente, el texto del 'alt' queda oculto visualmente. -->
+<img src="https://images.pexels.com/photos/34492887/pexels-photo-34492887.jpeg" alt="Perro de color café mirando hacia la izquierda" width="400">
+<p>(Visualmente solo ves al perro. El atributo alt está ahí, pero no se ve).</p>
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/02-css-y-diseno/imagen-alt-lector.png"
+  alt="Caso 2: Imagen junto con el texto descriptivo del atributo alt que lee un lector de pantalla"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- CASO 2: IMAGEN ALT (LECTOR DE PANTALLA)    -->
+<!-- ========================================== -->
+<h2>Imagen alt</h2>
+
+<!-- p: Renderiza el texto que un lector de pantalla lee en voz alta para usuarios con discapacidad visual. -->
+<p><strong>Lo que "ve" (escucha) el lector de pantalla:</strong> "Imagen: Perro de color café mirando hacia la izquierda"</p>
+
+<!-- img: La imagen es la misma, pero para el usuario ciego, esta es la única información que recibe. -->
+<img src="https://images.pexels.com/photos/34492887/pexels-photo-34492887.jpeg" alt="Perro de color café mirando hacia la izquierda" width="400">
+```
+
+<Figure
+  src="/classes/introduccion-web-movil/02-css-y-diseno/imagen-mala-carga.png"
+  alt="Caso 3: Mala carga donde la imagen falla y el navegador muestra el ícono roto junto al texto alt"
+  side="right"
+/>
+
+```html
+<!-- ========================================== -->
+<!-- CASO 3: MALA CARGA                         -->
+<!-- ========================================== -->
+<h2>Mala carga</h2>
+
+<!-- img: Al usar una URL falsa, la imagen no puede descargar. El navegador muestra un icono roto y renderiza el texto del 'alt' al lado. -->
+<img src="https://esta-url-es-falsa.com/perro.jpg" alt="Perro de color café mirando hacia la izquierda" width="400">
+<p>(Como la imagen falla, el navegador te muestra el texto del 'alt' para que al menos sepas qué debería haber ahí).</p>
+```
+
+## Modelo de Caja (CSS Box Model)
+
+En CSS, debemos imaginar que todos los elementos HTML son cajas cuadradas o rectangulares. El **modelo de caja** es la regla que describe cómo se calcula el espacio que ocupa cada una de estas cajas en la pantalla; se compone de las siguientes capas:
+
+<Figure
+  src="/classes/introduccion-web-movil/02-css-y-diseno/css-box-model.png"
+  alt="Diagrama del modelo de caja de CSS (The CSS Box Model): Content, Padding, Border y Margin"
+  side="right"
+/>
+
+- **Contenido (*Content*)**: Es el corazón de la caja, es decir, el texto o las imágenes que pusiste adentro.
+- **Relleno (*Padding*)**: Es un espacio transparente interno; es la distancia que hay entre tu contenido y el borde del elemento.
+- **Borde (*Border*)**: Es el marco o línea que rodea al relleno y al contenido. Puedes hacer que sea visible, cambiar su grosor, color y estilo.
+- **Margen (*Margin*)**: Es el espacio transparente externo; es la distancia que empuja y separa a tu caja de las otras cajas que hay a su alrededor.
+
+Para poder manipular estas cajas existen distintas propiedades de CSS:
+
+- **Para el texto**: `attr::color`, `attr::background-color`, `attr::font-size`, `attr::text-align`, `attr::width` y `attr::height`.
+- **De diseño**: `attr::display` (para indicar si la caja se comporta como un bloque, línea o cuadrícula) y `attr::position` (para dejar elementos fijos o moverlos con coordenadas absolutas).
+- **Efectos modernos**: Gracias a CSS3 podemos utilizar `attr::border-radius` (bordes redondeados), `attr::box-shadow` (para sombras), `attr::opacity` y además formatos de color como HSLA o RGBA que incluyen un canal para controlar qué tan transparente es el color del fondo.
+
+Además de todo esto, tenemos que saber cómo vamos a aplicar CSS en nuestro HTML; para eso existen 3 formas distintas, cada una con su caso de uso:
+
+### CSS en línea (inline)
+
+Se escribe directamente dentro de la etiqueta utilizando `attr::style`; no es recomendable para proyectos grandes ya que ensucia mucho el código.
+
+```html
+<!-- ========================================== -->
+<!-- 1. CSS EN LÍNEA (Inline)                   -->
+<!-- ========================================== -->
+<!-- style="...": Aplica CSS directamente a esta única etiqueta.
+     Es rápido para pruebas, pero malo para mantener si tienes que repetirlo. -->
+<p style="color: red; font-weight: bold;">Este párrafo tiene CSS en línea (solo afecta a esta línea).</p>
+```
+
+### CSS interno (internal)
+
+Se escribe todo el código dentro de un bloque `tag::style` ubicado en el `tag::head`; se comporta como una variable, actúa como reemplazo del CSS *inline*: en vez de escribir `attr::style`, le asignamos un `attr::class` a lo que queremos que afecte.
+
+```html
+<!-- ========================================== -->
+<!-- 2. CSS EN BLOQUE (Interno)                 -->
+<!-- ========================================== -->
+<!-- style: Abre un bloque de código CSS dentro del head.
+     Afecta a toda la página usando selectores (clases, etiquetas, IDs). -->
+<style>
+    .caja-bloque {
+        background-color: #f0f8ff;
+        padding: 15px;
+        border: 2px dashed #007bff;
+    }
+    .caja-bloque h2 {
+        color: #0056b3;
+    }
+</style>
+```
+
+```html
+<!-- Elemento que usa el CSS en Bloque (definido arriba en el <style>) -->
+<div class="caja-bloque">
+    <h2>Caja con CSS en Bloque</h2>
+    <p>Los estilos de esta caja están en el bloque &lt;style&gt; del head.</p>
+</div>
+```
+
+### CSS externo (external)
+
+Se escribe el código CSS en un archivo externo, el cual luego se conecta con el HTML utilizando `tag::link` en el `tag::head`; su relación es similar a interfaces y clases en lenguajes de programación convencionales, donde la clase necesita una referencia a la interfaz para poder usarla (en el ejemplo se muestra tanto el `tag::link` como el `tag::div` juntos para facilidad de visualización). Es recomendable para cualquier proyecto grande que tenga bloques que comparten un mismo estilo CSS, además de que ayuda a separar el diseño del contenido de la página de manera física.
+
+```html
+<!-- ========================================== -->
+<!-- 3. CSS EXTERNO                             -->
+<!-- ========================================== -->
+<!-- link: Conecta esta página con un archivo CSS independiente.
+     Es el método profesional porque separa el diseño (CSS) de la estructura (HTML). -->
+<link rel="stylesheet" href="estilos.css">
+
+<!-- Elemento que usa el CSS Externo (definido en el archivo estilos.css) -->
+<div class="caja-externa">
+    <p>Esta caja usa los estilos del archivo externo <strong>estilos.css</strong>.</p>
+</div>
+```
+
+```css title="estilos.css"
+/* ========================================== */
+/* ARCHIVO EXTERNO: estilos.css               */
+/* ========================================== */
+
+/* 1. Regla para el cuerpo general de la página */
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+/* 2. Regla para el título principal */
+h1 {
+    text-align: center;
+    color: #333333;
+    border-bottom: 1px solid #ccc;
+}
+
+/* 3. Regla para la clase específica del ejemplo externo */
+.caja-externa {
+    background-color: #e2e3e5;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    margin-top: 20px;
+}
+```
+
+## Organización de un Proyecto Web
+
+Tener un proyecto web organizado facilita enormemente su mantenimiento y escalabilidad a futuro. Para esto se utiliza una estructura de carpetas clara:
+
+- La página de inicio siempre debe llamarse `index.html` y ubicarse en la raíz del proyecto.
+- **Uso de carpetas**: Se debe crear una carpeta `css` para las hojas de estilo independientes, una carpeta `img` para imágenes y logos, y una carpeta `js` para los scripts de comportamiento.
+- Además se recomienda utilizar nombres de archivo claros y en minúscula (por ejemplo, `contacto.html`, `menu.html`, etc.), además de incluir un archivo `favicon.ico` para que la página tenga un ícono personalizado en la pestaña del navegador.
+
+Además de esto, imaginemos que vamos a crear múltiples páginas web distintas, pero todas ellas contienen la misma barra de navegación; normalmente copiaríamos y pegaríamos el código HTML del menú para cada página: esto ensuciaría código y generaría redundancia. La solución a este problema es utilizar la función `fn::fetch()` de JavaScript.
+
+La idea es muy simple: vamos a crear un archivo `.html` el cual solo contenga el código que queremos reutilizar; luego crearemos un archivo `.js` el cual se encargará de cargar los contenidos del `.html` simple en cualquiera de nuestras páginas.
+
+Archivo simple llamado `menu.html`:
+
+```html title="menu.html"
+<nav>
+    <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="about.html">Acerca de</a></li>
+        <li><a href="contact.html">Contacto</a></li>
+    </ul>
+</nav>
+```
+
+Archivo `cargar-menu.js`, el cual contiene la lógica:
+
+```javascript title="cargar-menu.js"
+// Función reutilizable que puedes llamar desde cualquier página
+function cargarMenu(contenedorId, archivoMenu) {
+    fetch(archivoMenu) // Solicita el archivo (en este caso "menu.html")
+        .then(response => response.text()) // Una vez recibe el archivo lo convierte a texto HTML
+        .then(data => {
+            document.getElementById(contenedorId).innerHTML = data; // Reemplaza los contenidos de nuestro <div> por los de "menu.html"
+        })
+        .catch(error => console.error('Error al cargar el menú:', error));
+}
+```
+
+En una de las páginas cualquiera referenciamos el script:
+
+```html
+<script src="cargar-menu.js" defer></script>
+```
+
+Nuestro `tag::div` vacío solo con su `id`:
+
+```html
+<div id="menu-container"></div>
+```
+
+Llamada al script:
+
+```html
+<script>
+    // Solo llamas a la función con el ID del contenedor y el archivo del menú
+    cargarMenu('menu-container', 'menu.html');
+</script>
+```

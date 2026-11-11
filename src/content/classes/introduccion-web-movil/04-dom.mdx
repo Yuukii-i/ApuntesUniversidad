@@ -1,0 +1,166 @@
+---
+title: "DOM"
+order: 4
+summary: "El DOM (Document Object Model) es la representación en memoria de un HTML, el navegador toma el código de la web y lo convierte en una estructura de árbol de nodos."
+tags: ["dom", "eventos", "bubbling", "delegacion"]
+minutes: 13
+---
+
+import Figure from '../../../components/Figure.astro';
+import Demo from '../../../components/Demo.astro';
+
+El **DOM** (*Document Object Model*) es la representación en memoria de un HTML; el navegador toma el código de la web y lo convierte en una estructura de árbol de nodos, donde cada etiqueta, atributo e incluso texto se convierte en un nodo. Esta transformación es la que le permite a JavaScript acceder, modificar y crear contenido de manera dinámica en la página web.
+
+<Figure
+  src="/classes/introduccion-web-movil/04-dom/dom-tree.png"
+  alt="Diagrama de transformación de un documento HTML en la estructura de árbol de nodos del DOM (The DOM Tree)"
+  side="full"
+/>
+
+Para poder manipular un botón, una imagen o texto, debemos indicarle a JavaScript cómo debe encontrarlo; esto se hace utilizando la palabra `var::document` seguido de algunos métodos:
+
+```javascript
+document.getElementById('id');
+//Buscara y devolvera el elemento que tenga asignado ese id como por ejemplo: "h1 id='titulo'"
+
+document.getElementsByClassName('clase');
+//Devuelve la coleccion que agrupa todos los elementos que comparte esta clase: "class='clase'"
+
+document.querySelector('selectorCSS')
+//Es el metodo mas moderno, permite buscar elementos por id, clase o por etiqueta como <p> para parrafo
+```
+
+## Manipulación del DOM
+
+Una vez que hemos atrapado el elemento que queríamos utilizando los métodos anteriores, podemos modificarlos a nuestro gusto utilizando:
+
+```javascript
+titulo.textContent = "Nuevo titulo dinamico";
+//Modifica directamente el texto plano, permite cambiar titulos o secciones de texto
+
+titulo.innerHTML = <em>Titlo en cursiva</em>
+//Permite inyectar etiquetas nuevas HTML directamente
+```
+{/* REVISAR: En el bloque de código original la línea "titulo.innerHTML = <em>Titlo en cursiva</em>" no tiene comillas alrededor del string HTML (en JS requiere comillas: "<em>Título en cursiva</em>"). Se transcribe literal según las reglas. */}
+
+Además podemos hacer modificaciones de estilo:
+
+```javascript
+titulo.style.color = "red";
+titulo.style.fontSize = "24px";
+//Manipulamos el estilo del titulo directamente desde JS
+
+titulo.classList.add("resaltado");
+//Alterando clases CSS
+```
+
+Finalmente podemos crear o eliminar nodos utilizando:
+
+```javascript
+const p = document.createElement("p");
+//creara un nuevo elemento <p>
+
+document.body.appendChild(p);
+//nos permitira insertar nuestro nuevo elemento
+//en este caso se insertara como ultimo elemento del <body>
+
+p.remove();
+//nos permite removerlo
+```
+
+## Eventos
+
+Un **evento** es cualquier acción que ocurre dentro de la página web; JavaScript es capaz de "escuchar" y responder a estas acciones para que la página sea más interactiva. Los eventos más comunes se agrupan por categoría:
+
+- **Mouse**: `click`, doble click (`dblclick`), pasar el cursor (`mouseover`) o alejarlo (`mouseout`).
+- **Teclado**: presionar una tecla (`keydown`, `keypress`) o soltarla (`keyup`).
+- **Formularios**: escribir en un campo (`input`), cambiar un valor (`change`) o enviar datos (`submit`).
+- **Ventana/Documento**: cuando la página termina de cargar (`load`), al desplazarse (`scroll`) o cambiar su tamaño (`resize`).
+
+Para que un elemento reaccione tenemos que utilizar los selectores que vimos anteriormente seguido de la función como tal; para esto existen dos opciones:
+
+```javascript
+const btn = document.querySelector("#btnAccion");
+//atrapamos al boton usando un selector
+
+btn.onclick = () => {console.log("Click detectado en el botón")};
+//Es rapido, pero si intentamos asignarle otra funcion la primera se sobrescribira
+
+btn.addEventListener("click", () => {
+  console.log("Click detectado en el botón");
+});
+//Es la opcion mas moderna y el estandar. Permite tener varias funciones escuchando al mismo evento
+```
+
+## Bubbling y Delegación de Eventos
+
+Dentro del mundo de los eventos existe un problema; si tenemos una estructura como la siguiente:
+
+```html
+<!-- Cajas anidadas: La verde está dentro de la naranja, y la naranja dentro de la roja -->
+<div id="outer" class="box outer">
+    EXTERIOR (Rojo)
+    <div id="middle" class="box middle">
+        MEDIO (Naranja)
+        <div id="inner" class="box inner">
+            INTERIOR (Verde) - ¡Haz clic aquí!
+        </div>
+    </div>
+</div>
+```
+
+```javascript
+// Le ponemos un escuchador de clic a CADA caja (abuelo, padre e hijo)
+document.getElementById('outer').addEventListener('click', () => {
+    registrar('3. El evento llegó al EXTERIOR (Rojo)');
+});
+
+document.getElementById('middle').addEventListener('click', () => {
+    registrar('2. El evento llegó al MEDIO (Naranja)');
+});
+
+document.getElementById('inner').addEventListener('click', () => {
+    registrar('1. El evento llegó al INTERIOR (Verde)');
+});
+```
+
+Al crear un evento que escuche los clicks, se creará una reacción en cadena (*Bubbling*) hacia `str::"fuera"`.
+
+Un buen uso del *Bubbling* es si quisiéramos asignarles un evento único a múltiples elementos hijos: podemos asignarle un único evento al elemento padre. Así, cuando el usuario interactúa con el hijo ocurrirá *Bubbling* y el padre utilizará la propiedad `var::target` para identificar exactamente de qué hijo originó la acción. Veamos el ejemplo con una lista:
+
+```html
+<!-- Esta es la lista (el PADRE). Los LI son los HIJOS -->
+<ul id="fruit-list">
+    <li>Manzana</li>
+    <li>Banana</li>
+    <li>Naranja</li>
+</ul>
+```
+
+```javascript
+// ==========================================
+// LÓGICA PARA LA DELEGACIÓN DE EVENTOS
+// ==========================================
+const fruitList = document.getElementById('fruit-list');
+let contadorFrutas = 3;
+
+// ¡LA MAGIA! En lugar de poner un addEventListener a cada <li>,
+// le ponemos UNO SOLO al padre (el <ul>).
+fruitList.addEventListener('click', (evento) => {
+
+    // event.target: Identifica literalmente qué elemento hijo recibió el clic.
+    // Si el clic fue en un <li> (y no en el espacio vacío del <ul>), lo tachamos.
+    if (evento.target.tagName === 'LI') {
+        evento.target.classList.toggle('completed');
+    }
+});
+```
+
+<Demo
+  src="/classes/introduccion-web-movil/04-dom/bubbling-y-delegacion.html"
+  title="Simulación interactiva de Event Bubbling en cajas anidadas y Delegación de Eventos en una lista"
+  height="320"
+/>
+{/* REVISAR: En la página 7 del PDF aparece el ícono del archivo HTML adjunto en OneNote ("Bubbling y Delegacio...") que no queda incrustado al exportar a PDF; se reconstruyó la simulación interactiva con ambos ejemplos de la sección. */}
+
+Gracias a esta implementación, si añadimos nuevos elementos a la lista, estos se crearán con la habilidad de ser clickeados de la misma forma que los elementos ya existentes. Arriba se comparte el archivo HTML para probar o para ver el código.

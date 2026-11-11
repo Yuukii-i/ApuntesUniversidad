@@ -1,0 +1,184 @@
+---
+title: "JavaScript"
+order: 3
+summary: "JavaScript es un lenguaje de programación interpretado, el cual fue creado en 1995 por Brendan Eich."
+tags: ["javascript", "variables", "coercion", "prototipos", "clases", "json"]
+minutes: 14
+---
+
+**JavaScript** es un lenguaje de programación interpretado, el cual fue creado en 1995 por Brendan Eich. Originalmente su propósito era ejecutarse dentro de los navegadores web para manipular el **DOM** (*Document Object Model*) y crear aplicaciones web dinámicas. Hoy en día su alcance es muchísimo mayor, ya que puede ser ejecutado del lado del servidor mediante entornos como **Node.js**.
+
+## Declaración de Variables
+
+En JavaScript existen 3 palabras reservadas para la declaración de variables:
+
+- `kw::var`: Es la forma clásica de declarar variables; hoy en día no es recomendada.
+- `kw::let`: Se utiliza para declarar variables cuyo valor vamos a modificar dentro de un bloque.
+- `kw::const`: Se usa para declarar variables que no pueden ser reasignadas, lo que ayuda a proteger la referencia al dato.
+
+Cada una de estas declaraciones tiene su propio *Scope* (alcance):
+
+- **`kw::var`**: Tiene alcance global, es decir, puedes utilizarla dentro y fuera de bloques; por ejemplo, si declaras un `kw::var` dentro de un `kw::if`, podrás usar esa variable fuera de ese bloque y no dará error; además puedes redeclararla varias veces en el mismo *Scope* sin error.
+- **`kw::let` y `kw::const`**: Ambas tienen alcance de bloque. Esto significa que si declaras cualquiera dentro de `{ }` esa variable solo existirá allí dentro.
+
+Es común pensar que las variables `kw::const` son 100% inmutables; la realidad es que solo prohíbe la reasignación directa, es decir, para el ejemplo de una `kw::const` `var::z` la cual es una lista:
+
+```javascript
+const z = [1, 2];
+z = [4,2] // Arrojara TypeError
+z.push(3); // El arreglo ahora contiene [1, 2, 3]
+```
+
+## Tipos de datos
+
+- **Primitivos**: Son los datos más básicos y simples; dentro de ellos encontramos:
+  - `number` (números)
+  - `string` (textos)
+  - `boolean`
+  - `const::null`
+  - `const::undefined`
+  - `symbol`
+  - `bigint`
+- **Objetos**: Son estructuras más complejas; aquí entran:
+  - `cls::Object`
+  - `cls::Array`
+  - `cls::Function`
+  - `cls::Date`
+  - `cls::Map`
+  - `cls::Set`
+
+## Tipos de comparaciones y conversiones (Coerción)
+
+En JavaScript existen dos formas de comparar si un valor es igual al otro:
+
+- El operador `==` es la **comparación flexible**: intenta convertir los valores para que sean del mismo tipo antes de comparar.
+  - Si comparas un booleano con un número, convierte `const::false` a `0` y `const::true` a `1`.
+  - Si comparas un *string* con un número, convierte el *string* a número (ej. `str::"5"` se convierte a `5`).
+  - Si uno es un objeto (como un *array* vacío), intenta convertirlo a un primitivo.
+  - Esto genera resultados raros:
+    - `0 == false` da como resultado `const::true`.
+    - `[] == 0` da `const::true` (porque el *array* vacío se convierte en un *string* vacío, y luego en `0`).
+    - `[] == false` da `const::true`.
+    - `null == undefined` da `const::true`.
+    - `"5" == 5` da `const::true`.
+- El operador `===` es la **comparación estricta**: no intenta ninguna conversión, por lo que para los casos anteriores:
+  - `0 === false` da como resultado `const::false` (uno es *int*, el otro es *boolean*).
+  - `[] === 0` da `const::false` (uno es `cls::Array`, el otro *int*).
+  - `[] === false` da `const::false` (uno es *array*, el otro *boolean*).
+  - `null === undefined` da `const::false`.
+  - `"5" === 5` da `const::false`.
+  - `5 === 5` da `const::true` (ambos son *int* y el mismo número).
+
+## Funciones
+
+Al igual que con las comparaciones, en JavaScript existen dos formas de declarar una función:
+
+- **Función declarativa**: La forma clásica, muy similar a otros lenguajes de programación; utilizamos la palabra `kw::function` y nos obliga a seguir la estructura típica de las llaves `{ }`.
+
+```javascript
+function suma(a, b) {
+  return a + b;
+}
+```
+
+- **Función flecha**: Este es el método moderno introducido en versiones modernas de JavaScript. Esta utiliza el símbolo `=>`, y si la función es muy corta podemos omitir las llaves y el `kw::return`.
+
+```javascript
+const resta = (a, b) => a - b;
+```
+
+## Objetos
+
+En JavaScript un objeto es una colección de propiedades estructuradas en pares "clave-valor", donde las claves suelen ser texto y los valores pueden ser cualquier cosa como números, otros objetos, `cls::Array`s e incluso funciones.
+
+Se puede acceder a estos valores utilizando un punto (`user.name`) o incluso corchetes (`user["active"]`). Además se pueden agregar nuevas propiedades en cualquier momento (`user.role = "admin"`) o eliminarlas usando `kw::delete`.
+
+## Prototipos
+
+JavaScript utiliza un sistema de herencias basado en prototipos. Cada objeto tiene un enlace interno llamado `var::Prototype` el cual funciona como una cadena de búsqueda. Clases. Para visualizarlo mejor veamos el siguiente ejemplo:
+{/* REVISAR: En el apunte aparece la palabra suelta "Clases." antes de "Para visualizarlo mejor veamos el siguiente ejemplo:". */}
+
+En este ejemplo tenemos la clase `var::base` la cual inicia con el método `fn::greet()`. Para efectuar la herencia utilizamos `Object.create("padre")`. Como se mencionó anteriormente, los objetos en JavaScript están estructurados como clave-valor, lo que nos permite asignarles nuevas variables o, como vemos en el ejemplo, reemplazar funciones del padre.
+{/* REVISAR: En el código del ejemplo, "base" es un objeto literal (no una clase) y se pasa la referencia Object.create(base) en lugar de un string "padre". */}
+
+```javascript
+// 1. Creamos el objeto "padre" o base que contiene la función a compartir
+const base = {
+  greet() {
+    return "hola desde la base";
+  }
+};
+
+// 2. Creamos el objeto "hijo" y lo enlazamos al padre en ese mismo instante
+const child = Object.create(base);
+
+// Le damos propiedades propias al hijo
+child.name = "Ada";
+
+// Si llamamos al método, el hijo usa la cadena de búsqueda y ejecuta el del padre
+console.log(child.greet()); // Imprime: "hola desde la base"
+
+// 3. Podemos hacer Override simplemente reemplazando la funcion
+child.greet = function() {
+  return "hola, soy " + this.name;
+};
+
+console.log(child.greet()); // Imprime: "hola, soy Ada"
+```
+
+## Clases
+
+Para que el lenguaje fuera más amigable para los programadores que venían de otros sistemas se introdujo la sintaxis `kw::class`, la cual funciona como cualquier clase de otro lenguaje donde se puede definir un constructor y crear métodos estáticos o no estáticos.
+
+Sin embargo, esto no es más que una fachada, debido a que por detrás JavaScript igualmente utiliza el sistema de herencia basado en prototipos que vimos anteriormente.
+
+Si quisiéramos utilizar herencias tendríamos que hacerlo exactamente igual que en Java, donde se define un constructor y sus métodos, mientras que el hijo puede tener sus propios métodos y heredar utilizando `kw::extends`.
+
+Ahora un ejemplo:
+
+```javascript
+// Tu clase padre original
+class Point {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+  dist() {
+    return Math.hypot(this.x, this.y);
+  }
+}
+
+// El hijo hereda del padre usando la palabra "extends"
+class Point3D extends Point {
+  constructor(x, y, z) {
+    // "super()" ejecuta automáticamente el constructor del padre para configurar 'x' e 'y'
+    super(x, y);
+
+    // Luego configuras la variable exclusiva del hijo
+    this.z = z;
+  }
+
+  // Creas el método que es solo del hijo
+  volumen() {
+    return this.x * this.y * this.z;
+  }
+}
+
+const puntoNuevo = new Point3D(3, 4, 5);
+
+// Puede usar lo que heredó del padre
+console.log(puntoNuevo.dist()); // Imprime: 5
+
+// Y puede usar lo que es netamente suyo
+console.log(puntoNuevo.volumen()); // Imprime: 60
+```
+
+## La diferencia entre JSON (JavaScript Object Notation) y el Objeto JS
+
+- **Objeto JS**: Es una estructura "viva" en la memoria del programa. Puede hacer cosas y tener prototipos.
+- **JSON**: Es un formato de texto "estático" usado para intercambiar datos entre servidores y navegadores. Como solo es texto, este no permite guardar funciones ni prototipos.
+
+Es posible transformar un JSON en Objeto JS y viceversa utilizando:
+
+- `fn::JSON.stringify()` convierte un Objeto JS en JSON.
+- `fn::JSON.parse()` convierte un JSON en Objeto JS.

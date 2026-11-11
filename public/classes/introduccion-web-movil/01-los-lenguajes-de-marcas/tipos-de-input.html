@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --text: #ebe8f2;
+    --muted: #8d8a9a;
+    --accent: #a78bfa;
+    --surface: #17161e;
+    --surface-2: #1e1c27;
+  }
+  * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+  body { margin: 0; padding: 12px; background: transparent; color: var(--text); font-size: 13px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+  fieldset { background: var(--surface); border: none; border-radius: 12px; padding: 12px 14px; margin: 0; }
+  legend { font-weight: 600; color: var(--accent); padding: 0 4px; font-size: 12px; }
+  .row { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .inline-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
+  label { color: var(--muted); font-size: 12px; }
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="date"] {
+    background: var(--surface-2); color: var(--text); border: none; border-radius: 8px; padding: 6px 10px; font-size: 12px; outline: none;
+  }
+  input[type="file"] { font-size: 11px; color: var(--muted); }
+  input[type="color"] { background: var(--surface-2); border: none; border-radius: 6px; width: 44px; height: 28px; cursor: pointer; }
+  input[type="submit"] {
+    background: #4CAF50; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 600; cursor: pointer; font-size: 12px;
+  }
+  .out { margin-top: 10px; padding: 8px 12px; background: var(--surface-2); border-radius: 8px; font-family: monospace; font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<form id="demo-form" class="grid">
+  <fieldset>
+    <legend>Inputs de Texto</legend>
+    <div class="row">
+      <label for="nombre">Nombre (text):</label>
+      <input type="text" id="nombre" name="nombre" placeholder="Escribe tu nombre">
+    </div>
+    <div class="row">
+      <label for="correo">Correo electrónico (email):</label>
+      <input type="email" id="correo" name="correo" placeholder="ejemplo@correo.com">
+    </div>
+    <div class="row">
+      <label for="contrasena">Contraseña (password):</label>
+      <input type="password" id="contrasena" name="contrasena" placeholder="Tu contraseña">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Inputs Numéricos</legend>
+    <div class="row">
+      <label for="edad">Edad (number):</label>
+      <input type="number" id="edad" name="edad" min="0" max="120" value="20">
+    </div>
+    <div class="row">
+      <label for="satisfaccion">Nivel de satisfacción (range): <span id="r-val">7</span></label>
+      <input type="range" id="satisfaccion" name="satisfaccion" min="1" max="10" value="7">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Inputs de Fecha y Archivo</legend>
+    <div class="row">
+      <label for="fecha">Fecha de nacimiento (date):</label>
+      <input type="date" id="fecha" name="fecha">
+    </div>
+    <div class="row">
+      <label for="archivo">Subir archivo (file):</label>
+      <input type="file" id="archivo" name="archivo" accept=".pdf,.jpg,.png">
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Inputs de Selección</legend>
+    <div class="row">
+      <label>Intereses (checkbox):</label>
+      <div class="inline-group">
+        <label><input type="checkbox" id="deportes" name="intereses" value="deportes" checked> Deportes</label>
+        <label><input type="checkbox" id="musica" name="intereses" value="musica"> Música</label>
+        <label><input type="checkbox" id="lectura" name="intereses" value="lectura"> Lectura</label>
+      </div>
+    </div>
+    <div class="row">
+      <label>Género (radio):</label>
+      <div class="inline-group">
+        <label><input type="radio" id="masculino" name="genero" value="masculino"> Masculino</label>
+        <label><input type="radio" id="femenino" name="genero" value="femenino" checked> Femenino</label>
+        <label><input type="radio" id="otro" name="genero" value="otro"> Otro</label>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Input de Color</legend>
+    <div class="row">
+      <label for="color-favorito">Color favorito (color):</label>
+      <input type="color" id="color-favorito" name="color" value="#4CAF50">
+    </div>
+    <div class="row" style="margin-top: 14px;">
+      <input type="submit" value="Enviar Formulario">
+    </div>
+  </fieldset>
+</form>
+<div class="out" id="out">Datos listos para enviar</div>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    const r = document.documentElement.style;
+    r.setProperty("--text", v("--text") || "#ebe8f2");
+    r.setProperty("--muted", v("--muted") || "#8d8a9a");
+    r.setProperty("--accent", v("--accent") || "#a78bfa");
+    r.setProperty("--surface", v("--surface") || "#17161e");
+    r.setProperty("--surface-2", v("--surface-2") || "#1e1c27");
+  }
+  syncTheme();
+  try { new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch {}
+  const rng = document.getElementById("satisfaccion");
+  const rVal = document.getElementById("r-val");
+  rng.addEventListener("input", () => { rVal.textContent = rng.value; });
+  document.getElementById("demo-form").addEventListener("submit", e => {
+    e.preventDefault();
+    const fd = new FormData(e.target);
+    const pairs = [];
+    for (const [k, val] of fd.entries()) pairs.push(k + "=" + (val instanceof File ? (val.name || "sin archivo") : val));
+    document.getElementById("out").textContent = pairs.join(" · ");
+  });
+</script>
+</body>
+</html>

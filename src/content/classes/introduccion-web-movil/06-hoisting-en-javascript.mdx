@@ -1,0 +1,173 @@
+---
+title: "Hoisting en JavaScript"
+order: 6
+summary: "El Hoisting es un comportamiento interno de JavaScript donde el motor del navegador escanea el archivo y mueve las declaraciones de variables y funciones a la parte más alta de su entorno de memoria."
+tags: ["hoisting", "ciclos", "arreglos", "map", "filter", "reduce", "testing"]
+minutes: 12
+---
+
+El **Hoisting** es un comportamiento interno de JavaScript donde el motor del navegador escanea el archivo y "mueve" las declaraciones de variables y funciones a la parte más alta de su entorno de memoria. Esto ocurre principalmente con variables tipo `kw::var` y funciones declarativas (las de bloque), lo que nos permite escribir las funciones o declarar variables en la parte de abajo del código.
+
+Sin embargo, esto no funciona con variables `kw::let` o `kw::const`; esto incluye además a las funciones con flecha, debido a que estas suelen declararse con un `kw::const`. Técnicamente el navegador también registra estas variables, pero te prohíbe usarlas hasta que la ejecución llegue a la línea donde está definida esa variable o función. Un ejemplo:
+
+### Hoisting funcionando
+
+```javascript
+console.log(y); // Imprime: undefined (por el hoisting)
+var y = 2;
+
+console.log(suma(2, 3)); // Funciona perfecto e imprime: 5
+
+function suma(a, b) {
+  return a + b;
+}
+```
+
+### El caso de const y let
+
+```javascript
+console.log(z); // Error: Cannot access 'z' before initialization
+let z = 3;
+
+console.log(resta(5, 2)); // Error
+
+const resta = (a, b) => a - b;
+```
+
+## Ciclos en JavaScript
+
+Primero que nada: sí, en JavaScript existen los ciclos `kw::for`, `kw::while` y `do while`, pero los saltaremos porque ya deberías saber cómo funcionan; por eso ahora veremos la versión moderna de los ciclos `kw::for`.
+
+El `for...of` es la versión moderna del ciclo `kw::for`, la cual nos permite iterar sobre elementos de una lista o incluso sobre caracteres de un `cls::String`. Su estructura es:
+
+```javascript
+for (const "lo que queremos iterar" of "donde vamos a iterar"){...}
+```
+
+Ejemplo:
+
+### Iteración en una lista
+
+```javascript
+const numeros = [10, 20, 30, 40, 50];
+
+// En cada vuelta, "numero" toma el siguiente valor automáticamente
+for (const numero of numeros) {
+  console.log(numero);
+}
+```
+
+### Iteración de un string
+
+```javascript
+const palabra = "JavaScript";
+
+for (const letra of palabra) {
+  console.log(letra); // Imprime 'J', luego 'a', luego 'v', etc.
+}
+```
+
+En la práctica esto lo podemos complementar con la **Desestructuración** cuando trabajamos con bases de datos o servidores los cuales nos dan respuestas JSON; esto nos permitirá "desempacar" propiedades del objeto. Ejemplo:
+
+```javascript
+const personas = [
+  { nombre: "Ana", edad: 25 },
+  { nombre: "Carlos", edad: 30 }
+];
+
+// En lugar de declarar "const persona of personas" y luego escribir "persona.nombre"
+for (const { nombre, edad } of personas) {
+  console.log(`\({nombre} tiene\){edad} años`);
+}
+```
+{/* REVISAR: En la captura de código original aparece "\({nombre} tiene\){edad} años" en vez de la interpolación de template string "${nombre} tiene ${edad} años". Se preserva el código literal según las reglas. */}
+
+Esto mostrará por consola: `Ana tiene 25 años`, `Carlos tiene 30 años`.
+
+## Manipulación de arreglos
+
+Los arreglos (`cls::Array`s) pueden almacenar distintos tipos de datos simultáneamente, incluyendo textos, booleanos y objetos enteros. Para agregar un elemento al final de la lista utilizamos `fn::push()`, mientras que para agregar un elemento al inicio de la lista utilizamos `fn::unshift()`. Para eliminarlos utilizamos `fn::pop()` para eliminar y extraer el último elemento de la lista y `fn::shift()` para hacer lo mismo con el primero.
+
+Además existen los métodos avanzados, los cuales nos permiten crear nuevas listas a partir de las originales sin modificar la original:
+
+- `fn::map()` nos permite modificar los contenidos de una lista; esta función crea una nueva lista a partir de la original:
+
+```javascript
+const numeros = [1, 2, 3, 4, 5];
+
+// Por cada 'num' que entra, map() guarda el resultado de 'num * 2' en el nuevo arreglo
+const duplicados = numeros.map(num => num * 2);
+
+console.log(duplicados); // Imprime: [2, 4, 6, 8, 10]
+console.log(numeros);    // El original sigue intacto: [1, 2, 3, 4, 5]
+
+const personas = [
+  {nombre: "Ana", edad: 25},
+  {nombre: "Carlos", edad: 30},
+  {nombre: "María", edad: 28}
+];
+
+// map() recorre cada objeto 'persona' y extrae únicamente su propiedad 'nombre'
+const nombres = personas.map(persona => persona.nombre);
+
+console.log(nombres); // Imprime un arreglo limpio: ["Ana", "Carlos", "María"]
+```
+
+- `fn::filter()` evalúa una condición y devuelve una nueva lista que contiene únicamente los elementos que pasaron la comprobación:
+
+```javascript
+const numeros = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+// Guarda solo los números pares (donde el resto de dividir por 2 es cero)
+const pares = numeros.filter(num => num % 2 === 0);
+console.log(pares); // Imprime: [2, 4, 6, 8, 10]
+
+const estudiantes = [
+  {nombre: "Ana", calificacion: 85},
+  {nombre: "Carlos", calificacion: 92},
+  {nombre: "María", calificacion: 78},
+  {nombre: "Pedro", calificacion: 95}
+];
+
+// Filtra la lista para dejar solo a los que tienen 80 o más de calificación
+const aprobados = estudiantes.filter(est => est.calificacion >= 80);
+
+// María (78) queda descartada del nuevo arreglo
+console.log(aprobados);
+```
+
+- `fn::reduce()` recorre la lista para reducir todos sus elementos a un valor final. Funciona como un acumulador:
+
+```javascript
+const numeros = [1, 2, 3, 4, 5];
+
+// "acumulador" guarda la suma histórica, "actual" es el número que está entrando.
+// El "0" al final indica en qué número empieza el acumulador.
+const suma = numeros.reduce((acumulador, actual) => acumulador + actual, 0);
+
+console.log(suma); // Imprime: 15
+
+const productos = [
+  {nombre: "Laptop", precio: 1000},
+  {nombre: "Mouse", precio: 25},
+  {nombre: "Teclado", precio: 80}
+];
+
+// Suma el precio de cada objeto al total acumulado
+const total = productos.reduce((suma, producto) => suma + producto.precio, 0);
+
+console.log(total); // Imprime: 1105
+```
+
+## JavaScript y Responsive Design
+
+JavaScript no solo maneja clics en botones; también permite detectar cambios en el tamaño de la pantalla o la orientación. Esto nos permite manipular directamente las clases CSS para optimizar el rendimiento en móviles o cargar contenido nuevo al vuelo según el tamaño de la pantalla.
+
+## Herramientas de Desarrollo y Testing
+
+Para garantizar que la aplicación web no falle se recomienda utilizar las siguientes herramientas:
+
+- **DevTools del Navegador**: Utiliza su simulador de dispositivos para pruebas rápidas mientras programas.
+- **Responsinator y BrowserStack**: Plataformas para previsualizar y testear cómo se comporta tu código en entornos y dispositivos móviles reales.
+- **Lighthouse**: Una herramienta de auditoría automatizada que califica el rendimiento, las buenas prácticas y la accesibilidad de tu página.
+- **Can I Use**: Una base de datos indispensable para verificar si la propiedad de CSS o método de JS que quieres usar es compatible con todos los navegadores actuales.

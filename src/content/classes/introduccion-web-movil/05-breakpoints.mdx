@@ -1,0 +1,46 @@
+---
+title: "Breakpoints"
+order: 5
+summary: "Los breakpoints son puntos específicos basados en el ancho de la pantalla (medidos en píxeles) donde el diseño de la página cambia para adaptarse al dispositivo."
+tags: ["responsive", "breakpoints", "mobile-first", "tailwind"]
+minutes: 7
+---
+
+import Demo from '../../../components/Demo.astro';
+
+Los **breakpoints** son puntos específicos basados en el ancho de la pantalla (medidos en píxeles) donde el diseño de la página cambia para adaptarse al dispositivo. Son fundamentales para mejorar la usabilidad y asegurar que el contenido sea siempre legible. Los rangos típicos son:
+
+- **Mobile (Teléfonos)**: 320px a 768px.
+- **Tablet (Tabletas)**: 768px a 1024px.
+- **Desktop (Computadoras)**: 1024px en adelante.
+- **Large Desktop**: 1200px en adelante.
+
+Es aquí donde entran las **Media Queries** de CSS; implementadas en CSS3, hacen posible el *responsive design*, ya que permiten aplicar estilos de forma condicional basándose en las características del dispositivo. Esto se logra utilizando la regla `@media`, la cual evalúa el ancho, alto, orientación y resolución.
+
+A continuación se adjunta un archivo para ver las diferencias y el código; se puede usar Ctrl + rueda del ratón para poder ver las diferencias.
+
+<Demo
+  src="/classes/introduccion-web-movil/05-breakpoints/breakpoints.html"
+  title="Demostración interactiva de Breakpoints y Media Queries según el ancho de pantalla"
+  height="240"
+/>
+{/* REVISAR: En la página 7 del PDF aparece el ícono del archivo HTML adjunto en OneNote ("breakpoints") que no queda incrustado al exportar a PDF; se reconstruyó la demostración interactiva con los rangos de la sección. */}
+
+## La Estrategia Mobile First
+
+Como se pudo ver anteriormente en el código, el primer diseño de la página que se creó fue para móviles; a esto se le conoce como **Mobile First** y se trata de priorizar el diseño para móviles, usualmente haciendo que el aspecto por defecto sea el de móviles. Esto se hace porque normalmente los celulares suelen tener menos potencia y conexiones más lentas; al usar *Mobile First* se cargan primero los estilos esenciales y más livianos. Además es mucho más fácil empezar a diseñar como una sola columna e ir agregando complejidad a medida que sobra espacio.
+
+## Librerías de Estilo y Tailwind
+
+Las **librerías de estilo** son conjuntos predefinidos de estilos CSS que aceleran el desarrollo web y proporcionan una consistencia visual inmediata. Sus mayores ventajas son la rapidez de desarrollo, el diseño uniforme, la responsividad integrada y un código más fácil de mantener.
+
+Dentro de estas librerías está **Tailwind CSS**, el cual es un *framework* de estilo *utility-first*, es decir, funciona en base a clases. Sus clases básicas son:
+
+- **Espaciado**: Utiliza escalas predefinidas. `p-4` aplica un *padding* (espacio interno) de 16px, y `m-2` aplica un *margin* (espacio externo) de 8px. Los valores van desde `0` hasta `64`.
+- **Colores**: Se componen de la propiedad y un sufijo de intensidad que va del `50` al `900`. Ejemplos: `bg-blue-500` para un fondo azul estándar, o `text-red-600` para texto rojo oscuro.
+- **Tipografía**: Tamaños que van desde `text-xs` hasta `text-7xl`. Puedes apilarlos, por ejemplo: `text-2xl font-bold` para generar un título grande en negrita.
+- **Layout**: Permite estructurar cajas rápidamente con *flexbox* usando clases como `flex justify-center items-center` para centrar contenido.
+
+Además de esto, Tailwind trae preconfigurado el *Responsive Design*, el cual usa prefijos como: `sm` (*small*), `md` (*medium*), `lg` (*large*), `xl` (*extra large*), `2xl` (*extra extra large*).
+
+Esto facilita muchísimo el desarrollo web permitiendo hacer cosas como: `w-full md:w-1/2 lg:w-1/3`, donde la instrucción le dice al navegador *"ocupa todo el ancho del móvil, la mitad en Tablet y un tercio en escritorio"*.

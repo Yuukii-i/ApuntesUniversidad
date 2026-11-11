@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  :root {
+    --text: #ebe8f2;
+    --muted: #8d8a9a;
+    --accent: #a78bfa;
+    --surface: #17161e;
+    --surface-2: #1e1c27;
+  }
+  * { box-sizing: border-box; font-family: system-ui, sans-serif; }
+  body { margin: 0; padding: 12px; background: transparent; color: var(--text); font-size: 13px; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .panel { background: var(--surface); border-radius: 12px; padding: 14px; }
+  .label { font-weight: 600; color: var(--accent); margin-bottom: 10px; font-size: 12px; }
+  .box { border-radius: 10px; padding: 12px; cursor: pointer; font-weight: 600; font-size: 12px; transition: transform 0.12s; }
+  .outer { background: rgba(242, 107, 107, 0.22); color: var(--text); }
+  .middle { background: rgba(245, 138, 75, 0.28); margin-top: 8px; }
+  .inner { background: rgba(111, 214, 138, 0.32); margin-top: 8px; text-align: center; }
+  .active-ring { transform: scale(0.98); }
+  .log { margin-top: 10px; background: var(--surface-2); border-radius: 8px; padding: 8px 10px; font-family: monospace; font-size: 11px; min-height: 58px; color: var(--muted); }
+  .log div { margin: 2px 0; color: var(--text); }
+  ul { list-style: none; padding: 0; margin: 0 0 10px 0; display: flex; flex-direction: column; gap: 6px; }
+  li { background: var(--surface-2); padding: 7px 12px; border-radius: 8px; cursor: pointer; user-select: none; }
+  li.completed { text-decoration: line-through; color: var(--muted); opacity: 0.65; }
+  button { background: var(--surface-2); color: var(--text); border: none; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="cols">
+  <div class="panel">
+    <div class="label">Bubbling (Cajas anidadas)</div>
+    <div id="outer" class="box outer">
+      EXTERIOR (Rojo)
+      <div id="middle" class="box middle">
+        MEDIO (Naranja)
+        <div id="inner" class="box inner">
+          INTERIOR (Verde) - ¡Haz clic aquí!
+        </div>
+      </div>
+    </div>
+    <div class="log" id="bubble-log"></div>
+  </div>
+
+  <div class="panel">
+    <div class="label">Delegación de Eventos (ul#fruit-list)</div>
+    <ul id="fruit-list">
+      <li>Manzana</li>
+      <li>Banana</li>
+      <li>Naranja</li>
+    </ul>
+    <button id="add-fruit" type="button">+ Añadir fruta</button>
+    <div class="log" id="delegation-log">Haz clic en un elemento &lt;li&gt;</div>
+  </div>
+</div>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    const r = document.documentElement.style;
+    r.setProperty("--text", v("--text") || "#ebe8f2");
+    r.setProperty("--muted", v("--muted") || "#8d8a9a");
+    r.setProperty("--accent", v("--accent") || "#a78bfa");
+    r.setProperty("--surface", v("--surface") || "#17161e");
+    r.setProperty("--surface-2", v("--surface-2") || "#1e1c27");
+  }
+  syncTheme();
+  try { new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ["data-theme"] }); } catch {}
+
+  const bLog = document.getElementById("bubble-log");
+  let clearTimer = null;
+  function registrar(msg) {
+    if (clearTimer) { clearTimeout(clearTimer); }
+    if (bLog.dataset.fresh === "1") { bLog.innerHTML = ""; bLog.dataset.fresh = "0"; }
+    const d = document.createElement("div");
+    d.textContent = msg;
+    bLog.appendChild(d);
+    clearTimer = setTimeout(() => { bLog.dataset.fresh = "1"; }, 80);
+  }
+  bLog.dataset.fresh = "1";
+
+  document.getElementById("outer").addEventListener("click", () => {
+    registrar("3. El evento llegó al EXTERIOR (Rojo)");
+  });
+  document.getElementById("middle").addEventListener("click", () => {
+    registrar("2. El evento llegó al MEDIO (Naranja)");
+  });
+  document.getElementById("inner").addEventListener("click", () => {
+    registrar("1. El evento llegó al INTERIOR (Verde)");
+  });
+
+  const fruitList = document.getElementById("fruit-list");
+  const dLog = document.getElementById("delegation-log");
+  let contadorFrutas = 3;
+
+  fruitList.addEventListener("click", (evento) => {
+    if (evento.target.tagName === "LI") {
+      evento.target.classList.toggle("completed");
+      dLog.textContent = "event.target: <li" + (evento.target.classList.contains("completed") ? ' class="completed"' : "") + ">" + evento.target.textContent + "</li>";
+    }
+  });
+
+  document.getElementById("add-fruit").addEventListener("click", () => {
+    contadorFrutas++;
+    const li = document.createElement("li");
+    li.textContent = "Fruta " + contadorFrutas;
+    fruitList.appendChild(li);
+  });
+</script>
+</body>
+</html>

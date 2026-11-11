@@ -1,0 +1,5 @@
+title: "Introducción a Web Móvil"
+description: "Fundamentos del desarrollo de páginas web utilizando HTML para la estructuración semántica, CSS para el diseño visual y adaptabilidad entre pantallas, y JavaScript para la lógica, manipulación del DOM y manejo de eventos. Incluye organización de proyectos, diseño responsivo y herramientas de pruebas."
+order: 6
+color: blue
+art: code
