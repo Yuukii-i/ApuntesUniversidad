@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #e6edf3; --muted: #8b949e; --accent: #38bdf8; --surface-2: #1f242c; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 720px; height: 170px; display: block; }
+  .node { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.8; transition: stroke 0.25s, stroke-width 0.25s; }
+  .node.active { stroke: var(--accent); stroke-width: 2.8; }
+  .label { fill: var(--text); font-size: 13px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; opacity: 0.5; }
+  .signal { fill: var(--accent); transition: opacity 0.2s; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 720 170" aria-label="Diagrama animado de flujo entre Usuario, Frontend, Backend y Base de datos">
+  <!-- Conexiones -->
+  <line class="cable" x1="140" y1="85" x2="575" y2="85" />
+
+  <!-- Usuario (rectángulo bordes suavizados) -->
+  <rect id="n-user" class="node" x="20" y="53" width="120" height="64" rx="14" />
+  <text class="label" x="80" y="85">Usuario</text>
+
+  <!-- Frontend (rectángulo bordes suavizados) -->
+  <rect id="n-front" class="node" x="200" y="53" width="125" height="64" rx="14" />
+  <text class="label" x="262.5" y="85">Frontend</text>
+
+  <!-- Backend (rectángulo bordes suavizados) -->
+  <rect id="n-back" class="node" x="385" y="53" width="125" height="64" rx="14" />
+  <text class="label" x="447.5" y="85">Backend</text>
+
+  <!-- Base de datos (cilindro) -->
+  <path id="db-body" class="node" d="M 570 55 L 570 113 A 62 14 0 0 0 694 113 L 694 55 Z" />
+  <ellipse id="db-top" class="node" cx="632" cy="55" rx="62" ry="14" />
+  <text class="label" x="632" y="90">Base de datos</text>
+
+  <!-- Señal animada -->
+  <circle id="sig" class="signal" cx="140" cy="85" r="7.5" />
+</svg>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    ['--text', '--muted', '--accent', '--surface-2'].forEach(k => {
+      const val = v(k);
+      if (val) document.documentElement.style.setProperty(k, val);
+    });
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch {}
+
+  const $ = id => document.getElementById(id);
+  const sig = $('sig');
+  const stops = [80, 262.5, 447.5, 632];
+
+  function highlight(x) {
+    $('n-user').classList.toggle('active', Math.abs(x - 80) < 55);
+    $('n-front').classList.toggle('active', Math.abs(x - 262.5) < 58);
+    $('n-back').classList.toggle('active', Math.abs(x - 447.5) < 58);
+    const dbActive = Math.abs(x - 632) < 58;
+    $('db-body').classList.toggle('active', dbActive);
+    $('db-top').classList.toggle('active', dbActive);
+  }
+
+  function animateCycle() {
+    const duration = 5200;
+    const start = performance.now();
+    sig.style.opacity = '1';
+
+    function step(now) {
+      const t = Math.min(1, (now - start) / duration);
+      const x = t <= 0.5
+        ? stops[0] + (t * 2) * (stops[3] - stops[0])
+        : stops[3] - ((t - 0.5) * 2) * (stops[3] - stops[0]);
+      sig.setAttribute('cx', x.toFixed(1));
+      highlight(x);
+      if (t < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  animateCycle();
+  setInterval(animateCycle, 6000);
+</script>
+</body>
+</html>

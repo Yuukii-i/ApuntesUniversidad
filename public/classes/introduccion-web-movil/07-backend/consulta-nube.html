@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #e6edf3; --muted: #8b949e; --accent: #38bdf8; --surface-2: #1f242c; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 700px; height: 240px; display: block; }
+  #scene { transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1); transform-origin: 500px 120px; }
+  #scene.zoomed { transform: scale(1.85) translate(-85px, 0px); }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; transition: stroke 0.2s, transform 0.15s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.4; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; opacity: 0.45; }
+  .label { fill: var(--text); font-size: 12px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
+  .code-line { stroke: var(--muted); stroke-width: 5; stroke-linecap: round; opacity: 0.35; transition: stroke 0.2s, opacity 0.2s; }
+  .code-line.on { stroke: var(--accent); opacity: 1; }
+  .sig { fill: var(--accent); opacity: 0; }
+  #cursor { fill: var(--text); transition: transform 0.2s ease; transform-origin: 120px 128px; }
+  #cursor.click { transform: scale(0.82) translate(-3px, -3px); }
+  #hello { opacity: 0; transition: opacity 0.25s; }
+  #hello.show { opacity: 1; }
+  #cloud-interior { opacity: 0.25; transition: opacity 0.4s; }
+  #scene.zoomed #cloud-interior { opacity: 1; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 700 240" aria-label="Animación de consulta web a un backend y base de datos en la nube">
+  <g id="scene">
+    <!-- Cable principal Cliente <-> Nube -->
+    <line class="cable" x1="155" y1="120" x2="365" y2="120" />
+
+    <!-- Cliente / Botón y Cursor -->
+    <rect id="btn" class="box" x="55" y="96" width="100" height="48" rx="12" />
+    <text class="label" x="105" y="120">Consultar</text>
+
+    <!-- Salida "Hello world" -->
+    <g id="hello">
+      <rect class="box active" x="48" y="42" width="114" height="34" rx="9" />
+      <text class="label" x="105" y="59">"Hello world"</text>
+    </g>
+
+    <!-- Cursor -->
+    <path id="cursor" d="M 118 124 L 118 148 L 124 143 L 129 152 L 133 150 L 128 141 L 136 141 Z" />
+
+    <!-- Contorno de la Nube -->
+    <path id="cloud" class="box" d="M 385 175 L 620 175 A 36 36 0 0 0 628 104 A 46 46 0 0 0 542 72 A 54 54 0 0 0 438 82 A 40 40 0 0 0 385 175 Z" />
+
+    <!-- Interior de la Nube (Bloque de código + Cilindro Base de datos) -->
+    <g id="cloud-interior">
+      <rect id="code-box" class="box" x="412" y="92" width="86" height="68" rx="8" />
+      <line id="cl1" class="code-line" x1="424" y1="106" x2="476" y2="106" />
+      <line id="cl2" class="code-line" x1="424" y1="119" x2="484" y2="119" />
+      <line id="cl3" class="code-line" x1="424" y1="132" x2="468" y2="132" />
+      <line id="cl4" class="code-line" x1="424" y1="145" x2="480" y2="145" />
+
+      <line class="cable" x1="498" y1="125" x2="548" y2="125" />
+
+      <!-- Cilindro Base de datos -->
+      <path id="db-b" class="box" d="M 548 102 L 548 146 A 30 9 0 0 0 608 146 L 608 102 Z" />
+      <ellipse id="db-t" class="box" cx="578" cy="102" rx="30" ry="9" />
+      <text class="label" x="578" y="128" style="font-size:10px">DB</text>
+
+      <circle id="sig-db" class="sig" cx="498" cy="125" r="4.5" />
+    </g>
+
+    <!-- Señal principal -->
+    <circle id="sig-main" class="sig" cx="155" cy="120" r="6.5" />
+  </g>
+</svg>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    ['--text', '--muted', '--accent', '--surface-2'].forEach(k => {
+      const val = v(k);
+      if (val) document.documentElement.style.setProperty(k, val);
+    });
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function moveSig(el, x1, x2, dur) {
+    return new Promise(res => {
+      el.style.opacity = '1';
+      const s = performance.now();
+      function f(now) {
+        const p = Math.min(1, (now - s) / dur);
+        el.setAttribute('cx', (x1 + p * (x2 - x1)).toFixed(1));
+        p < 1 ? requestAnimationFrame(f) : (el.style.opacity = '0', res());
+      }
+      requestAnimationFrame(f);
+    });
+  }
+
+  async function loop() {
+    while (true) {
+      $('hello').classList.remove('show');
+      ['cl1', 'cl2', 'cl3', 'cl4'].forEach(id => $(id).classList.remove('on'));
+      ['btn', 'db-b', 'db-t'].forEach(id => $(id).classList.remove('active'));
+      await wait(400);
+      $('cursor').classList.add('click');
+      $('btn').classList.add('active');
+      await wait(280);
+      $('cursor').classList.remove('click');
+      await moveSig($('sig-main'), 155, 375, 750);
+      $('btn').classList.remove('active');
+      $('scene').classList.add('zoomed');
+      await wait(650);
+      $('cl1').classList.add('on');
+      await wait(420);
+      $('cl2').classList.add('on');
+      await wait(350);
+      await moveSig($('sig-db'), 498, 548, 500);
+      $('db-b').classList.add('active'); $('db-t').classList.add('active');
+      await wait(320);
+      await moveSig($('sig-db'), 548, 498, 500);
+      $('db-b').classList.remove('active'); $('db-t').classList.remove('active');
+      $('cl3').classList.add('on');
+      await wait(420);
+      $('cl4').classList.add('on');
+      await wait(450);
+      $('scene').classList.remove('zoomed');
+      await wait(650);
+      await moveSig($('sig-main'), 375, 155, 750);
+      $('hello').classList.add('show');
+      await wait(1600);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>
