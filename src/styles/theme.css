@@ -48,6 +48,45 @@
   outline-offset: 2px !important;
 }
 
+/* Tokens tipográficos unificados para .prose en ambos temas (claro y oscuro) */
+:root .prose {
+  --tw-prose-body: var(--text);
+  --tw-prose-headings: var(--text);
+  --tw-prose-lead: var(--muted);
+  --tw-prose-links: var(--accent);
+  --tw-prose-bold: var(--text);
+  --tw-prose-counters: var(--muted);
+  --tw-prose-bullets: var(--muted);
+  --tw-prose-hr: var(--surface-2);
+  --tw-prose-quotes: var(--text);
+  --tw-prose-quote-borders: transparent;
+  --tw-prose-captions: var(--muted);
+  --tw-prose-kbd: var(--text);
+  --tw-prose-code: var(--text);
+  --tw-prose-pre-code: var(--text);
+  --tw-prose-pre-bg: var(--surface);
+  --tw-prose-th-borders: transparent;
+  --tw-prose-td-borders: var(--surface-2);
+
+  --tw-prose-invert-body: var(--text);
+  --tw-prose-invert-headings: var(--text);
+  --tw-prose-invert-lead: var(--muted);
+  --tw-prose-invert-links: var(--accent);
+  --tw-prose-invert-bold: var(--text);
+  --tw-prose-invert-counters: var(--muted);
+  --tw-prose-invert-bullets: var(--muted);
+  --tw-prose-invert-hr: var(--surface-2);
+  --tw-prose-invert-quotes: var(--text);
+  --tw-prose-invert-quote-borders: transparent;
+  --tw-prose-invert-captions: var(--muted);
+  --tw-prose-invert-kbd: var(--text);
+  --tw-prose-invert-code: var(--text);
+  --tw-prose-invert-pre-code: var(--text);
+  --tw-prose-invert-pre-bg: var(--surface);
+  --tw-prose-invert-th-borders: transparent;
+  --tw-prose-invert-td-borders: var(--surface-2);
+}
+
 /* Desactivar animaciones y desplazamientos suaves para usuarios con preferencia de movimiento reducido */
 @media (prefers-reduced-motion: reduce) {
   *,

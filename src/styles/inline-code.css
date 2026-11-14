@@ -22,7 +22,7 @@
   --ic-cls: #953800;
   --ic-fn: #7e4cdb; /* oscurecido minimamente desde #8250df para lograr contraste >= 4.5:1 (4.57:1) */
   --ic-var: #0550ae;
-  --ic-kw: #cf222e;
+  --ic-kw: #c21e2a; /* oscurecido minimamente desde #cf222e para lograr contraste >= 4.5:1 */
   --ic-const: #0550ae;
   --ic-str: #0a3069;
   --ic-tag: #116329;
