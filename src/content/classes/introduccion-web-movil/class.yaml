@@ -1,5 +1,5 @@
 title: "Introducción a Web Móvil"
-description: "Fundamentos del desarrollo web en frontend y backend. Abarca estructuración con HTML, diseño adaptable con CSS y programación en JavaScript junto al manejo del DOM, así como arquitecturas de servidor, entornos de ejecución, bases de datos SQL y NoSQL, APIs REST, seguridad y frameworks modernos."
+description: "Fundamentos del desarrollo web en frontend y backend. Abarca estructuración con HTML, diseño adaptable con CSS, programación en JavaScript y desarrollo de aplicaciones SPA con Angular, así como arquitecturas de servidor, entornos de ejecución, bases de datos SQL y NoSQL, APIs REST y seguridad."
 order: 6
 color: blue
 art: code

@@ -1,0 +1,741 @@
+---
+title: "Angular"
+order: 8
+summary: "Angular es un framework para construir aplicaciones web tipo SPA que proporciona una estructura común con componentes, templates, Signals, servicios con inyección de dependencias y Router."
+tags: ["angular", "typescript", "spa", "componentes", "signals", "servicios", "router"]
+minutes: 34
+---
+
+import Demo from '../../../components/Demo.astro';
+
+{/* GENERADO: "(IMPORTANTE, MAS ADELANTE SE PIDE LO MISMO, PARA ESTA CLASE ME GUSTARIA QUE LOS BLOQUES DE CODIGO RESALTEN LOS CAMBIOS HECHOS, TIPO GITHUB CON SU RESALTADO VERDE Y ROJO, ESTO CON EL OBJETIVO DE QUE AL LEER EL MATERIAL SE ENTIENDA QUE ES EL MISMO CODIGO DE ANTES PERO CON NUEVAS LINEAS, ADEMAS TODO CODIGO HTML TIENE CORCHETES EN VEZ DE LAS ETIQUETAS NORMALES, ESO TIENES QUE CAMBIARLO AL TRANSCRIBIR, TEN CUIDADO CON MODIFICAR LOS CORCHETES NATIVOS DE ANGULAR, SOLO TIENES QUE MODIFICAR LOS DE HTML YA QUE ANGULAR SI USA CORCHETES)" */}
+{/* REVISAR: Se aplicaron las indicaciones de nivel de encabezado entre paréntesis a lo largo del documento ("(titulo de todo el contenido)", "(titulo de seccion)", "(titulo de nuevo tema)", "(titulo de seccion pequeña, no tema nuevo)", etc.) como jerarquía Markdown (title, ## y ###) y se omitieron esas notas editoriales de los títulos visibles. */}
+
+Como vimos en clases anteriores, una aplicación web necesita diferentes tecnologías con responsabilidades claras:
+
+- **HTML** se encarga de describir el contenido y su estructura.
+- **CSS** se encarga exclusivamente de la presentación visual y los estilos.
+- **JavaScript** se encarga del comportamiento en el navegador.
+
+Aquí es donde entra **Angular**: Angular es un *framework* para construir aplicaciones web, el cual intenta unir las responsabilidades de cada tecnología típica.
+
+A pesar de que no hay problema con usar JavaScript, y que por sí solo puedes construir casi cualquier cosa, este no te impone un orden. Un *framework* como Angular proporciona una estructura común, como piezas que ya están organizadas y coordenadas, lo que evita que cada programador "reinvente la rueda".
+
+Angular trae herramientas clave como los **componentes** y **templates**, los cuales se encargan de construir la interfaz de usuario de manera modular. Además tenemos los **Signals**, los cuales manejan el estado de la aplicación de forma "reactiva", es decir, la pantalla se actualiza sola cuando un dato cambia. También tenemos los **servicios e inyección de dependencias**, cuyo objetivo es que distintas partes de la app puedan compartir lógica sin enredar el código. Finalmente tenemos los **Routers**; su trabajo es simplemente manejar la navegación entre distintas pantallas.
+
+La principal característica de Angular es que se utiliza para crear interfaces que corren completamente en el navegador. En desarrollo HTML tradicional, cada vez que haces click a un enlace tu navegador le pide un documento HTML nuevo al servidor; esto hace que la página actual se destruya y se reemplace por ese HTML solicitado.
+
+La diferencia con Angular es que está orientado al **SPA** (*Single Page Application*), el cual carga el documento inicial de la app una sola vez. A partir de ahí, cuando haces clic en un enlace interno, el **Angular Router** lee la dirección URL y simplemente cambia el componente visual que estás viendo. El servidor solo se encarga de entregar los recursos básicos. Esto hace que la app se sienta instantánea, pero manteniendo la capacidad de usar los botones atrás y adelante del navegador.
+
+<Demo
+  src="/classes/introduccion-web-movil/08-angular/spa-vs-tradicional.html"
+  title="Comparación entre desarrollo web tradicional y Single Page Application (SPA)"
+  height={230}
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ UNA ANIMACION QUE MUESTRA DOS LAPTOPS, EN UNA SE MUESTRA UNA PAGINA MUY SIMPLE (LOS ELEMENTOS DE LA PAGINA SON SOLO PLACEHOLDERS COMO FIGURAS SIN DETALLE) AL CLICKEAR UN BOTON TODA LA PAGINA SE ACTUALIZA (QUE ESTO SE MUESTRE CON TODA LA PAGINA CAMBIANDO A VERDE LENTAMENTE, COMO SI ESTUVIERA CARGANDO EL NUEVO DOCUMENTO) LA OTRA LAPTOP TIENE LA MISMA PAGINA, PERO CUANDO HACE CLICK AL BOTON SOLO UNO DE LOS ELEMENTOS CAMBIA A VERDE, ESTO ES PARA MOSTRAR LA DIFERENCIA ENTRE SPA Y DESARROLLO WEB TRADICIONAL)" */}
+
+## ¿Cómo se organiza?
+
+Angular funciona como un rompecabezas compuesto por **Componentes**. Todo empieza con un gran componente llamado `cls::App`; de ahí cada componente es la unión de una clase TypeScript (lógica) y un *template* (visual), acompañados de sus estilos. Estos componentes padres pueden contener a otros componentes hijos, formando vistas más grandes.
+
+<Demo
+  src="/classes/introduccion-web-movil/08-angular/organizacion-angular.html"
+  title="Organización en Angular: Componentes, Signal, actualización de Templates y Router"
+  height={250}
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ UNA ANIMACION PARA MOSTRAR LA ORGANIZACIÓN, EL USUARIO CLICKEA UN BOTON, SE ENVIA LA SEÑAL A UN SIGNAL QUE ACTUALIZA UN DATO, LOS TEMPLATE QUE DEPENDEN DE ESTE DATO SE DARAN CUENTA Y SE ACTUALIZARAN VISUALMENTE EN LA PAGINA, FINALMENTE LA ANIMACION MUESTRA COMO EL USUARIO CAMBIA DE DIRECCION LO QUE HACE QUE EL ROUTER SELECCIONE UNA NUEVA VISTA SEGÚN EL URL)" */}
+
+## Creación y ejecución de un proyecto
+
+Angular requiere de ciertas herramientas base para poder funcionar:
+
+- **Node.js** es el entorno que ejecuta las herramientas.
+- **npm** es el administrador que descarga y gestiona los paquetes.
+- **Angular CLI** es la interfaz de línea de comandos de Angular, la cual se encarga de crear la estructura inicial, compilar código y levantar un servidor local.
+
+Para crear un proyecto tendremos que seguir los siguientes pasos:
+
+{/* GENERADO: "(TODO LO QUE VIENE AQUÍ TIENEN QUE SER BLOQUES DE CODIGO TIPO BASH/POWERSHELL, CADA UNO TIENE QUE TENER SU PROPIO BLOQUE SIN NINGUN TIPO DE COMENTARIOS DENTRO) (INICIO)" */}
+
+Nos permite saber si tenemos Node.js, npm y Angular CLI instalados:
+
+```bash
+node --version
+```
+
+```bash
+npm --version
+```
+
+```bash
+ng version
+```
+
+{/* REVISAR: Se colocó cada comando de verificación en su propio bloque bash individual siguiendo literalmente "CADA UNO TIENE QUE TENER SU PROPIO BLOQUE SIN NINGUN TIPO DE COMENTARIOS DENTRO". */}
+
+El siguiente comando es el cual creará la aplicación; cada etiqueta es una opción especial y específica:
+
+```bash
+ng new gestor-tareas --routing --style css --zoneless --minimal --inline-style=false --inline-template=false
+```
+
+{/* GENERADO: "(AQUÍ SIMPLEMENTE PONER CADA ETIQUETA DENTRO DE UN RESALTADO TIPICO DE CODIGO COMO CLASES, FUNCIONES ETC, NO BLOQUES DE CODIGO)" */}
+
+- `--routing` habilita la configuración de rutas.
+- `--zoneless` activa la detección de cambios moderna de Angular.
+- `--minimal` evita incorporar un *framework* de pruebas.
+- `--inline-style=false` y `--inline-template=false` obligan a mantener el *template* visual HTML y los estilos CSS en archivos separados, en lugar de mezclarlos dentro de la clase TypeScript.
+
+Para poder ejecutar el servidor de desarrollo utilizaremos el comando que compila y sirve la aplicación en modo *dev*. Esto crea una dirección local tipo `localhost`, el cual se actualiza en tiempo real cuando haces cambios en el código:
+
+```bash
+ng serve
+```
+
+{/* GENERADO: "(FIN DE LOS BLOQUES DE CODIGO)" */}
+
+Dentro de la raíz del proyecto, Angular CLI genera archivos fundamentales:
+
+```txt
+gestor-tareas/
+└── src/
+    ├── main.ts            # Punto de entrada de la app
+    └── app/
+        ├── app.config.ts  # Reúne los proveedores de configuración general como el manejo de rutas
+        ├── app.ts         # Declara el componente raíz de la interfaz
+        └── app.html       # Contiene el template visual de ese componente raíz
+```
+
+{/* GENERADO: "(AÑADIR AQUÍ UN ARBOL DE ESTRUCTURA COMO LOS QUE SE AÑADEN EN DOCUMENTACION DE CODIGO Y READMES EN GITHUB, SE MUESTRA LA RAIZ DEL PROYECTO, DENTRO DE \"src\" ESTA: \"main.ts\" punto de entrada de la app. DENTRO DE \"src\" esta \"app\" y dentro de esta ultima esta: \"app.config.ts\" reune los proveedores de configuracion general como el manejo de rutas, \"app.ts\" declara el componente raiz de la interfaz, \"app.html\" contiene el template visual de ese componente raiz. IMPORTANTE AÑADIR LA PEQUEÑA DESCRIPCION DE QUE HACE CADA ARCHIVO AL LADO EN EL ARBOL)" */}
+
+El archivo `app.ts` utiliza un decorador llamado `@Component`, el cual es el que le entrega a Angular los metadatos necesarios para interpretar esa unidad de código; además:
+
+- `attr::selector` identifica el nombre de la etiqueta con la que este componente se insertará en otros lugares.
+- `attr::templateUrl` conecta la clase lógica con su respectivo HTML.
+
+Una recomendación es reemplazar el código generado en `app.ts` por el siguiente:
+
+```ts title="src/app/app.ts"
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  templateUrl: './app.html'
+})
+export class App {}
+```
+
+```html title="src/app/app.html"
+<main>
+  <h1>Gestor de tareas</h1>
+</main>
+```
+
+{/* GENERADO: "(NOTA, SE DEBEN REEMPLAZAR LOS PARENTESIS DE CORCHETE POR LAS TIPICAS ETIQUETAS DE PICO \"< ,Y, >\" AL TRANSCRIBIR LA IMAGEN A CODIGO)" */}
+
+### Templates y Bindings
+
+Un **Template** en Angular no es solo un HTML estático; el *framework* reconoce expresiones y *"bindings"* (enlaces) dentro de él. Para esto existen tres formas principales de enlazar la interfaz con la lógica:
+
+- **Interpolación**: Se escribe con dobles llaves `{{ title }}` y sirve para insertar un valor de tu clase directamente como texto en la pantalla.
+- **Binding de propiedad**: Se encierra entre corchetes `[class.is-complete]="completed"`, el cual le entrega un valor de la clase a una propiedad de un elemento HTML.
+- **Binding de evento**: Se encierra entre paréntesis `(click)="greet()"`, el cual conecta una interacción de usuario con una acción o método de la clase.
+
+La ventaja es que no necesitas buscar nodos en el DOM para reescribirlos manualmente; Angular los evalúa por ti cuando los datos cambian.
+
+### Creación de un primer componente permanente: La Tarjeta de Tarea
+
+Para crear el componente visual de una tarea, tenemos que ejecutar el siguiente comando:
+
+{/* GENERADO: "(BLOQUE DE CODIGO AQUÍ)" */}
+
+```bash
+ng generate component task-card --inline-template=false --inline-style=false
+```
+
+Para este ejemplo reemplazaremos el código que viene en `src/app/task-card/task-card.ts` por el siguiente:
+
+```ts title="src/app/task-card/task-card.ts"
+import { Component } from '@angular/core';
+
+@Component({
+  selector: 'app-task-card',
+  standalone: true,
+  templateUrl: './task-card.html',
+  styleUrl: './task-card.css'
+})
+export class TaskCard {
+  title = 'Preparar el proyecto';
+  completed = false;
+}
+```
+
+Y también su `task-card.html`:
+
+{/* GENERADO: "(IGUAL QUE ANTES, REEMPLAZAR LOS CORCHETES(QUE CORRESPONDAN, POR EJEMPLO LOS DE DENTRO DE ARTICLE SON DE ANGULAR Y NO DE HTML) POR LAS ETIQUETAS DE HTML, ESTO APLICARA PARA TODOS LOS BLOQUES DE HTML DE AQUÍ EN ADELANTE)" */}
+
+```html title="src/app/task-card/task-card.html"
+<article [class.is-complete]="completed">
+  <h2>{{ title }}</h2>
+  <p>{{ completed ? 'Completada' : 'Pendiente' }}</p>
+</article>
+```
+
+En este *template* que creamos, `[class.is-complete]` enlaza una clase CSS al valor booleano `var::completed` de la clase, y la expresión condicional dentro de la interpolación `{{ }}` decide qué texto se va a mostrar.
+
+Para que nuestra tarjeta funcione tenemos que añadirla al componente raíz `app.ts`:
+
+```ts title="src/app/app.ts" ins={2, 7}
+import { Component } from '@angular/core';
+import { TaskCard } from './task-card/task-card';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [TaskCard],
+  templateUrl: './app.html'
+})
+export class App {}
+```
+
+{/* GENERADO: "(EN ESTE BLOQUE DE CODIGO ASEGURATE DE RESALTAR LAS LINEAS NUEVAS COMPARADAS A LAS QUE HABIAN EN LA IMAGEN DE MAS ARRIBA)" */}
+
+Y también en `app.html`:
+
+```html title="src/app/app.html" ins={3}
+<main>
+  <h1>Gestor de tareas</h1>
+  <app-task-card />
+</main>
+```
+
+Como nuestra aplicación es *standalone*, debemos declarar explícitamente `cls::TaskCard` en el arreglo de `attr::imports` de `cls::App` para poder usar su selector `tag::app-task-card`.
+
+### Ciclo de vida de un Componente
+
+Cada vez que Angular crea un componente en la pantalla, este pasa por un ciclo de vida: Angular lo crea, prepara sus entradas, actualiza su vista y finalmente lo destruye cuando no se usa. Nosotros podemos intervenir en ese proceso mediante *"hooks"*:
+
+- **Constructor**: No es un *hook* de Angular; es una función de la clase TypeScript que se ejecuta al instanciarla. Sirve para establecer dependencias o valores básicos.
+- `fn::ngOnInit()`: Se ejecuta una sola vez después de que Angular configura las entradas iniciales. Sirve para preparaciones que dependen de esos datos de entrada.
+- `fn::ngOnChanges(changes)`: Se ejecuta cuando el componente padre modifica las propiedades de entrada de este componente.
+- `fn::ngAfterViewInit()`: Ocurre una vez cuando los elementos del *template* propio ya se inicializaron.
+- `fn::ngOnDestroy()`: Se ejecuta justo antes de que el componente sea destruido (por ejemplo, si cambias de pantalla). Es vital para liberar recursos, como temporizadores o suscripciones que abriste manualmente.
+
+Anteriormente se mencionó que nuestra aplicación era *"standalone"*; esto es importante ya que antiguamente las dependencias se escribían en un archivo global usando `@NgModule`. En este curso se utiliza la forma moderna llamada *"standalone"*, donde cada componente declara directamente lo que usa en sus `attr::imports`.
+
+## Control de flujo y listas
+
+Las interfaces reales no muestran un solo objeto fijo, sino que representan colecciones de datos y estados vacíos. El control de flujo en Angular determina qué fragmentos del *template* aparecen en pantalla. Para esto Angular utiliza bloques específicos en el *template* para manejar la lógica de presentación:
+
+- `@if` actúa como el típico `kw::if` de código: incorpora contenido cuando se cumple una condición.
+- `@for` actúa como el `kw::for` de código normal: repite un bloque de código para cada elemento dentro de una colección.
+- `@empty` ofrece una alternativa visual cuando la colección del `@for` no tiene elementos.
+- `@switch` funciona como el típico `kw::switch` de código: permite elegir entre varias alternativas excluyentes.
+
+### Creando el Modelo de Datos
+
+Como TypeScript es un lenguaje al cual no le gusta "adivinar", tendremos que crear un molde para las tareas; esto básicamente le dice al programa qué cosas tiene que tener una tarea para ser considerada correcta. Para eso iremos a la raíz del proyecto y crearemos la carpeta `src/app/models` y dentro el archivo llamado `task.ts` con el siguiente contenido:
+
+```ts title="src/app/models/task.ts"
+export type Priority = 'baja' | 'media' | 'alta';
+
+export interface Task {
+  id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  priority: Priority;
+}
+```
+
+Aquí estamos explícitamente diciendo que las tareas solo pueden tener las prioridades `str::"baja"`, `str::"media"` y `str::"alta"`, y que obligatoriamente tienen que tener un `var::id` número, un título y descripción `cls::string`, una variable `var::completed` booleana y una prioridad.
+
+Para crear el componente de Lista usaremos el comando:
+
+```bash
+ng generate component task-list --inline-template=false --inline-style=false
+```
+
+Y modificaremos el archivo `task-list.ts` que se creó al usar el comando:
+
+```ts title="src/app/task-list/task-list.ts"
+import { Component } from '@angular/core';
+import { Task } from '../models/task';
+
+@Component({
+  selector: 'app-task-list',
+  standalone: true,
+  templateUrl: './task-list.html'
+})
+export class TaskList {
+  readonly tasks: Task[] = [
+    {
+      id: 1,
+      title: 'Revisar componentes',
+      description: 'Leer la tarjeta.',
+      completed: true,
+      priority: 'media'
+    },
+    {
+      id: 2,
+      title: 'Practicar Signals',
+      description: 'Cambiar un estado.',
+      completed: false,
+      priority: 'alta'
+    },
+    {
+      id: 3,
+      title: 'Explorar Router',
+      description: 'Abrir el detalle.',
+      completed: false,
+      priority: 'baja'
+    }
+  ];
+}
+```
+
+Y su HTML:
+
+```html title="src/app/task-list/task-list.html"
+@for (task of tasks; track task.id) {
+  <article>
+    <h2>{{ task.title }}</h2>
+    <p>{{ task.description }}</p>
+    <p>{{ task.completed ? 'Completada' : 'Pendiente' }}</p>
+    <p>Prioridad: {{ task.priority }}</p>
+  </article>
+} @empty {
+  <p>No hay tareas todavía.</p>
+}
+```
+
+Dentro del `@for` utilizamos la instrucción `track task.id`; esto le permite a Angular conservar la identidad de cada tarjeta incluso cuando los datos cambian. Por ejemplo, si quitas o añades tareas a la lista se desplazan todos los elementos; si no usáramos `kw::track` y utilizáramos los índices, este desplazamiento de la lista podría provocar problemas visuales o de rendimiento.
+
+Al igual que anteriormente, tendremos que importar `cls::TaskList` en nuestro `app.ts` y `app.html`.
+
+## Signals
+
+El **estado** es la información que puede cambiar durante el uso de la aplicación, como nuestra lista de tareas. La **reactividad** es el sistema que permite saber qué partes de la interfaz dependen de ese estado; de este modo, cuando los datos cambian, Angular actualiza automáticamente las vistas que los leyeron. Aquí es donde entran las **Signals**.
+
+Las **Signals** son un sistema integrado en Angular las cuales se encargan de manejar los datos reactivos de manera óptima; se incluyen en código mediante diversas funciones:
+
+- `fn::signal(valor)` crea una señal "escribible". Para leer su valor actual en cualquier momento, simplemente se invoca como una función cualquiera, por ejemplo `fn::tasks()`.
+- `fn::set(valor)` reemplaza el valor actual de la señal.
+- `fn::update(fn)` calcula un nuevo valor basándose en el valor actual, lo cual es ideal para modificar arreglos o listas.
+- `fn::computed(fn)` crea una señal de solo lectura que deriva su resultado matemática o lógicamente de otras señales. Angular memoriza este resultado y solo lo recalcula si alguna de sus dependencias cambia.
+
+Ahora utilicemos Signals para refactorizar nuestra lista: empezaremos por convertir nuestro arreglo estático a una señal y añadiremos una señal calculada (`fn::computed`) para saber cuántas tareas nos faltan. En `task-list.ts`:
+
+```ts title="src/app/task-list/task-list.ts" del={1, 11} ins={2, 12-16, 18-28}
+import { Component } from '@angular/core';
+import { Component, computed, signal } from '@angular/core';
+import { Task } from '../models/task';
+
+@Component({
+  selector: 'app-task-list',
+  standalone: true,
+  templateUrl: './task-list.html'
+})
+export class TaskList {
+  readonly tasks: Task[] = [
+  // Convertimos el arreglo en una Signal escribible
+  readonly tasks = signal([
+    { id: 1, title: 'Revisar componentes', description: 'Leer la tarjeta.', completed: true, priority: 'media' },
+    { id: 2, title: 'Practicar Signals', description: 'Cambiar un estado.', completed: false, priority: 'alta' }
+  ]);
+
+  // Señal calculada: se actualiza sola si 'tasks' cambia
+  readonly pending = computed(() =>
+    this.tasks().filter(task => !task.completed)
+  );
+
+  toggle(id: number): void {
+    this.tasks.update(items => items.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  }
+}
+```
+
+{/* GENERADO: "(LA IMAGEN SE CORTABA, AÑADI LO QUE SE SALIA DE LA CAPTURA INICIAL, ASEGURATE DE ESCRIBIRLO TODO EN UN SOLO BLOQUE DE CODIGO Y NO DOS)" */}
+
+Utilizamos `fn::computed` para que la señal se actualice sola si acaso `var::tasks` cambia. Dentro de la función `fn::toggle()` utilizamos `fn::map()` para crear un arreglo nuevo y la sintaxis de propagación `{...task}` para crear un objeto nuevo exclusivamente para la tarea modificada. Esta actualización "inmutable" le entrega a la Signal un valor de referencia completamente nuevo, dejando claro qué fue lo que cambió. Si modificáramos el dato directamente, la Signal no notificaría el cambio y la pantalla quedaría desactualizada.
+
+Actualizamos `task-list.html` con `fn::tasks()` y `fn::pending()` para que Angular registre automáticamente que este *template* depende de esas señales:
+
+```html title="src/app/task-list/task-list.html" del={3} ins={1, 4, 11-13}
+<p>{{ pending().length }} pendientes</p>
+
+@for (task of tasks; track task.id) {
+@for (task of tasks(); track task.id) {
+  <article>
+    <h2>{{ task.title }}</h2>
+    <p>{{ task.description }}</p>
+    <p>Prioridad: {{ task.priority }}</p>
+
+    <p>{{ task.completed ? 'Completada' : 'Pendiente' }}</p>
+
+    <button type="button" (click)="toggle(task.id)">
+      {{ task.completed ? 'Reabrir' : 'Completar' }}
+    </button>
+  </article>
+} @empty {
+  <p>No hay tareas.</p>
+}
+```
+
+Anteriormente creamos el proyecto con el tag `--zoneless` y se mencionó que era para las Signals. Antiguamente Angular utilizaba **Zone.js**, el cual observaba todos los eventos del navegador y suponía cuándo debía revisar las vistas para ver si algo había cambiado. A partir de Angular 21, la configuración por defecto es *"zoneless"*.
+
+En Angular también verás a menudo la librería **RxJS**. Es vital no confundir ambas herramientas, ya que resuelven problemas distintos:
+
+- **Signals**: Representan un *valor actual* que se puede consultar de forma síncrona. Son ideales para manejar el estado local o compartido de la interfaz.
+- **Observables (RxJS)**: Representan una *secuencia de eventos* a lo largo del tiempo. Son ideales para coordinar eventos asíncronos, como solicitudes HTTP al servidor o flujos de datos complejos.
+
+## Comunicación entre Componentes
+
+Cuando una pantalla contiene varias piezas, hace falta un acuerdo claro sobre quién conserva los datos y quién solo los presenta. En lo que hemos visto, nuestra `cls::TaskList` es el componente padre que posee la colección y decide cómo cambiarla, mientras que `cls::TaskCard` es el componente hijo que recibe una tarea, la representa y comunica la acción que solicita el usuario.
+
+Esta separación de responsabilidades permite que la tarjeta sea reutilizable y mantiene la modificación de la lista en un único lugar. Angular nos proporciona dos herramientas modernas para la comunicación de componentes:
+
+- `fn::input()` declara los datos que el padre le entrega al hijo. Un *input* requerido se declara con `input.required<Task>()` y su valor se convierte en una Signal de solo lectura dentro del hijo.
+- `fn::output()` declara los eventos que el hijo emite hacia el padre. El padre lo escucha usando un *binding* de evento y recibe su valor a través de la variable `var::$event`.
+
+Vamos a modificar nuestra `cls::TaskCard` para que ya no tenga datos fijos, sino que reciba la tarea desde afuera y emita una intención al hacer clic en el botón:
+
+```ts title="src/app/task-card/task-card.ts" del={1, 9, 12-13} ins={2-3, 14-15}
+import { Component } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { Task } from '../models/task';
+
+@Component({
+  selector: 'app-task-card',
+  standalone: true,
+  templateUrl: './task-card.html',
+  styleUrl: './task-card.css'
+})
+export class TaskCard {
+  title = 'Preparar el proyecto';
+  completed = false;
+  readonly task = input.required<Task>();
+  readonly toggleRequested = output<number>();
+}
+```
+
+Y también su HTML:
+
+```html title="src/app/task-card/task-card.html" del={1-3} ins={4-13}
+<article [class.is-complete]="completed">
+  <h2>{{ title }}</h2>
+  <p>{{ completed ? 'Completada' : 'Pendiente' }}</p>
+<article [class.is-complete]="task().completed">
+  <h2>{{ task().title }}</h2>
+  <p>{{ task().description }}</p>
+  <p>Prioridad: {{ task().priority }}</p>
+
+  <p>{{ task().completed ? 'Completada' : 'Pendiente' }}</p>
+
+  <button type="button" (click)="toggleRequested.emit(task().id)">
+    {{ task().completed ? 'Reabrir' : 'Completar' }}
+  </button>
+</article>
+```
+
+Ahora leemos la tarea invocando `fn::task()` porque el *input* moderno de Angular se comporta como una Signal. Al pulsar el botón, la tarjeta no cambia el estado por sí sola; simplemente emite el identificador `task().id` hacia el exterior.
+
+Ahora conectaremos la tarjeta en la lista; actualizaremos `cls::TaskList` para que use esta tarjeta reutilizable, le pase cada tarea individual y escuche su evento:
+
+```html title="src/app/task-list/task-list.html" del={2-13} ins={14-17}
+@for (task of visibleTasks(); track task.id) {
+  <article>
+    <h2>{{ task.title }}</h2>
+    <p>{{ task.description }}</p>
+    <p>Prioridad: {{ task.priority }}</p>
+
+    <p>{{ task.completed ? 'Completada' : 'Pendiente' }}</p>
+
+    <button type="button" (click)="toggle(task.id)">
+      {{ task.completed ? 'Reabrir' : 'Completar' }}
+    </button>
+  </article>
+  <app-task-card
+    [task]="task"
+    (toggleRequested)="toggle($event)" />
+} @empty {
+  <p>No hay tareas.</p>
+}
+```
+
+{/* REVISAR: En la captura de código de task-list.html de la página 9 aparece @for (task of visibleTasks(); track task.id), aunque la señal calculada visibleTasks() se define más adelante en la sección de Inyección de dependencias (hasta este paso la señal se llamaba tasks()). */}
+
+<Demo
+  src="/classes/introduccion-web-movil/08-angular/flujo-input-output.html"
+  title="Flujo de comunicación entre TaskCard (hijo) y TaskList (padre) mediante input y output"
+  height={225}
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ UNA ANIMACION QUE REPRESENTE DE MANERA FACIL DE ENTENDER EL SIGUIENTE FLUJO: el usuario hace clic, TaskCard emite el ID, TaskList recibe ese $event y ejecuta su método toggle, actualizando su propia Signal interna. Al actualizarse la Signal del padre, Angular refresca la vista y la tarjeta refleja el nuevo estado automáticamente.)" */}
+
+Si trabajas en proyectos existentes es muy probable que te encuentres con decoradores `@Input()` y `@Output()` junto con una clase `cls::EventEmitter`; esta es la forma antigua. A pesar de que siguen siendo compatibles, la forma moderna es más eficiente y le permite a Angular reaccionar automáticamente cuando un valor recibido cambia.
+
+## Inyección de dependencias
+
+Hasta ahora guardar la colección de tareas dentro de `cls::TaskList` era razonable porque era el único lugar que la usaba, pero ¿qué pasa cuando agreguemos una vista de "Detalle de Tarea"? Si cada componente guarda su propia copia de la lista, completar una tarea en la lista principal dejará obsoleta la copia del detalle.
+
+Es para esto que existe la **Inyección de Dependencias**: con esto, en lugar de que cada componente construya el servicio manualmente usando `new TaskStore()`, Angular utiliza la inyección de dependencias. Esto significa que el componente simplemente declara "necesito este servicio" y Angular busca el proveedor, crea la instancia o incluso reutiliza una ya existente, y luego se la entrega.
+
+Existen dos formas de pedir un servicio: a través de un parámetro en el constructor o mediante la función `fn::inject()`.
+
+Primero vamos a crear nuestro nuevo servicio `cls::TaskStore`; para eso vamos a ejecutar el siguiente comando:
+
+```bash
+ng generate service services/task-store --skip-tests
+```
+
+Y reemplazaremos el código del archivo `task-store.ts` creado por este:
+
+```ts title="src/app/services/task-store.ts"
+import { Service, signal } from '@angular/core';
+import { Task, Priority } from '../models/task';
+
+@Service()
+export class TaskStore {
+  // Señal privada escribible: solo el servicio puede modificarla
+  private readonly taskState = signal<Task[]>([
+    { id: 1, title: 'Revisar componentes', description: 'Identificar template...', completed: true, priority: 'media' },
+    { id: 2, title: 'Practicar Signals', description: 'Completar una tarea...', completed: false, priority: 'alta' }
+  ]);
+
+  // Señal pública de solo lectura: los componentes la leen, pero no la pueden sobreescribir
+  readonly tasks = this.taskState.asReadonly();
+
+  toggle(id: number): void {
+    this.taskState.update((items) => items.map((task) =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  }
+
+  remove(id: number): void {
+    this.taskState.update((items) => items.filter((task) => task.id !== id));
+  }
+
+  find(id: number): Task | undefined {
+    return this.tasks().find((task) => task.id === id);
+  }
+}
+```
+
+Aquí utilizamos el decorador `@Service()` introducido en Angular 22.1, el cual registra este servicio en la raíz de la aplicación, garantizando que todos los componentes compartan la misma instancia exacta.
+
+Ahora vamos a limpiar `cls::TaskList` para que ya no guarde tareas ni la lógica de `fn::toggle`; simplemente se conectará al servicio mediante `inject(TaskStore)`:
+
+```ts title="src/app/task-list/task-list.ts" del={1-2, 14-24} ins={3-7, 11, 25-46}
+import { Component, computed, signal } from '@angular/core';
+import { Task } from '../models/task';
+import { Component, computed, inject, signal } from '@angular/core';
+import { TaskCard } from '../task-card/task-card';
+import { TaskStore } from '../services/task-store';
+
+type TaskFilter = 'todas' | 'pendientes';
+
+@Component({
+  selector: 'app-task-list',
+  standalone: true,
+  imports: [TaskCard],
+  templateUrl: './task-list.html'
+})
+export class TaskList {
+  readonly tasks = signal([
+    { id: 1, title: 'Revisar componentes', description: 'Leer la tarjeta.', completed: true, priority: 'media' },
+    { id: 2, title: 'Practicar Signals', description: 'Cambiar un estado.', completed: false, priority: 'alta' }
+  ]);
+  readonly pending = computed(() =>
+    this.tasks().filter(task => !task.completed)
+  );
+  toggle(id: number): void {
+    this.tasks.update(items => items.map(task =>
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+  }
+  // Inyectamos el servicio
+  readonly store = inject(TaskStore);
+
+  readonly filter = signal<TaskFilter>('todas');
+
+  // Ahora leemos las tareas directamente desde store.tasks()
+  readonly pendingCount = computed(() =>
+    this.store.tasks().filter(task => !task.completed).length
+  );
+
+  readonly visibleTasks = computed(() =>
+    this.filter() === 'pendientes'
+      ? this.store.tasks().filter(task => !task.completed)
+      : this.store.tasks()
+  );
+
+  setFilter(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.filter.set(value === 'pendientes' ? 'pendientes' : 'todas');
+  }
+}
+```
+
+Y también actualizaremos su HTML para que llame directamente al servicio en lugar de una función local:
+
+```html title="src/app/task-list/task-list.html" del={4} ins={5}
+@for (task of visibleTasks(); track task.id) {
+  <app-task-card
+    [task]="task"
+    (toggleRequested)="toggle($event)" />
+    (toggleRequested)="store.toggle($event)" />
+}
+```
+
+## Conectando todo con Router
+
+Para tener navegación necesitaremos más de una pantalla. Desde la consola crearemos los componentes para la página de inicio y el detalle de cada tarea utilizando los siguientes comandos:
+
+```bash
+ng generate component home --inline-template=false --inline-style=false
+```
+
+```bash
+ng generate component task-detail --inline-template=false --inline-style=false
+```
+
+Las rutas asocian un patrón URL con un componente; para configurar nuestras rutas nos iremos al archivo de rutas `app.routes.ts` y definiremos los caminos de nuestra app:
+
+```ts title="src/app/app.routes.ts"
+import { Routes } from '@angular/router';
+import { Home } from './home/home';
+import { TaskList } from './task-list/task-list';
+import { TaskDetail } from './task-detail/task-detail';
+
+export const routes: Routes = [
+  { path: '', component: Home },
+  { path: 'tareas', component: TaskList },
+  { path: 'tareas/:id', component: TaskDetail }
+];
+```
+
+Ahora, para que Angular sepa dónde inyectar estas pantallas y cómo navegarlas, tendremos que actualizar el componente principal mediante la importación de `cls::RouterLink` (para crear enlaces) y `cls::RouterOutlet` (el marcador donde se insertará la vista activa), en `app.ts`:
+
+```ts title="src/app/app.ts" del={2, 8} ins={3, 9}
+import { Component } from '@angular/core';
+import { TaskCard } from './task-card/task-card';
+import { RouterLink, RouterOutlet } from '@angular/router';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [TaskCard],
+  imports: [RouterLink, RouterOutlet],
+  templateUrl: './app.html'
+})
+export class App {}
+```
+
+Y en su HTML:
+
+```html title="src/app/app.html" del={6-7} ins={1-4, 8}
+<header>
+  <a routerLink="/">Inicio</a>
+  <a routerLink="/tareas">Tareas</a>
+</header>
+<main>
+  <h1>Gestor de tareas</h1>
+  <app-task-card />
+  <router-outlet />
+</main>
+```
+
+En nuestro `task-list.ts` vamos a importar `cls::RouterLink` en su arreglo de `attr::imports`. Luego en su HTML agregaremos un enlace dentro del `@for` para ir al detalle de cada tarea:
+
+```html title="src/app/task-list/task-list.html" ins={5}
+@for (task of visibleTasks(); track task.id) {
+  <app-task-card
+    [task]="task"
+    (toggleRequested)="store.toggle($event)" />
+  <a [routerLink]="['/tareas', task.id]">Ver detalle de {{ task.title }}</a>
+}
+```
+
+El detalle debe leer la URL para saber qué tarea mostrar. Para ello inyectaremos `cls::ActivatedRoute` (para leer el parámetro variable `:id`) y el `cls::TaskStore` (para buscar la tarea en la única fuente de verdad) en `task-detail.ts`:
+
+```ts title="src/app/task-detail/task-detail.ts"
+import { Component, inject } from '@angular/core';
+import { ActivatedRoute, RouterLink } from '@angular/router';
+import { TaskStore } from '../services/task-store';
+
+@Component({
+  selector: 'app-task-detail',
+  standalone: true,
+  imports: [RouterLink],
+  templateUrl: './task-detail.html'
+})
+export class TaskDetail {
+  private readonly route = inject(ActivatedRoute);
+  private readonly store = inject(TaskStore);
+
+  get task() {
+    const value = this.route.snapshot.paramMap.get('id');
+    const id = value === null ? Number.NaN : Number(value);
+    return Number.isInteger(id) ? this.store.find(id) : undefined;
+  }
+}
+```
+
+En su HTML usaremos `@if` para mostrar la tarea si acaso existe; si no existe o se ingresó un ID inválido, se enviará un error mediante `@else`:
+
+```html title="src/app/task-detail/task-detail.html"
+@if (task; as item) {
+  <article>
+    <p>Detalle de tarea, #{{ item.id }}</p>
+    <h1>{{ item.title }}</h1>
+    <p>{{ item.description }}</p>
+    <p>Estado: {{ item.completed ? 'Completada' : 'Pendiente' }}</p>
+    <a routerLink="/tareas">Volver a tareas</a>
+  </article>
+} @else {
+  <section>
+    <h1>No encontramos esa tarea</h1>
+    <a routerLink="/tareas">Volver a tareas</a>
+  </section>
+}
+```
+
+## Resumen Final
+
+Si quedaste muy perdido leyendo el código, puedes leer este resumen y volver a cada sección para entenderlo mejor.
+
+El objetivo del proyecto fue crear una aplicación web tipo **SPA** (la página entera no se actualiza con cada acción) que nos permite organizar pendientes como tareas. En ella podemos ver una lista de tareas, agregar nuevas, marcarlas como completadas, filtrarlas y entrar a ver detalles específicos de cada una. Para lograr esto separamos el proyecto por partes:
+
+### Los datos (molde)
+
+Nuestro modelo de tarea `cls::Task`: simplemente es un contrato, así como una interfaz de programación. Lo hicimos para obligarnos a que toda tarea tenga siempre un título, descripción, identificador, estado y prioridad, con el objetivo de ahorrarnos errores de escritura en los datos.
+
+### El cerebro central (Servicio)
+
+Nuestro `cls::TaskStore` es la única fuente de verdad. La creamos para centralizar la lista real de tareas y las acciones que las modifican. Lo hicimos porque, como la pantalla de Lista y la pantalla de Detalle necesitan ver las mismas tareas, tener este servicio evita que los datos se desincronicen entre ellas.
+
+### El marco y el Tráfico (Navegación)
+
+La `cls::App` es nuestro componente raíz; es el marco principal de toda la aplicación. Lo usamos para poner el menú superior de navegación y un espacio vacío (el `cls::RouterOutlet`) donde van entrando y saliendo las demás pantallas.
+
+El **Router** es nuestra policía de tránsito. Su trabajo es leer la dirección URL y decidir qué pantalla debe dibujarse dentro del componente `cls::App`. Gracias a él podemos tener enlaces directos a pantallas específicas sin recargar el navegador.
+
+### Las pantallas (vistas de página)
+
+- `cls::Home` es nuestra pantalla de inicio, muy sencilla, cuya única función es dar la bienvenida y ofrecer un enlace para ir a organizar las tareas.
+- `cls::TaskList` es el componente coordinador (el padre). Su trabajo es leer las tareas desde el `cls::TaskStore`, manejar el filtro local y dibujar una "Tarjeta" por cada tarea visible.
+- `cls::TaskDetail` es la pantalla de enfoque. Su trabajo es leer el ID que viene en la URL de navegación, ir a buscar esa tarea específica al `cls::TaskStore` y mostrar toda su información detallada.
+
+### Piezas visuales reutilizables
+
+`cls::TaskCard` es el componente hijo y su única responsabilidad es la presentación. Recibe una tarea individual desde afuera (mediante `fn::input`) y la dibuja de forma bonita en pantalla; si el usuario hace clic en un botón, emite un aviso (mediante `fn::output`) hacia el padre. No guarda ni modifica datos por sí solo.
+
+### La magia del framework
+
+Las **Signals** son el mecanismo interno que envuelve nuestros datos para hacerlos "reactivos". Las usamos para que, cuando el `cls::TaskStore` cambie un dato, Angular se dé cuenta instantáneamente y actualice sola la pantalla, sin que nosotros tengamos que decirle qué botón o texto cambiar.

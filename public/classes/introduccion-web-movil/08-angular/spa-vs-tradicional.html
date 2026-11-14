@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #e6edf3; --muted: #8b949e; --accent: #38bdf8; --surface-2: #1f242c; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 720px; height: 220px; display: block; }
+  .shell { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.8; }
+  .base { fill: var(--muted); opacity: 0.45; }
+  .ph { fill: var(--muted); opacity: 0.28; transition: fill 0.25s, opacity 0.25s; }
+  .ph.green { fill: #22c55e; opacity: 0.85; }
+  .btn { fill: var(--accent); opacity: 0.85; transition: transform 0.15s; }
+  .label { fill: var(--text); font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .cursor { fill: var(--text); transition: transform 0.2s ease; }
+  #trad-overlay {
+    fill: #22c55e; opacity: 0;
+    transition: height 1.5s linear, opacity 0.25s ease;
+  }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 720 220" aria-label="Comparación entre desarrollo web tradicional y SPA en dos laptops">
+  <!-- Laptop 1: Web Tradicional -->
+  <text class="label" x="180" y="22">Desarrollo Web Tradicional</text>
+  <rect class="shell" x="55" y="34" width="250" height="145" rx="10" />
+  <path class="base" d="M 35 179 L 325 179 L 312 191 L 48 191 Z" />
+
+  <!-- Placeholders Laptop 1 -->
+  <g id="trad-page">
+    <rect class="ph" x="70" y="48" width="220" height="20" rx="4" />
+    <rect class="ph" x="70" y="76" width="65" height="88" rx="4" />
+    <rect class="ph" x="145" y="76" width="145" height="52" rx="4" />
+    <rect id="btn-1" class="btn" x="145" y="138" width="70" height="26" rx="5" />
+    <rect class="ph" x="225" y="138" width="65" height="26" rx="4" />
+  </g>
+  <!-- Barrido verde lento de toda la página -->
+  <rect id="trad-overlay" x="63" y="42" width="234" height="0" rx="6" />
+  <path id="cur-1" class="cursor" d="M 182 152 L 182 172 L 187 168 L 191 175 L 195 173 L 191 166 L 197 166 Z" />
+
+  <!-- Laptop 2: SPA (Angular) -->
+  <text class="label" x="540" y="22">SPA (Angular)</text>
+  <rect class="shell" x="415" y="34" width="250" height="145" rx="10" />
+  <path class="base" d="M 395 179 L 685 179 L 672 191 L 408 191 Z" />
+
+  <!-- Placeholders Laptop 2 -->
+  <g id="spa-page">
+    <rect class="ph" x="430" y="48" width="220" height="20" rx="4" />
+    <rect class="ph" x="430" y="76" width="65" height="88" rx="4" />
+    <rect id="spa-target" class="ph" x="505" y="76" width="145" height="52" rx="4" />
+    <rect id="btn-2" class="btn" x="505" y="138" width="70" height="26" rx="5" />
+    <rect class="ph" x="585" y="138" width="65" height="26" rx="4" />
+  </g>
+  <path id="cur-2" class="cursor" d="M 542 152 L 542 172 L 547 168 L 551 175 L 555 173 L 551 166 L 557 166 Z" />
+</svg>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    ['--text', '--muted', '--accent', '--surface-2'].forEach(k => {
+      const val = v(k);
+      if (val) document.documentElement.style.setProperty(k, val);
+    });
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+
+  async function loop() {
+    const ov = $('trad-overlay');
+    const spaTarget = $('spa-target');
+    const c1 = $('cur-1'), c2 = $('cur-2');
+    while (true) {
+      ov.style.transition = 'none';
+      ov.setAttribute('height', '0');
+      ov.style.opacity = '0';
+      spaTarget.classList.remove('green');
+      await wait(700);
+
+      c1.style.transform = 'translate(-3px, -4px) scale(0.88)';
+      c2.style.transform = 'translate(-3px, -4px) scale(0.88)';
+      await wait(240);
+      c1.style.transform = '';
+      c2.style.transform = '';
+
+      // En SPA solo cambia un elemento de inmediato
+      spaTarget.classList.add('green');
+
+      // En Web tradicional toda la página cambia a verde lentamente
+      ov.style.opacity = '0.78';
+      ov.style.transition = 'height 1.6s linear, opacity 0.25s ease';
+      ov.setAttribute('height', '130');
+
+      await wait(2600);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

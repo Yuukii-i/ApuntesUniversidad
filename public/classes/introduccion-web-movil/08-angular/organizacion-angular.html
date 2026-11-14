@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #e6edf3; --muted: #8b949e; --accent: #38bdf8; --surface-2: #1f242c; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 720px; height: 240px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; transition: stroke 0.25s, fill 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.5; }
+  .box.updated { stroke: #22c55e; stroke-width: 2.5; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-dasharray: 4 4; opacity: 0.45; }
+  .label { fill: var(--text); font-size: 12px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
+  .sub { fill: var(--muted); font-size: 11px; text-anchor: middle; dominant-baseline: middle; }
+  .sig { fill: var(--accent); opacity: 0; }
+  #cursor { fill: var(--text); transition: transform 0.35s ease; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 720 240" aria-label="Animación de organización de Angular con Componentes, Signal, Templates y Router">
+  <!-- Contenedor Raíz App -->
+  <rect class="box" x="15" y="12" width="690" height="216" rx="14" stroke-dasharray="6 4" />
+  <text class="sub" x="65" y="28">App (Raíz)</text>
+
+  <!-- Barra URL y Router -->
+  <rect id="url-box" class="box" x="140" y="24" width="210" height="32" rx="8" />
+  <text id="url-txt" class="label" x="245" y="40">URL: /inicio</text>
+
+  <line class="cable" x1="350" y1="40" x2="430" y2="40" />
+  <rect id="router-box" class="box" x="430" y="24" width="130" height="32" rx="8" />
+  <text class="label" x="495" y="40">Router</text>
+  <line class="cable" x1="495" y1="56" x2="495" y2="92" />
+
+  <!-- Botón Usuario -> Signal -->
+  <rect id="btn" class="box" x="40" y="115" width="105" height="44" rx="10" />
+  <text class="label" x="92.5" y="137">Botón</text>
+
+  <line class="cable" x1="145" y1="137" x2="225" y2="137" />
+
+  <rect id="sig-node" class="box" x="225" y="107" width="125" height="60" rx="10" />
+  <text class="label" x="287.5" y="127">Signal</text>
+  <text id="sig-val" class="sub" x="287.5" y="147">dato = 0</text>
+
+  <!-- Cables Signal -> Templates -->
+  <line class="cable" x1="350" y1="127" x2="425" y2="115" />
+  <line class="cable" x1="350" y1="147" x2="425" y2="175" />
+
+  <!-- Vista / Templates hijos -->
+  <rect id="view-box" class="box" x="410" y="92" width="270" height="118" rx="12" />
+  <text id="view-title" class="sub" x="545" y="108">Vista activa: Inicio</text>
+
+  <rect id="tpl-1" class="box" x="425" y="120" width="112" height="72" rx="8" />
+  <text class="label" x="481" y="144">Template A</text>
+  <text id="tpl-1-val" class="sub" x="481" y="166">Valor: 0</text>
+
+  <rect id="tpl-2" class="box" x="553" y="120" width="112" height="72" rx="8" />
+  <text class="label" x="609" y="144">Template B</text>
+  <text id="tpl-2-val" class="sub" x="609" y="166">Valor: 0</text>
+
+  <!-- Pulsos -->
+  <circle id="p1" class="sig" cx="145" cy="137" r="6" />
+  <circle id="p2" class="sig" cx="350" cy="127" r="5.5" />
+  <circle id="p3" class="sig" cx="350" cy="147" r="5.5" />
+  <circle id="pr" class="sig" cx="350" cy="40" r="5.5" />
+
+  <!-- Cursor -->
+  <path id="cursor" d="M 96 142 L 96 164 L 101 160 L 105 168 L 109 166 L 105 158 L 112 158 Z" />
+</svg>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    ['--text', '--muted', '--accent', '--surface-2'].forEach(k => {
+      const val = v(k);
+      if (val) document.documentElement.style.setProperty(k, val);
+    });
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function travel(el, x1, y1, x2, y2, dur) {
+    return new Promise(res => {
+      el.style.opacity = '1';
+      const s = performance.now();
+      function f(now) {
+        const p = Math.min(1, (now - s) / dur);
+        el.setAttribute('cx', (x1 + p * (x2 - x1)).toFixed(1));
+        el.setAttribute('cy', (y1 + p * (y2 - y1)).toFixed(1));
+        p < 1 ? requestAnimationFrame(f) : (el.style.opacity = '0', res());
+      }
+      requestAnimationFrame(f);
+    });
+  }
+
+  async function loop() {
+    while (true) {
+      $('sig-val').textContent = 'dato = 0';
+      $('tpl-1-val').textContent = 'Valor: 0';
+      $('tpl-2-val').textContent = 'Valor: 0';
+      $('url-txt').textContent = 'URL: /inicio';
+      $('view-title').textContent = 'Vista activa: Inicio';
+      ['btn', 'sig-node', 'tpl-1', 'tpl-2', 'url-box', 'router-box', 'view-box'].forEach(id => {
+        $(id).classList.remove('active', 'updated');
+      });
+      $('cursor').style.transform = 'translate(0px, 0px)';
+      await wait(550);
+
+      // 1. Click en botón -> Signal actualiza dato
+      $('cursor').style.transform = 'translate(-3px, -3px) scale(0.88)';
+      $('btn').classList.add('active');
+      await wait(240);
+      $('cursor').style.transform = 'translate(0px, 0px)';
+      await travel($('p1'), 145, 137, 225, 137, 500);
+      $('btn').classList.remove('active');
+      $('sig-node').classList.add('active');
+      $('sig-val').textContent = 'dato = 1';
+      await wait(350);
+
+      // 2. Signal notifica a Templates que dependen del dato
+      await Promise.all([
+        travel($('p2'), 350, 127, 425, 145, 520),
+        travel($('p3'), 350, 147, 553, 155, 520)
+      ]);
+      $('sig-node').classList.remove('active');
+      $('tpl-1').classList.add('updated');
+      $('tpl-2').classList.add('updated');
+      $('tpl-1-val').textContent = 'Valor: 1';
+      $('tpl-2-val').textContent = 'Valor: 1';
+      await wait(800);
+
+      // 3. Usuario cambia dirección URL -> Router selecciona nueva vista
+      $('cursor').style.transform = 'translate(145px, -100px)';
+      await wait(420);
+      $('url-box').classList.add('active');
+      $('url-txt').textContent = 'URL: /tareas';
+      await travel($('pr'), 350, 40, 430, 40, 450);
+      $('router-box').classList.add('active');
+      await travel($('pr'), 495, 56, 495, 92, 420);
+      $('view-box').classList.add('active');
+      $('view-title').textContent = 'Vista activa: Tareas (/tareas)';
+      await wait(1500);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

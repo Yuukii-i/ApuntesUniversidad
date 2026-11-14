@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #e6edf3; --muted: #8b949e; --accent: #38bdf8; --surface-2: #1f242c; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 700px; height: 215px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.8; transition: stroke 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #22c55e; stroke-width: 2.6; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; opacity: 0.45; }
+  .label { fill: var(--text); font-size: 13px; font-weight: 600; text-anchor: middle; dominant-baseline: middle; }
+  .sub { fill: var(--muted); font-size: 11.5px; text-anchor: middle; dominant-baseline: middle; }
+  .sig { fill: var(--accent); opacity: 0; }
+  #cursor { fill: var(--text); transition: transform 0.2s ease; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 700 215" aria-label="Flujo de comunicación entre TaskCard hijo y TaskList padre mediante input y output">
+  <!-- Cables superiores (input: Padre -> Hijo) e inferiores (output $event: Hijo -> Padre) -->
+  <line class="cable" x1="250" y1="68" x2="450" y2="68" />
+  <text class="sub" x="350" y="52">[task]="task" (input)</text>
+
+  <line class="cable" x1="250" y1="148" x2="450" y2="148" />
+  <text class="sub" x="350" y="168">(toggleRequested) → $event (id: 1)</text>
+
+  <!-- TaskCard (Hijo) -->
+  <rect id="card" class="box" x="35" y="30" width="215" height="155" rx="14" />
+  <text class="label" x="142.5" y="54">TaskCard (Hijo)</text>
+  <text id="card-state" class="sub" x="142.5" y="88">Estado: Pendiente</text>
+  <rect id="btn" class="box" x="78" y="114" width="129" height="36" rx="8" />
+  <text id="btn-txt" class="label" x="142.5" y="132" style="font-size:12px">Completar</text>
+
+  <!-- TaskList (Padre) -->
+  <rect id="list" class="box" x="450" y="30" width="215" height="155" rx="14" />
+  <text class="label" x="557.5" y="54">TaskList (Padre)</text>
+  <rect id="fn-box" class="box" x="478" y="76" width="159" height="36" rx="8" />
+  <text class="sub" x="557.5" y="94">toggle($event)</text>
+  <rect id="sig-box" class="box" x="478" y="124" width="159" height="40" rx="8" />
+  <text id="sig-txt" class="sub" x="557.5" y="144">Signal tasks: Pendiente</text>
+
+  <!-- Señales -->
+  <circle id="s-out" class="sig" cx="250" cy="148" r="6.5" />
+  <circle id="s-in" class="sig" cx="450" cy="68" r="6.5" />
+
+  <!-- Cursor -->
+  <path id="cursor" d="M 148 136 L 148 158 L 153 154 L 157 162 L 161 160 L 157 152 L 164 152 Z" />
+</svg>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    ['--text', '--muted', '--accent', '--surface-2'].forEach(k => {
+      const val = v(k);
+      if (val) document.documentElement.style.setProperty(k, val);
+    });
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function moveX(el, x1, x2, dur) {
+    return new Promise(res => {
+      el.style.opacity = '1';
+      const s = performance.now();
+      function f(now) {
+        const p = Math.min(1, (now - s) / dur);
+        el.setAttribute('cx', (x1 + p * (x2 - x1)).toFixed(1));
+        p < 1 ? requestAnimationFrame(f) : (el.style.opacity = '0', res());
+      }
+      requestAnimationFrame(f);
+    });
+  }
+
+  async function loop() {
+    while (true) {
+      $('card-state').textContent = 'Estado: Pendiente';
+      $('btn-txt').textContent = 'Completar';
+      $('sig-txt').textContent = 'Signal tasks: Pendiente';
+      ['card', 'btn', 'list', 'fn-box', 'sig-box'].forEach(id => $(id).classList.remove('active', 'done'));
+      await wait(650);
+
+      // 1. Click en botón de TaskCard
+      $('cursor').style.transform = 'translate(-3px, -3px) scale(0.86)';
+      $('btn').classList.add('active');
+      await wait(250);
+      $('cursor').style.transform = '';
+
+      // 2. TaskCard emite ID ($event) hacia TaskList
+      await moveX($('s-out'), 250, 450, 620);
+      $('btn').classList.remove('active');
+
+      // 3. TaskList recibe $event, ejecuta toggle y actualiza su Signal
+      $('fn-box').classList.add('active');
+      await wait(380);
+      $('fn-box').classList.remove('active');
+      $('sig-box').classList.add('active');
+      $('sig-txt').textContent = 'Signal tasks: Completada';
+      await wait(450);
+
+      // 4. Angular refresca vista pasando el nuevo estado por input a TaskCard
+      await moveX($('s-in'), 450, 250, 620);
+      $('sig-box').classList.remove('active');
+      $('card').classList.add('done');
+      $('card-state').textContent = 'Estado: Completada';
+      $('btn-txt').textContent = 'Reabrir';
+      await wait(1650);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>
