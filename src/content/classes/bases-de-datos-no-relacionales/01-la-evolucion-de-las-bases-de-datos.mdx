@@ -1,0 +1,123 @@
+---
+title: "La evolución de las bases de datos"
+order: 1
+summary: "Evolución desde el manejo de archivos simples y sistemas relacionales SQL con las reglas de Codd y propiedades ACID hasta el nacimiento de NoSQL y el modelo clave-valor."
+tags: ["sql", "nosql", "mer", "der", "orm", "codd", "acid", "clave-valor", "sharding", "hashing", "redis"]
+minutes: 9
+---
+
+import Figure from '../../../components/Figure.astro';
+
+Inicialmente, los lenguajes como Python o Java interactuaban directamente con archivos simples como `.txt` o `.csv`; estos utilizaban métodos de lectura simple como ciclos `kw::for`, y codificaciones tipo UTF-8.
+
+Pero ¿qué pasa si el archivo crece mucho, si necesitamos buscar algo rápido o si se requiere acceso multiplataforma? Esto generaba problemas de redundancia, dificultad para hacer consultas y cuellos de botella, nula escalabilidad, además de depender completamente del programa que leía el archivo.
+
+## Sistemas SQL (Structured Query Language)
+
+**SQL** nació como una solución a este problema; su principal ventaja es que la información se organiza en tablas estructuradas que se relacionan a través de llaves primarias e identificadores.
+
+Antes de crear cualquier base de datos es fundamental diseñarlas y diagramarlas de forma: {/* REVISAR: posible palabra faltante, propuesta: "de dos formas:" o "de la siguiente forma:" */}
+
+- **MER (Modelo Entidad-Relación):** Es un diseño conceptual de alto nivel.
+  - Se compone de entidades (rectángulos), atributos (óvalos) y relaciones que siempre se expresan con **verbos** (rombos, por ejemplo: un autor *escribe* un libro).
+  - *(El MER es excelente para mostrárselo a los clientes o gerentes de una empresa, ya que se entiende con lenguaje natural sin requerir conocimientos técnicos).*
+- **DER (Diagrama Entidad-Relación):** Es el paso más técnico, la representación lógica.
+  - Aquí ya vemos la estructura física de las tablas, los tipos de datos (como `cls::integer` o `cls::varchar`) y las notaciones de cardinalidad exactas (como "de uno a muchos" usando la notación "pata de gallo").
+
+### ORM (Object Relational Mapping)
+
+El **ORM** nos permite mapear tablas de bases de datos directamente hacia objetos en lenguajes de programación; esto ayuda a cerrar la brecha entre la base de datos y el programa. Es aquí donde entran dos grandes filosofías:
+
+- **Code-first:** Escribes las clases en código y luego ORM arma la base de datos.
+- **Schema-first:** Diseñas y diagramas la base de datos primero y luego ORM te ayuda con el código.
+
+### El problema
+
+A pesar de que SQL elimina la redundancia, garantiza integridad de los datos y, además, permite consultas que son fáciles de leer y eficientes, esta sufre de problemas de escalabilidad. Primero hablemos de los sistemas **IoT** (*Internet of Things*), los cuales son un "ecosistema" de distintos electrónicos con sensores y conectividad a internet; si tuviéramos miles de dispositivos IoT enviando información al mismo tiempo hacia una base de datos SQL, esta técnicamente podría aguantarlo, pero el costo de infraestructura sería muy alto. Esto se debe a que las bases de datos SQL normalmente necesitan un tipo específico de escalado:
+
+- **Escalado Vertical (Mejor servidor):** Significa mejorar el equipo, ya sea añadiendo RAM, almacenamiento o mejorando sus otros componentes.
+- **Escalado Horizontal (Más servidores):** Significa comprar y añadir nuevos servidores baratos o no tan potentes que trabajarán en conjunto con la base de datos ya existente.
+
+<Figure
+  src="/classes/bases-de-datos-no-relacionales/01-la-evolucion-de-las-bases-de-datos/escalamiento-vertical-vs-horizontal.png"
+  alt="Diagrama comparativo entre escalamiento vertical (incrementar CPU, memoria, etc. de una instancia) y escalamiento horizontal (agregar más instancias)"
+  side="full"
+/>
+
+En el caso de SQL, estas suelen requerir un escalamiento vertical.
+
+## Sistemas NoSQL
+
+Para solucionar los problemas de SQL apareció **NoSQL**, originalmente llamado *Not only SQL*, que hace referencia a que no solo existen los sistemas SQL. A diferencia de SQL que almacena sus datos en tablas rígidas, NoSQL suele guardar la información en documentos tipo **JSON** (*JavaScript Object Notation*), los cuales son denominados documentos "clave-valor".
+
+Imaginemos que tenemos una base de datos SQL donde se guardan los datos de clientes: se registra Nombre, Apellido, Rut, Correo y número telefónico. ¿Qué ocurre si un cliente no agrega su número telefónico o correo? En SQL esa casilla quedaría vacía pero igualmente ocuparía memoria; en NoSQL es flexible gracias a los archivos JSON.
+
+## Las reglas de Codd
+
+Entre los años 70 y los 2000, Edgar F. Codd, quien en ese tiempo trabajaba en IBM, inventó el modelo relacional basándose en teoría de conjuntos matemática. Codd se dio cuenta de que muchas bases de datos que decían ser relacionales realmente no lo eran. Es por esto que él creó 13 reglas, de las cuales se destacan algunas:
+
+- **Regla 0: Regla fundamental.** El sistema debe ser capaz de gestionar la base de datos usando *exclusivamente* sus capacidades relacionales, sin depender de herramientas externas.
+- **Regla 1: Regla de la información.** Absolutamente todos los datos deben estar representados de una sola manera: como valores dentro de celdas en tablas (filas y columnas).
+- **Regla 2: Acceso garantizado.** Cualquier dato específico debe poder encontrarse sin ambigüedades si conoces tres cosas: el nombre de la tabla, la columna y la clave primaria (el identificador único de la fila).
+- **Regla 3: Tratamiento de valores nulos.** El sistema debe saber manejar la "ausencia de información" (valores nulos). Un nulo debe tratarse de forma diferente a un cero, un texto vacío o un error.
+- **Regla 4: Catálogo dinámico en línea.** La estructura de la base de datos (las descripciones de las tablas y reglas) debe guardarse exactamente igual que los datos normales: en tablas. Así, los usuarios pueden consultarla usando el mismo lenguaje.
+- **Regla 5: Sublenguaje de datos completo.** Debe existir al menos un lenguaje (como SQL) que sirva para todo: crear tablas, consultar datos, modificarlos, manejar seguridad y definir transacciones.
+- **Regla 6: Actualización de vistas.** Las "vistas" (tablas virtuales creadas a partir de otras) deben poder modificarse, y esos cambios deben reflejarse automáticamente en las tablas originales.
+- **Regla 7: Operaciones de alto nivel.** El sistema debe permitir insertar, actualizar y borrar conjuntos enteros de datos de una sola vez, no solo de uno en uno (fila por fila).
+- **Regla 8: Independencia física.** Si cambias la forma en que los datos se almacenan en el disco duro o el hardware, los programas y aplicaciones que usan la base de datos deben seguir funcionando igual.
+- **Regla 9: Independencia lógica.** Si cambias la estructura de las tablas (como añadir una nueva columna), las aplicaciones que no necesiten esa nueva columna no deben verse afectadas ni requerir modificaciones.
+- **Regla 10: Independencia de integridad.** Las reglas matemáticas o de negocio (como "el salario no puede ser negativo") deben guardarse en la propia base de datos, no en el código de las aplicaciones que se conectan a ella.
+- **Regla 11: Independencia de distribución.** Si la base de datos se divide y se reparte en varios servidores distintos por la red, las aplicaciones deben seguir funcionando como si los datos estuvieran en un solo lugar.
+- **Regla 12: Regla de no subversión.** Si el sistema permite acceder a los datos a bajo nivel (esquivando el lenguaje relacional principal), este acceso no debe poder usarse para saltarse las reglas de seguridad o integridad establecidas.
+
+## Las propiedades ACID
+
+Estas propiedades son garantías del motor de la base de datos que aseguran que las transacciones se procesen de manera confiable. Estas son:
+
+- **Atomicidad (A):** Las transacciones son "todo o nada". Si haces una transferencia bancaria (quitar dinero de A y poner en B) y el sistema falla a la mitad, la base de datos hace un `ROLLBACK` y anula todo para no perder dinero. Si todo sale bien, hace un `COMMIT`.
+- **Consistencia (C):** La base de datos siempre pasa de un estado válido a otro, respetando todas las reglas definidas (por ejemplo, que un saldo no pueda ser menor a cero).
+- **Aislamiento (I):** Las transacciones no se afectan entre sí si ocurren al mismo tiempo, evitando problemas como las "lecturas sucias" (leer un dato de una transacción que aún no hace `COMMIT`).
+- **Durabilidad (D):** Una vez que se confirma una transacción con un `COMMIT`, los datos jamás se pierden, incluso si hay un apagón o el servidor se reinicia.
+
+## La crisis del Internet y el Nacimiento de NoSQL
+
+Como se mencionó anteriormente, NoSQL nació para solucionar las limitaciones de SQL. Antes del *"boom"* de internet, SQL se utilizaba en bancos y sistemas empresariales, pero distribuir una base de datos relacional manteniendo la consistencia, las transacciones ACID y las consultas `JOIN` complejas es extremadamente difícil y se vuelve muy lento; además, como ya se mencionó, SQL normalmente requiere escalamiento vertical.
+
+Es aquí donde gigantes como Google o Amazon entran: ellos necesitaban escalar horizontalmente para manejar datos variados: documentos, imágenes, *logs* y redes sociales.
+
+Es por esto que en el año 2006 Google publicó el *paper* de **BigTable**, y luego Amazon publicaría el de **Dynamo** (que curiosamente fue un año después de que algunos trabajadores de Google abandonaran la empresa y se cambiaran a Amazon); en ambos *papers* se hablaba de las bases de datos NoSQL.
+
+### Ventajas y Desventajas de NoSQL
+
+- **Ventajas:** Escalabilidad horizontal nativa, flexibilidad de esquemas (no hay que definir columnas antes), excelente rendimiento para *Big Data* y alta disponibilidad (priorizan que el sistema no se caiga).
+- **Desventajas:** No hay un lenguaje estándar. MongoDB usa sintaxis tipo JSON, Cassandra usa CQL y Neo4j usa Cypher. Además, al no haber un modelo relacional estricto, el desarrollador tiene la responsabilidad de organizar los datos, manejar la duplicación y optimizar las consultas.
+
+## Arquitectura NoSQL: Modelo Clave-Valor
+
+El **modelo clave-valor** funciona como un diccionario; cada dato se identifica con una clave única que devuelve un valor que puede ser texto, JSON, datos binarios u objetos.
+
+<Figure
+  src="/classes/bases-de-datos-no-relacionales/01-la-evolucion-de-las-bases-de-datos/modelo-clave-valor.png"
+  alt="Estructura de modelo clave-valor con claves K1 a K5 y sus valores asociados"
+  side="full"
+/>
+
+Este modelo de NoSQL tiene un rendimiento altísimo ya que solo hace operaciones simples como leer (`GET`), guardar (`PUT`/`SET`), o eliminar (`DELETE`).
+
+Para poder manejar millones de datos utilizan **Sharding**, que es básicamente dividir la base de datos en distintos servidores.
+
+<Figure
+  src="/classes/bases-de-datos-no-relacionales/01-la-evolucion-de-las-bases-de-datos/sharding-monolitico-a-shards.png"
+  alt="Diagrama de Sharding dividiendo una base de datos monolítica en múltiples Shards para escalabilidad, rendimiento y disponibilidad"
+  side="full"
+/>
+
+El *Sharding* se hace mediante el **Hashing**, el cual es un proceso matemático donde cualquier cantidad de datos de entrada es convertida en una cadena de datos única y de longitud fija. En el caso de NoSQL y *Sharding*, el *Hashing* se utiliza para convertir la clave en un número el cual indicará a cuál servidor se irá la información.
+
+<Figure
+  src="/classes/bases-de-datos-no-relacionales/01-la-evolucion-de-las-bases-de-datos/hashing-claves-a-storage.png"
+  alt="Diagrama de función hash transformando claves (James, Ellen, Bill, Susan) en posiciones de almacenamiento de longitud fija"
+  side="full"
+/>
+
+Un ejemplo de base de datos NoSQL de modelo Clave-valor es **REDIS**, el cual es increíblemente rápido, capaz de responder a una consulta en 5 milisegundos comparado a los 200ms de una SQL tradicional. REDIS es ideal para ser usado como *Cache*.

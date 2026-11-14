@@ -1,0 +1,5 @@
+title: "Bases de Datos No Relacionales"
+description: "Evolución de los sistemas de almacenamiento desde archivos planos y bases de datos relacionales SQL hasta el surgimiento de las arquitecturas NoSQL. Examina el modelado de datos, las reglas de Codd, las propiedades ACID y el funcionamiento del modelo clave-valor mediante técnicas de particionamiento como Sharding y Hashing."
+order: 7
+color: violet
+art: database
