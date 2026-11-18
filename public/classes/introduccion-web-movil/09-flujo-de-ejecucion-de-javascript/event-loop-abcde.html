@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #e6edf3; --muted: #8b949e; --accent: #38bdf8; --surface-2: #1f242c; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 700px; height: 245px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 10; transition: stroke 0.25s, fill 0.25s, opacity 0.25s; }
+  .box.reading { stroke: var(--accent); stroke-width: 2.8; }
+  .box.waiting { fill: #111318; stroke: var(--muted); opacity: 0.55; }
+  .box.done { stroke: #22c55e; stroke-width: 2.4; }
+  .letter { fill: var(--text); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 18px; font-weight: 700; text-anchor: middle; dominant-baseline: middle; }
+  .timer { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 700; text-anchor: middle; opacity: 0; transition: opacity 0.2s; }
+  .timer.show { opacity: 1; }
+  .title { fill: var(--text); font-size: 12px; font-weight: 700; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+  .slot { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; font-weight: 700; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-dasharray: 4 4; opacity: 0.45; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 700 245" aria-label="Animación del orden de ejecución A, B, C, D y E pasando por Stack y Cola de tareas">
+  <!-- Fila superior: String A, B, C, D, E con contadores encima -->
+  <text id="tm-B" class="timer" x="255" y="18">3s</text>
+  <text id="tm-D" class="timer" x="445" y="18">1s</text>
+
+  <rect id="ch-A" class="box" x="132" y="26" width="56" height="46" />
+  <text class="letter" x="160" y="50">A</text>
+
+  <rect id="ch-B" class="box" x="227" y="26" width="56" height="46" />
+  <text class="letter" x="255" y="50">B</text>
+
+  <rect id="ch-C" class="box" x="322" y="26" width="56" height="46" />
+  <text class="letter" x="350" y="50">C</text>
+
+  <rect id="ch-D" class="box" x="417" y="26" width="56" height="46" />
+  <text class="letter" x="445" y="50">D</text>
+
+  <rect id="ch-E" class="box" x="512" y="26" width="56" height="46" />
+  <text class="letter" x="540" y="50">E</text>
+
+  <!-- Fila central: Stack (Pila) y Cola de tareas -->
+  <rect id="b-stack" class="box" x="85" y="96" width="220" height="74" />
+  <text class="title" x="195" y="118">Pila de llamadas (Stack)</text>
+  <text id="txt-stack" class="slot" x="195" y="148">-</text>
+
+  <line class="cable" x1="395" y1="133" x2="305" y2="133" />
+  <text class="sub" x="350" y="124">Event Loop</text>
+
+  <rect id="b-queue" class="box" x="395" y="96" width="220" height="74" />
+  <text class="title" x="505" y="118">Cola de tareas (Asíncronas)</text>
+  <text id="txt-queue" class="slot" x="505" y="148">[vacía]</text>
+
+  <!-- Fila inferior: Salida -->
+  <rect class="box" x="85" y="188" width="530" height="42" />
+  <text class="sub" x="145" y="213">Salida:</text>
+  <text id="txt-out" class="slot" x="375" y="214"></text>
+</svg>
+<script>
+  const v = n => { try { return getComputedStyle(parent.document.documentElement).getPropertyValue(n).trim(); } catch { return ""; } };
+  function syncTheme() {
+    ['--text', '--muted', '--accent', '--surface-2'].forEach(k => {
+      const val = v(k);
+      if (val) document.documentElement.style.setProperty(k, val);
+    });
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  const letters = ['A', 'B', 'C', 'D', 'E'];
+
+  function resetAll() {
+    letters.forEach(l => $('ch-' + l).classList.remove('reading', 'waiting', 'done'));
+    $('tm-B').classList.remove('show');
+    $('tm-D').classList.remove('show');
+    $('b-stack').classList.remove('reading');
+    $('b-queue').classList.remove('reading');
+    $('txt-stack').textContent = '-';
+    $('txt-queue').textContent = '[vacía]';
+    $('txt-out').textContent = '';
+  }
+
+  async function loop() {
+    while (true) {
+      resetAll();
+      await wait(500);
+
+      // 1. Lee A (síncrona -> Stack -> Salida)
+      $('ch-A').classList.add('reading');
+      $('b-stack').classList.add('reading');
+      $('txt-stack').textContent = 'console.log("A")';
+      await wait(600);
+      $('ch-A').classList.replace('reading', 'done');
+      $('txt-out').textContent = 'A';
+      $('txt-stack').textContent = '-';
+      await wait(350);
+
+      // 2. Lee B (asíncrona 3s -> se ennegrece con contador 3s)
+      $('ch-B').classList.add('reading');
+      await wait(450);
+      $('ch-B').classList.replace('reading', 'waiting');
+      $('tm-B').textContent = '3s';
+      $('tm-B').classList.add('show');
+      await wait(350);
+
+      // 3. Lee C (síncrona -> Stack -> Salida)
+      $('ch-C').classList.add('reading');
+      $('txt-stack').textContent = 'console.log("C")';
+      await wait(600);
+      $('ch-C').classList.replace('reading', 'done');
+      $('txt-out').textContent = 'A → C';
+      $('txt-stack').textContent = '-';
+      await wait(350);
+
+      // 4. Lee D (asíncrona 1s -> se ennegrece con contador 1s)
+      $('ch-D').classList.add('reading');
+      await wait(450);
+      $('ch-D').classList.replace('reading', 'waiting');
+      $('tm-D').textContent = '1s';
+      $('tm-D').classList.add('show');
+      await wait(350);
+
+      // 5. Lee E (síncrona -> Stack -> Salida)
+      $('ch-E').classList.add('reading');
+      $('txt-stack').textContent = 'console.log("E")';
+      await wait(600);
+      $('ch-E').classList.replace('reading', 'done');
+      $('txt-out').textContent = 'A → C → E';
+      $('txt-stack').textContent = '-';
+      $('b-stack').classList.remove('reading');
+      await wait(450);
+
+      // 6. Pasa 1s: D termina su contador (0s), entra a la Cola y luego al Stack
+      $('tm-D').textContent = '0s';
+      $('tm-B').textContent = '2s';
+      $('b-queue').classList.add('reading');
+      $('txt-queue').textContent = '[ D ]';
+      await wait(550);
+      $('tm-D').classList.remove('show');
+      $('b-queue').classList.remove('reading');
+      $('txt-queue').textContent = '[vacía]';
+      $('b-stack').classList.add('reading');
+      $('txt-stack').textContent = 'console.log("D")';
+      $('ch-D').classList.replace('waiting', 'reading');
+      await wait(550);
+      $('ch-D').classList.replace('reading', 'done');
+      $('txt-out').textContent = 'A → C → E → D';
+      $('txt-stack').textContent = '-';
+      $('b-stack').classList.remove('reading');
+
+      // 7. Contador de B baja a 1s y luego 0s, pasa a la Cola y al Stack
+      $('tm-B').textContent = '1s';
+      await wait(550);
+      $('tm-B').textContent = '0s';
+      $('b-queue').classList.add('reading');
+      $('txt-queue').textContent = '[ B ]';
+      await wait(550);
+      $('tm-B').classList.remove('show');
+      $('b-queue').classList.remove('reading');
+      $('txt-queue').textContent = '[vacía]';
+      $('b-stack').classList.add('reading');
+      $('txt-stack').textContent = 'console.log("B")';
+      $('ch-B').classList.replace('waiting', 'reading');
+      await wait(550);
+      $('ch-B').classList.replace('reading', 'done');
+      $('txt-out').textContent = 'A → C → E → D → B';
+      $('txt-stack').textContent = '-';
+      $('b-stack').classList.remove('reading');
+      await wait(1600);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

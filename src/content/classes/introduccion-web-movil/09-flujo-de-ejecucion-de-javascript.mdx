@@ -1,0 +1,215 @@
+---
+title: "Flujo de ejecución de JavaScript"
+order: 9
+summary: "Funcionamiento síncrono y asíncrono del motor de JavaScript mediante la pila de llamadas, colas y Event Loop, uso de Promesas con async/await, consumo de APIs HTTP con fetch() y concurrencia con Promise.all()."
+tags: ["javascript", "asincronia", "event-loop", "promesas", "async-await", "http", "fetch", "concurrencia"]
+minutes: 14
+---
+
+import Demo from '../../../components/Demo.astro';
+
+{/* REVISAR: Se aplicaron las indicaciones de jerarquía de encabezados entre paréntesis a lo largo del documento ("(titulo de tema)", "(titulo de subtema)", "(titulo de nuevo tema)", "(subtema)") como niveles Markdown (title, ## y ###) y se omitieron esas notas editoriales de los títulos visibles. */}
+
+El motor de JavaScript funciona, por defecto, de manera **síncrona**. Esto significa que lee y ejecuta el código secuencialmente, es decir, una instrucción se ejecuta siempre después de que haya terminado la anterior. Veamos el siguiente código:
+
+```js
+console.log("Inicio");
+console.log("Procesando datos");
+console.log("Fin");
+```
+
+La salida siempre será: `str::"Inicio"` -> `str::"Procesando datos"` -> `str::"Fin"`, debido a la ejecución síncrona que ya mencionamos. Sin embargo, tenemos que hacernos la siguiente pregunta: ¿Qué pasa si una instrucción tarda mucho, como esperar información de internet o ejecutar un temporizador? Nuestra página se congelaría por completo; es aquí donde entra la **ejecución asíncrona**.
+
+Algunas operaciones permiten que JavaScript registre qué debe ocurrir cuando finalicen y continúe ejecutando el resto del código sin quedarse de brazos cruzados, por ejemplo en el siguiente código:
+
+```js
+console.log("Inicio");
+setTimeout(() => {
+  console.log("Operación finalizada");
+}, 2000);
+console.log("Fin");
+```
+
+La salida será `str::"Inicio"` -> `str::"Fin"` y aproximadamente 2 segundos después -> `str::"Operación finalizada"`. El temporizador programa la instrucción para el futuro sin bloquear el programa.
+
+### ¿Cómo funciona esta organización?
+
+JavaScript tiene cuatro piezas clave de su arquitectura las cuales nos ayudarán a comprender su funcionamiento de mejor manera:
+
+- **Pila de llamadas:** Es donde se ejecuta el código síncrono; sirve imaginarla como un tubo donde las instrucciones entran y salen una a una: solo puede hacer una cosa a la vez.
+- **Cola de tareas:** Cuando una operación asíncrona termina de esperar, su código no interrumpe bruscamente al programa, sino que ingresa a esta cola para esperar su turno.
+- **Event Loop:** Es el coordinador general. Su trabajo es vigilar constantemente la pila de llamadas. Cuando la pila está vacía, el Event Loop toma la primera función de la cola y la pasa a la pila para que se ejecute.
+- **Cola de microtareas:** Es un carril VIP. Las continuaciones de las promesas no van a la fila normal, sino que se incorporan a esta fila especial que tiene prioridad sobre la Cola de tareas ordinarias.
+
+Para entender mejor el concepto, veamos el siguiente ejemplo:
+
+```js
+console.log("A");
+setTimeout(() => console.log("B"), 3000);
+console.log("C");
+setTimeout(() => console.log("D"), 1000);
+console.log("E");
+```
+
+En este código el orden de ejecución será `A -> C -> E -> D -> B`; la principal razón es que tanto `A` como `C` y `E` son síncronas, así que se ejecutarán primero; luego `D` se ejecuta antes que `B` porque `B` tiene que esperar 3 segundos, por ende `D` termina primero y `B` última.
+
+<Demo
+  src="/classes/introduccion-web-movil/09-flujo-de-ejecucion-de-javascript/event-loop-abcde.html"
+  title="Flujo de ejecución síncrono y asíncrono de A, B, C, D y E en la Pila y la Cola de tareas"
+  height={255}
+/>
+
+{/* GENERADO: "(AÑADIR AQUÍ UNA ANIMACION DONDE SE MUESTRE A,B,C,D Y E AVANZANDO COMO UN STRING, LA LETRA SIENDO LEIDA SALE RESALTADA, SI TIENE QUE ESPERAR SE ENNEGRECE Y APERECE UN CONTADOR ENCIMA, LA IDEA ES MOSTRAR COMO LAS FUNCIONES SINCRONAS PASAN POR EL STACK Y LAS OTRAS PRIMERO PASAN POR LA COLA DEBIDO A QUE SON ASINCRONAS)" */}
+
+## Promesas
+
+Una *promise* (**promesa**) en JavaScript es un objeto que representa el eventual resultado de una operación asíncrona. Podemos pensarlo como un recibo en un restaurante de comida rápida: hacemos el pedido, recibimos el ticket (la promesa) y mientras esperamos la comida podemos hacer otras cosas. En el futuro podremos cambiar ese ticket por nuestra comida.
+
+Una promesa siempre se encuentra en uno de 3 estados:
+
+- `pending` (pendiente): La operación aún no se ha completado.
+- `fulfilled` (cumplida): La operación terminó correctamente y produjo un valor.
+- `rejected` (rechazada): La operación falló y produjo una razón de rechazo.
+
+Es importante destacar que una `cls::Promise` que deja el estado `pending` queda establecida, es decir, su resultado es definitivo y no puede cambiarse.
+
+Para construir una promesa debemos asignar dos valores que utiliza su constructor: `fn::resolve` y `fn::reject`:
+
+```js
+const promesa = new Promise((resolve, reject) => {
+  const exito = true;
+  if (exito) {
+    resolve("Operación exitosa"); // Se envía el resultado positivo
+  } else {
+    reject(new Error("La operación falló")); // Se envía el motivo del fallo
+  }
+});
+```
+
+Una vez que tenemos la promesa necesitamos decirle qué hacer cuando se resuelva o falle; para eso utilizamos los siguientes métodos:
+
+- `fn::then()`: procesa el resultado correcto cuando la operación finaliza con éxito. Los `fn::then()` pueden encadenarse porque cada llamada devuelve una nueva `cls::Promise`, lo que permite transformar los datos paso a paso.
+- `fn::catch()`: maneja los rechazos si la operación falla en algún punto.
+- `fn::finally()`: Ejecuta una acción al terminar todo el proceso, sea cual sea el resultado.
+
+El uso de los métodos mencionados anteriormente es poderoso, pero cuando tenemos múltiples operaciones asíncronas seguidas el código puede volverse difícil de leer. Es por esto que JavaScript introdujo una sintaxis que nos permite escribir código asíncrono que se lee casi como si fuera síncrono.
+
+### Funciones Async
+
+Al declarar una función con la palabra reservada `kw::async`, le estamos indicando a JavaScript que esa función siempre devolverá una `cls::Promise`. Incluso si dentro de la función devolvemos un valor normal, el motor de JavaScript lo envuelve automáticamente convirtiéndolo en el resultado de una `cls::Promise` resuelta.
+
+Además existe la palabra clave `kw::await`. Esta instrucción permite obtener el resultado directo de una `cls::Promise` sin tener que encadenar `fn::.then()` explícitos. Lo que hace `kw::await` es suspender la ejecución de esa función asíncrona específica hasta que la `cls::Promise` se resuelva o rechace, pero lo hace de forma inteligente: no bloquea toda la aplicación ni congela la página. Es importante recordar que `kw::await` normalmente solo puede utilizarse dentro de funciones marcadas como `kw::async`.
+
+Con los métodos normales utilizábamos `kw::try` y `kw::catch` para atrapar los errores. Sin embargo, cuando usamos `kw::await`, una `cls::Promise` rechazada produce una excepción estándar en el código. Por lo que para atrapar estas excepciones podemos envolver toda la operación `kw::async` dentro de un bloque `try / catch`, lo que hace que se vea mucho más ordenado.
+
+En el siguiente código podemos ver cómo nuestro método es declarado con la palabra `kw::async`; dentro de este tenemos un solo bloque `try / catch`: si la `cls::Promise` falla, el código se detiene y salta al `kw::catch`. Si todo sale bien, el código continúa como si nada.
+
+```js
+async function mostrarProducto(id) {
+  try {
+    // La ejecución de esta función se pausa aquí hasta tener los datos
+    const producto = await obtenerProducto(id);
+
+    // Si la promesa se resuelve con éxito, el código continúa
+    console.log("Producto obtenido");
+    console.log(producto.nombre, producto.precio);
+  } catch (error) {
+    // Si la promesa es rechazada (ej. ID inválido), saltamos directo aquí
+    console.error("Error:", error.message);
+  }
+}
+```
+
+## Protocolo HTTP
+
+**HTTP** es el lenguaje que utilizan los navegadores y los servidores para intercambiar información. Las solicitudes HTTP tienen dos características fundamentales:
+
+- **Los métodos** indican la intención de la solicitud. Los más comunes son `GET`, `POST`, `PUT`, `PATCH` y `DELETE`.
+- **Los códigos de estado** son la respuesta rápida del servidor. Por ejemplo, `200` significa que la solicitud fue exitosa, `201` que un recurso fue creado, `404` que el recurso no fue encontrado y `500` que hubo un error interno en el servidor.
+
+Para obtener datos podemos utilizar la función `fn::fetch()`, la cual actúa como una solicitud `GET` y devuelve una `cls::Promise` que se resuelve entregando un objeto del tipo `cls::Response`.
+
+Como el cuerpo de esa respuesta viaja por la red, leerlo toma tiempo. Por eso, para extraer la información estructurada utilizamos el método `response.json()`, el cual también retorna una `cls::Promise`. Debido a esto, cuando usamos la sintaxis moderna normalmente hacemos dos esperas:
+
+```js
+const response = await fetch("url-del-servidor");
+const datos = await response.json();
+```
+
+### Errores de red vs errores de servidor
+
+Si nos quedamos sin internet, la `cls::Promise` de `fn::fetch()` automáticamente se rechazará y el código saltará automáticamente al método `fn::catch()`. Sin embargo, si el servidor responde con un error HTTP (como `404` o `500`), técnicamente sí hubo respuesta, solo que fue un error. Para tratar estas respuestas debemos usar manualmente la propiedad `response.ok`, la cual si es falsa tendremos que lanzar un error nosotros mismos utilizando `kw::throw`.
+
+### Enviar información
+
+Cuando queremos enviar datos, `fn::fetch()` necesita más información. Le pasamos un objeto de configuración donde especificamos el método `POST`, indicamos en los *headers* que enviaremos contenido en formato JSON mediante `"Content-Type": "application/json"` y finalmente convertimos nuestros datos de JavaScript usando `fn::JSON.stringify()` para ponerlos en el cuerpo de la solicitud.
+
+En el siguiente ejemplo podemos ver el uso de `response.ok` en acción: iniciamos un método `kw::async` con nuestro bloque `kw::try` y `kw::catch`, hacemos un `fn::fetch` el cual pasa obligatoriamente por un `kw::if` que comprueba si `response.ok` es falso; si todo está bien el código pasará del `kw::if` y seguirá como si nada. Por otro lado, si es que la `cls::Promise` arroja un error, saltaremos al bloque `kw::catch`.
+
+```js
+async function listarUsuarios(filtro) {
+  try {
+    const response = await fetch("url-de-usuarios");
+
+    // Verificación obligatoria de error HTTP
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+
+    const usuarios = await response.json();
+
+    // Filtramos la lista buscando coincidencias en el nombre
+    const filtrados = usuarios.filter(usuario =>
+      usuario.name.toLowerCase().includes(filtro.toLowerCase())
+    );
+
+    return filtrados;
+  } catch (error) {
+    console.error("Error al listar usuarios:", error.message);
+    throw error; // Volvemos a lanzar el error para quien haya llamado a esta función
+  }
+}
+```
+
+Ahora, si quisiéramos hacer un `POST` en vez de un `GET`, tendríamos que modificar un poco el método `fn::fetch()` donde diremos que es un método `POST` y su estructura. Aquí también tendremos que usar `response.ok` para comprobar que la creación haya sido exitosa.
+
+```js
+// Validamos los datos primero (titulo, contenido y id del usuario) y luego hacemos
+const response = await fetch("url-de-publicaciones", {
+  method: "POST",
+  headers: {"Content-Type": "application/json"},
+  body: JSON.stringify({
+    title: titulo,
+    body: contenido,
+    userId: usuarioId
+  })
+});
+```
+
+{/* REVISAR: En las capturas de código de las páginas 4 y 5, los comentarios "// Volvemos a lanzar el error para quien haya llamado a esta funció" y "// Validamos los datos primero (titulo, contenido y id del usuario) y luego hacemos" aparecen levemente cortados en el borde derecho de la imagen original. */}
+
+## Operaciones Secuenciales vs Concurrentes
+
+Cuando tenemos múltiples operaciones asíncronas que son independientes entre sí, no necesitamos que una operación espere a que termine la anterior. Cuando usamos `kw::await` línea por línea estamos forzando una ejecución secuencial que puede desperdiciar tiempo valioso.
+
+Para resolver esto y lanzar varias tareas a la vez utilizamos `fn::Promise.all()`; esta función recibe un conjunto de Promesas y entrega todos sus resultados finales de golpe exactamente en el orden en que fueron suministradas, pero solo una vez que todas se han resuelto. Es importante aclarar que en JavaScript el concepto de concurrencia no significa que la ejecución sea paralela en distintos hilos; solo se refiere a que el motor administra los tiempos de espera de todas las peticiones al mismo tiempo.
+
+Además es importante saber que si una de las Promesas internas se rechaza, la Promesa general que retorne `fn::Promise.all()` se rechazará inmediatamente.
+
+Veamos el siguiente ejemplo:
+
+En este bloque de código tendremos que esperar 1 segundo por `kw::await`, es decir un total de 3 segundos de espera para que todos terminen.
+
+```js
+await esperar(1000);
+await esperar(1000);
+await esperar(1000);
+```
+
+Por otro lado, si utilizamos `fn::Promise.all()` toda la operación tardará 1 segundo, ya que cada `cls::Promise` interna se ejecutará al mismo tiempo que las demás.
+
+```js
+await Promise.all([
+  esperar(1000),
+  esperar(1000),
+  esperar(1000)
+]);
+```
