@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 245px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 10; transition: stroke 0.25s, stroke-width 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #16a34a; stroke-width: 2.6; }
+  .title { fill: var(--text); font-size: 12.5px; font-weight: 700; text-anchor: middle; }
+  .code { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; font-weight: 600; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 4 4; opacity: 0.5; }
+  .pulse { fill: var(--accent); opacity: 0; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 245" aria-label="Animación del patrón Composite calculando tamano() recursivamente en carpetas y archivos">
+  <path id="c-1" class="cable" d="M 175 95 C 215 95, 225 45, 265 45" />
+  <path id="c-2" class="cable" d="M 175 118 L 265 118" />
+  <path id="c-3" class="cable" d="M 175 140 C 215 140, 225 195, 265 195" />
+  <path id="c-4" class="cable" d="M 435 195 L 495 195" />
+
+  <!-- Raíz: Carpeta proyecto -->
+  <rect id="b-root" class="box" x="20" y="72" width="155" height="92" />
+  <text class="title" x="97.5" y="98">Carpeta: proyecto/</text>
+  <text class="sub" x="97.5" y="118">raiz.tamano()</text>
+  <text id="t-total" class="code" x="97.5" y="144">total = 0 B</text>
+
+  <!-- Hoja 1: config.yml -->
+  <rect id="b-f1" class="box" x="265" y="14" width="170" height="62" />
+  <text class="title" x="350" y="38">Archivo: config.yml</text>
+  <text class="code" x="350" y="60">tamano() → 20 B</text>
+
+  <!-- Hoja 2: Main.java -->
+  <rect id="b-f2" class="box" x="265" y="87" width="170" height="62" />
+  <text class="title" x="350" y="111">Archivo: Main.java</text>
+  <text class="code" x="350" y="133">tamano() → 12 B</text>
+
+  <!-- Subcarpeta: docs/ -->
+  <rect id="b-docs" class="box" x="265" y="162" width="170" height="66" />
+  <text class="title" x="350" y="186">Carpeta: docs/</text>
+  <text id="t-docs" class="code" x="350" y="210">tamano() → ...</text>
+
+  <!-- Hoja 3 dentro de docs: guia.pdf -->
+  <rect id="b-f3" class="box" x="495" y="162" width="165" height="66" />
+  <text class="title" x="577.5" y="186">Archivo: guia.pdf</text>
+  <text class="code" x="577.5" y="210">tamano() → 120 B</text>
+
+  <circle id="sig" class="pulse" r="5.5" cx="175" cy="95" />
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const cs = getComputedStyle(parent.document.documentElement);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach(v => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch (_) {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function movePath(pathEl, rev, dur) {
+    return new Promise(res => {
+      const sig = $('sig'), len = pathEl.getTotalLength(), s = performance.now();
+      sig.style.opacity = '1';
+      function step(now) {
+        const p = Math.min(1, (now - s) / dur);
+        const d = rev ? (1 - p) * len : p * len;
+        const pt = pathEl.getPointAtLength(d);
+        sig.setAttribute('cx', pt.x); sig.setAttribute('cy', pt.y);
+        p < 1 ? requestAnimationFrame(step) : (sig.style.opacity = '0', res());
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function loop() {
+    while (true) {
+      ['b-root', 'b-f1', 'b-f2', 'b-docs', 'b-f3'].forEach(id => $(id).classList.remove('active', 'done'));
+      $('t-total').textContent = 'total = 0 B';
+      $('t-docs').textContent = 'tamano() → ...';
+      $('b-root').classList.add('active');
+      await wait(450);
+
+      // 1. config.yml (20 B)
+      await movePath($('c-1'), false, 400);
+      $('b-f1').classList.add('done');
+      await movePath($('c-1'), true, 400);
+      $('t-total').textContent = 'total = 20 B';
+      await wait(250);
+
+      // 2. Main.java (12 B)
+      await movePath($('c-2'), false, 380);
+      $('b-f2').classList.add('done');
+      await movePath($('c-2'), true, 380);
+      $('t-total').textContent = 'total = 32 B';
+      await wait(250);
+
+      // 3. docs/ -> guia.pdf (120 B)
+      await movePath($('c-3'), false, 400);
+      $('b-docs').classList.add('active');
+      await movePath($('c-4'), false, 380);
+      $('b-f3').classList.add('done');
+      await movePath($('c-4'), true, 380);
+      $('b-docs').classList.remove('active');
+      $('b-docs').classList.add('done');
+      $('t-docs').textContent = 'tamano() → 120 B';
+      await movePath($('c-3'), true, 400);
+
+      $('b-root').classList.remove('active');
+      $('b-root').classList.add('done');
+      $('t-total').textContent = 'total = 152 B';
+      await wait(1600);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

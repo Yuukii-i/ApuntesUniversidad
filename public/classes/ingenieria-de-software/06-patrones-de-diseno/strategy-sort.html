@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 225px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 12; transition: stroke 0.25s, stroke-width 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #16a34a; stroke-width: 2.6; }
+  .title { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; }
+  .code { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11.5px; font-weight: 600; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11.5px; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-dasharray: 5 4; opacity: 0.35; transition: opacity 0.25s, stroke 0.25s; }
+  .cable.selected { stroke: var(--accent); opacity: 0.9; }
+  .pulse { fill: var(--accent); opacity: 0; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 225" aria-label="Animación del patrón Strategy con MyList cambiando entre QuickSortStrategy y ShellSortStrategy">
+  <path id="c-quick" class="cable selected" d="M 255 95 C 325 95, 345 58, 420 58" />
+  <path id="c-shell" class="cable" d="M 255 130 C 325 130, 345 167, 420 167" />
+
+  <!-- Contexto: MyList -->
+  <rect id="b-list" class="box" x="25" y="48" width="230" height="130" />
+  <text class="title" x="140" y="76">MyList (miLista)</text>
+  <text id="t-strat" class="code" x="140" y="102">strategy = QuickSort</text>
+  <text id="t-action" class="sub" x="140" y="128">miLista.sort()</text>
+  <text id="t-res" class="code" x="140" y="156">[ 9, 2, 7, 4 ]</text>
+
+  <!-- Estrategia 1: QuickSortStrategy -->
+  <rect id="b-quick" class="box" x="420" y="18" width="235" height="80" />
+  <text class="title" x="537.5" y="48">QuickSortStrategy</text>
+  <text class="code" x="537.5" y="74">sort(list) → QuickSort</text>
+
+  <!-- Estrategia 2: ShellSortStrategy -->
+  <rect id="b-shell" class="box" x="420" y="127" width="235" height="80" />
+  <text class="title" x="537.5" y="157">ShellSortStrategy</text>
+  <text class="code" x="537.5" y="183">sort(list) → ShellSort</text>
+
+  <circle id="sig" class="pulse" r="6" cx="255" cy="95" />
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const cs = getComputedStyle(parent.document.documentElement);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach(v => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch (_) {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function moveAlong(pathEl, dur) {
+    return new Promise(res => {
+      const sig = $('sig'), len = pathEl.getTotalLength(), s = performance.now();
+      sig.style.opacity = '1';
+      function step(now) {
+        const p = Math.min(1, (now - s) / dur);
+        const pt = pathEl.getPointAtLength(p * len);
+        sig.setAttribute('cx', pt.x); sig.setAttribute('cy', pt.y);
+        p < 1 ? requestAnimationFrame(step) : (sig.style.opacity = '0', res());
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const runs = [
+    { strat: 'strategy = QuickSort', action: 'miLista.sort()', cable: 'c-quick', box: 'b-quick', out: 'Ordenada con QuickSort' },
+    { strat: 'setSortStrategy(ShellSort)', action: 'miLista.sort()', cable: 'c-shell', box: 'b-shell', out: 'Ordenada con ShellSort' }
+  ];
+  let idx = 0;
+
+  async function loop() {
+    while (true) {
+      const r = runs[idx];
+      ['b-list', 'b-quick', 'b-shell'].forEach(id => $(id).classList.remove('active', 'done'));
+      $('c-quick').classList.toggle('selected', r.cable === 'c-quick');
+      $('c-shell').classList.toggle('selected', r.cable === 'c-shell');
+      $('t-strat').textContent = r.strat;
+      $('t-action').textContent = r.action;
+      $('t-res').textContent = '[ 9, 2, 7, 4 ]';
+      $('b-list').classList.add('active');
+      await wait(550);
+
+      await moveAlong($(r.cable), 600);
+      $('b-list').classList.remove('active');
+      $(r.box).classList.add('done');
+      $('t-res').textContent = '[ 2, 4, 7, 9 ] (' + (idx === 0 ? 'Quick' : 'Shell') + ')';
+      await wait(1500);
+      idx = (idx + 1) % runs.length;
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 220px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 12; transition: stroke 0.25s, stroke-width 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #16a34a; stroke-width: 2.6; }
+  .title { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; }
+  .code { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11.5px; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-dasharray: 5 4; opacity: 0.5; }
+  .pulse { fill: var(--accent); opacity: 0; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 220" aria-label="Animación del patrón Adapter traduciendo encender() hacia SamsungProjector y LGProjector">
+  <path id="c-1" class="cable" d="M 175 110 L 245 110" />
+  <path id="c-2" class="cable" d="M 435 110 L 495 110" />
+
+  <!-- Sistema Central -->
+  <rect id="b-sys" class="box" x="20" y="65" width="155" height="90" />
+  <text class="title" x="97.5" y="94">Sistema Central</text>
+  <text class="sub" x="97.5" y="114">Interfaz Proyector</text>
+  <text class="code" x="97.5" y="138">encender()</text>
+
+  <!-- Adaptador -->
+  <rect id="b-adap" class="box" x="245" y="55" width="190" height="110" />
+  <text id="t-adap" class="title" x="340" y="84">AdaptadorSamsung</text>
+  <text class="sub" x="340" y="108">Traduce la llamada</text>
+  <text id="t-trans" class="code" x="340" y="136">encender() → turnon()</text>
+
+  <!-- Proyector concreto -->
+  <rect id="b-proj" class="box" x="495" y="60" width="165" height="100" />
+  <text id="t-proj" class="title" x="577.5" y="88">SamsungProjector</text>
+  <text id="t-method" class="code" x="577.5" y="114">turnon()</text>
+  <text id="t-state" class="sub" x="577.5" y="140">Apagado</text>
+
+  <circle id="sig" class="pulse" r="6" cx="175" cy="110" />
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const cs = getComputedStyle(parent.document.documentElement);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach(v => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch (_) {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function moveAlong(pathEl, dur) {
+    return new Promise(res => {
+      const sig = $('sig'), len = pathEl.getTotalLength(), s = performance.now();
+      sig.style.opacity = '1';
+      function step(now) {
+        const p = Math.min(1, (now - s) / dur);
+        const pt = pathEl.getPointAtLength(p * len);
+        sig.setAttribute('cx', pt.x); sig.setAttribute('cy', pt.y);
+        p < 1 ? requestAnimationFrame(step) : (sig.style.opacity = '0', res());
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const devices = [
+    { adap: 'AdaptadorSamsung', trans: 'encender() → turnon()', proj: 'SamsungProjector', method: 'turnon()', out: 'Samsung encendido' },
+    { adap: 'AdaptadorLG', trans: 'encender() → enable(10)', proj: 'LGProjector', method: 'enable(10)', out: 'LG encendido (timer: 10)' }
+  ];
+  let idx = 0;
+
+  async function loop() {
+    while (true) {
+      const d = devices[idx];
+      ['b-sys', 'b-adap', 'b-proj'].forEach(id => $(id).classList.remove('active', 'done'));
+      $('t-adap').textContent = d.adap;
+      $('t-trans').textContent = d.trans;
+      $('t-proj').textContent = d.proj;
+      $('t-method').textContent = d.method;
+      $('t-state').textContent = 'Esperando señal...';
+
+      $('b-sys').classList.add('active');
+      await wait(450);
+
+      await moveAlong($('c-1'), 520);
+      $('b-sys').classList.remove('active');
+      $('b-adap').classList.add('active');
+      await wait(600);
+
+      await moveAlong($('c-2'), 520);
+      $('b-adap').classList.remove('active');
+      $('b-proj').classList.add('done');
+      $('t-state').textContent = d.out;
+      await wait(1450);
+      idx = (idx + 1) % devices.length;
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

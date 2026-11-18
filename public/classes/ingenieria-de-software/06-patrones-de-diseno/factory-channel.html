@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 220px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 12; transition: stroke 0.25s, stroke-width 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #16a34a; stroke-width: 2.6; }
+  .title { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; }
+  .code { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11.5px; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-dasharray: 5 4; opacity: 0.5; }
+  .pulse { fill: var(--accent); opacity: 0; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 220" aria-label="Animación del patrón Factory con ChannelFactory creando TCPChannel y UDPChannel">
+  <path id="c-in" class="cable" d="M 185 110 L 265 110" />
+  <path id="c-tcp" class="cable" d="M 435 90 C 465 90, 475 58, 505 58" />
+  <path id="c-udp" class="cable" d="M 435 130 C 465 130, 475 162, 505 162" />
+
+  <!-- Cliente: f() o g() -->
+  <rect id="b-client" class="box" x="25" y="66" width="160" height="88" />
+  <text id="t-func" class="title" x="105" y="95">Función f()</text>
+  <text id="t-call" class="code" x="105" y="122">create("TCP")</text>
+
+  <!-- Fábrica: ChannelFactory -->
+  <rect id="b-factory" class="box" x="265" y="56" width="170" height="108" />
+  <text class="title" x="350" y="84">ChannelFactory</text>
+  <text class="sub" x="350" y="108">Evalúa el tipo pedido</text>
+  <text id="t-branch" class="code" x="350" y="136">tipo == "TCP"</text>
+
+  <!-- Producto 1: TCPChannel -->
+  <rect id="b-tcp" class="box" x="505" y="20" width="150" height="76" />
+  <text class="title" x="580" y="50">TCPChannel</text>
+  <text class="sub" x="580" y="72">new TCPChannel()</text>
+
+  <!-- Producto 2: UDPChannel -->
+  <rect id="b-udp" class="box" x="505" y="124" width="150" height="76" />
+  <text class="title" x="580" y="154">UDPChannel</text>
+  <text class="sub" x="580" y="176">new UDPChannel()</text>
+
+  <circle id="sig" class="pulse" r="6" cx="185" cy="110" />
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const cs = getComputedStyle(parent.document.documentElement);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach(v => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch (_) {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function moveAlong(pathEl, dur) {
+    return new Promise(res => {
+      const sig = $('sig'), len = pathEl.getTotalLength(), s = performance.now();
+      sig.style.opacity = '1';
+      function step(now) {
+        const p = Math.min(1, (now - s) / dur);
+        const pt = pathEl.getPointAtLength(p * len);
+        sig.setAttribute('cx', pt.x); sig.setAttribute('cy', pt.y);
+        p < 1 ? requestAnimationFrame(step) : (sig.style.opacity = '0', res());
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const cases = [
+    { fn: 'Función f()', call: 'create("TCP")', branch: 'tipo == "TCP"', path: 'c-tcp', target: 'b-tcp' },
+    { fn: 'Función g()', call: 'create("UDP")', branch: 'tipo == "UDP"', path: 'c-udp', target: 'b-udp' }
+  ];
+  let idx = 0;
+
+  async function loop() {
+    while (true) {
+      const c = cases[idx];
+      ['b-client', 'b-factory', 'b-tcp', 'b-udp'].forEach(id => $(id).classList.remove('active', 'done'));
+      $('t-func').textContent = c.fn;
+      $('t-call').textContent = c.call;
+      $('t-branch').textContent = '...';
+      $('b-client').classList.add('active');
+      await wait(450);
+
+      await moveAlong($('c-in'), 550);
+      $('b-client').classList.remove('active');
+      $('b-factory').classList.add('active');
+      $('t-branch').textContent = c.branch;
+      await wait(550);
+
+      await moveAlong($(c.path), 550);
+      $('b-factory').classList.remove('active');
+      $(c.target).classList.add('done');
+      await wait(1400);
+      idx = (idx + 1) % cases.length;
+    }
+  }
+  loop();
+</script>
+</body>
+</html>

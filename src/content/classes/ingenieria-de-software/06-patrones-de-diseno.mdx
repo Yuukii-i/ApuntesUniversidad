@@ -1,7 +1,7 @@
 ---
 title: "Patrones de diseño"
 order: 6
-minutes: 42
+minutes: 48
 ---
 
 import Demo from '../../../components/Demo.astro';
@@ -96,6 +96,14 @@ void g() {
 
 Esta implementación permite cambiar de manera fácil el objeto que crean los métodos. Si mañana decides añadir un protocolo nuevo además de TCP y UDP, solo necesitas crear su clase Factory respectiva y llamarla con `fn::.create()` desde la clase que la usará.
 
+Ejemplo visual del patrón: podemos ver cómo las funciones `fn::f()` y `fn::g()` ya no instancian los canales directamente con `kw::new`, sino que llaman a `ChannelFactory.create("TCP")` o `ChannelFactory.create("UDP")` y es la fábrica centralizada quien decide e instancia `cls::TCPChannel` o `cls::UDPChannel`.
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/factory-channel.html"
+  title="Patrón Factory: ChannelFactory creando TCPChannel o UDPChannel según el parámetro"
+  height={230}
+/>
+
 ## Patrón Adapter
 
 Imaginemos que estamos creando un sistema que permite controlar proyectores multimedia en distintas salas; el sistema central está diseñado para comunicarse siempre con una interfaz llamada `cls::Proyector` que tiene un método `fn::encender()`:
@@ -154,6 +162,14 @@ class AdaptadorProyectorLG implements Proyector {
 ```
 
 Cada *adapter* llama a la función específica de los proyectores, escondiendo el proceso detrás de la función `fn::encender()`. Esto nos permite que, si mañana decides comprar un proyector de otra marca, el sistema no se rompa, ya que no importa qué función de encender utilice el nuevo proyector: solo tendrás que crear un *adapter* que implemente la interfaz común.
+
+Ejemplo visual del patrón: podemos ver cómo el sistema central siempre envía la misma orden `fn::encender()`, y cada clase adaptadora actúa como traductor intermedio convirtiendo esa llamada en `fn::turnon()` cuando se conecta a `cls::SamsungProjector` o en `enable(10)` cuando se conecta a `cls::LGProjector`.
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/adapter-proyector.html"
+  title="Patrón Adapter: traducción de encender() hacia los métodos propios de cada proyector"
+  height={230}
+/>
 
 ## Patrón Strategy
 
@@ -230,6 +246,14 @@ public class Main {
 ```
 
 Ahora, cuando alguien no quiera usar Quicksort, no habrá necesidad de cambiar todo el código o la lógica; solo tendrás que cambiar el tipo de estrategia que utilizará la clase `cls::MyList`. Además, si mañana decides añadir otro algoritmo de ordenamiento, solo tendrás que crear una nueva clase que implemente la interfaz/clase principal e implemente su propia versión de `fn::sort()`.
+
+Ejemplo visual del patrón: podemos ver cómo `cls::MyList` ejecuta `fn::sort()` delegando el trabajo primero a `cls::QuickSortStrategy` y luego, tras cambiar la estrategia en tiempo de ejecución con `fn::setSortStrategy()`, ordena los mismos datos mediante `cls::ShellSortStrategy` sin alterar el código de la lista.
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/strategy-sort.html"
+  title="Patrón Strategy: cambio dinámico entre QuickSortStrategy y ShellSortStrategy en MyList"
+  height={235}
+/>
 
 ## Patrón Observer
 
@@ -328,6 +352,8 @@ public class Main {
 />
 
 {/* GENERADO: "(AÑADIR AQUÍ UN PAGINA HTML EMBEBIDA CON UNA ANIMACION MUY SIMPLE QUE MUESTRA COMO CUANDO CAMBIA LA TEMPERATURA SE ENVIA UNA SEÑAL A LOS OBSERVADORES, PARA EL EJEMPLO SOLO AÑADE EL TERMOMETRO DIGITAL Y ANALOGICO, LA ANIMACION DEBE MOSTRAR LAS CLASES CONECTADAS POR UN CABLE, LA CLASE TEMPERATURA SERA UN NUMERO COMO 15C O 20C (celsius) QUE CAMBIA, AL CAMBIAR POR EL CABLE VIAJA LA INFORMACION Y AMBOS SE ACTUALIZAN)" */}
+
+Ejemplo visual del patrón: podemos ver cómo al cambiar el valor en el sujeto `cls::Temperatura`, este emite una notificación automática a través de su lista de suscriptores para que cada observador (`cls::Termometro`) actualice su propia vista al instante sin estar acoplado a los demás.
 
 ## Patrón Composite
 
@@ -432,6 +458,14 @@ public class Main {
 
 Con esto, si mañana decides añadir un nuevo elemento, como lo podría ser un acceso directo, no necesitarás añadir ningún tipo de condicionales.
 
+Ejemplo visual del patrón: podemos ver cómo la carpeta raíz `proyecto/` invoca `fn::tamano()` de forma uniforme sobre cada hijo (`config.yml`, `Main.java` y la subcarpeta `docs/` que a su vez consulta a `guia.pdf`), acumulando recursivamente los bytes (`20 + 12 + 120 = 152 B`) sin distinguir con condicionales entre archivos y carpetas.
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/composite-archivos.html"
+  title="Patrón Composite: recorrido recursivo de tamano() en carpetas y archivos"
+  height={255}
+/>
+
 ## Patrón Command
 
 Imaginemos que estamos diseñando un software para un Control Remoto inteligente; el control te permite encender luces, abrir cortinas y operar distintos dispositivos de tu hogar. El objetivo es que se puedan cambiar las acciones de los botones sin tener que modificar el código interno; además, si a futuro quisieras recuperar una función eliminada, no podrías.
@@ -513,6 +547,14 @@ public class Main {
     }
 }
 ```
+
+Ejemplo visual del patrón: podemos ver cómo el invocador `cls::Boton` siempre ejecuta `accion.execute()` al llamar a `fn::pulsar()`, delegando la acción primero al comando `cls::EncenderLuz` (que enciende el receptor `cls::Luz`) y luego a otro comando como `AbrirCortina` (que abre la `Cortina`) sin modificar el código interno del botón.
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/command-control.html"
+  title="Patrón Command: Boton ejecutando distintos comandos sobre los receptores Luz y Cortina"
+  height={235}
+/>
 
 ## Patrón Abstract Factory
 
@@ -615,6 +657,14 @@ public class Main {
 ```
 
 El resultado es un sistema adaptable sin ninguna condicional, que funciona puramente en base a la fábrica definida al crear el objeto `cls::FabricaGUI`.
+
+Ejemplo visual del patrón: podemos ver cómo la clase genérica `cls::Aplicacion` pide `fn::crearBoton()` y `fn::crearCasilla()` a la interfaz `cls::FabricaGUI`, y según si se inyectó `cls::FabricaWindows` o `cls::FabricaMac`, la fábrica produce la familia completa de componentes compatibles (`cls::BotonWindows` con `cls::CasillaWindows`, o `cls::BotonMac` con `cls::CasillaMac`) sin mezclar estilos ni usar condicionales.
+
+<Demo
+  src="/classes/ingenieria-de-software/06-patrones-de-diseno/abstract-factory-gui.html"
+  title="Patrón Abstract Factory: creación de familias completas de componentes Windows o macOS"
+  height={245}
+/>
 
 ## Datos extra de los Patrones de Diseño
 

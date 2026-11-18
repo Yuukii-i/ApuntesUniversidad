@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 680px; height: 225px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 12; transition: stroke 0.25s, stroke-width 0.25s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #16a34a; stroke-width: 2.6; }
+  .title { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; }
+  .code { fill: var(--accent); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; font-weight: 600; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11.5px; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2.2; stroke-dasharray: 5 4; opacity: 0.45; }
+  .pulse { fill: var(--accent); opacity: 0; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 680 225" aria-label="Animación del patrón Command desacoplando Boton de los receptores Luz y Cortina">
+  <path id="c-1" class="cable" d="M 180 112 L 250 112" />
+  <path id="c-luz" class="cable" d="M 435 92 C 465 92, 475 58, 505 58" />
+  <path id="c-cor" class="cable" d="M 435 132 C 465 132, 475 168, 505 168" />
+
+  <!-- Invocador: Boton -->
+  <rect id="b-btn" class="box" x="20" y="62" width="160" height="100" />
+  <text class="title" x="100" y="88">Invocador: Boton</text>
+  <text class="sub" x="100" y="110">boton1.pulsar()</text>
+  <text class="code" x="100" y="138">accion.execute()</text>
+
+  <!-- Comando Concreto -->
+  <rect id="b-cmd" class="box" x="250" y="57" width="185" height="110" />
+  <text class="sub" x="342.5" y="80">Command asignado</text>
+  <text id="t-cmd" class="title" x="342.5" y="106">EncenderLuz</text>
+  <text id="t-del" class="code" x="342.5" y="138">luz.encender()</text>
+
+  <!-- Receptor 1: Luz -->
+  <rect id="b-luz" class="box" x="505" y="18" width="155" height="80" />
+  <text class="title" x="582.5" y="46">Receptor: Luz</text>
+  <text id="t-luz" class="code" x="582.5" y="74">Apagada</text>
+
+  <!-- Receptor 2: Cortina -->
+  <rect id="b-cor" class="box" x="505" y="128" width="155" height="80" />
+  <text class="title" x="582.5" y="156">Receptor: Cortina</text>
+  <text id="t-cor" class="code" x="582.5" y="184">Cerrada</text>
+
+  <circle id="sig" class="pulse" r="6" cx="180" cy="112" />
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const cs = getComputedStyle(parent.document.documentElement);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach(v => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch (_) {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function moveAlong(pathEl, dur) {
+    return new Promise(res => {
+      const sig = $('sig'), len = pathEl.getTotalLength(), s = performance.now();
+      sig.style.opacity = '1';
+      function step(now) {
+        const p = Math.min(1, (now - s) / dur);
+        const pt = pathEl.getPointAtLength(p * len);
+        sig.setAttribute('cx', pt.x); sig.setAttribute('cy', pt.y);
+        p < 1 ? requestAnimationFrame(step) : (sig.style.opacity = '0', res());
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  const actions = [
+    { cmd: 'EncenderLuz', del: 'luz.encender()', path: 'c-luz', box: 'b-luz', txtId: 't-luz', res: 'Luz encendida' },
+    { cmd: 'AbrirCortina', del: 'cortina.abrir()', path: 'c-cor', box: 'b-cor', txtId: 't-cor', res: 'Cortina abierta' }
+  ];
+  let idx = 0;
+
+  async function loop() {
+    while (true) {
+      const a = actions[idx];
+      ['b-btn', 'b-cmd', 'b-luz', 'b-cor'].forEach(id => $(id).classList.remove('active', 'done'));
+      $('t-luz').textContent = 'Apagada';
+      $('t-cor').textContent = 'Cerrada';
+      $('t-cmd').textContent = a.cmd;
+      $('t-del').textContent = a.del;
+
+      $('b-btn').classList.add('active');
+      await wait(450);
+
+      await moveAlong($('c-1'), 520);
+      $('b-btn').classList.remove('active');
+      $('b-cmd').classList.add('active');
+      await wait(550);
+
+      await moveAlong($(a.path), 520);
+      $('b-cmd').classList.remove('active');
+      $(a.box).classList.add('done');
+      $(a.txtId).textContent = a.res;
+      await wait(1450);
+      idx = (idx + 1) % actions.length;
+    }
+  }
+  loop();
+</script>
+</body>
+</html>
