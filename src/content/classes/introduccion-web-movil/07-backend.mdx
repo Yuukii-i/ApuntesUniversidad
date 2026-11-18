@@ -64,22 +64,11 @@ Esta arquitectura se enfoca principalmente en el backend; la idea principal es s
 
 Lo más importante de la arquitectura microservicios es que es altamente escalable y flexible; su mayor ventaja es que, al existir separación del código, cada microservicio puede vivir dentro de un servidor distinto, permitiendo que los microservicios menos usados tengan servidores menos potentes, mientras que los microservicios principales tengan servidores potentes y rápidos.
 
-```mermaid
-flowchart LR
-  U["Usuarios / Clientes"] --> GW["API Gateway (Recepcionista)"]
-  subgraph S1["Servidor Potente (Alta carga)"]
-    M1["Microservicio de Catálogo"] --> DB1[("DB Catálogo")]
-  end
-  subgraph S2["Servidor Estándar (Carga media)"]
-    M2["Microservicio de Pagos"] --> DB2[("DB Pagos")]
-  end
-  subgraph S3["Servidor Ligero (Baja carga)"]
-    M3["Microservicio de Reportes"] --> DB3[("DB Reportes")]
-  end
-  GW --> M1
-  GW --> M2
-  GW --> M3
-```
+<Demo
+  src="/classes/introduccion-web-movil/07-backend/arquitectura-microservicios.html"
+  title="Arquitectura de microservicios con API Gateway al centro y separación de responsabilidades y cargas"
+  height={250}
+/>
 
 {/* GENERADO: "(AÑADIR AQUÍ UN DIAGRAMA SIMPLE QUE MUESTRE COMO FUNCIONA UNA ARQUITECTURA MICROSERVICIOS, DEBE SER CLARA LA SEPARACION DE RESPONSABILIDADES Y CARGAS, Y ADEMAS MOSTRARSE LA API GATEWAY AL CENTRO)" */}
 
