@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root { --text: #1c1917; --muted: #78716c; --accent: #b45309; --surface-2: #ede8df; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%; background: transparent;
+    font-family: ui-sans-serif, system-ui, -apple-system, sans-serif;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+  }
+  svg { width: 100%; max-width: 720px; height: 240px; display: block; }
+  .box { fill: var(--surface-2); stroke: var(--muted); stroke-width: 1.6; rx: 12; transition: stroke 0.25s, opacity 0.3s, transform 0.35s; }
+  .box.active { stroke: var(--accent); stroke-width: 2.6; }
+  .box.done { stroke: #16a34a; stroke-width: 2.6; }
+  .title { fill: var(--text); font-size: 12.5px; font-weight: 700; text-anchor: middle; }
+  .sub { fill: var(--muted); font-size: 11px; text-anchor: middle; }
+  .cable { fill: none; stroke: var(--muted); stroke-width: 2; stroke-dasharray: 5 4; opacity: 0.45; }
+  .code-line { stroke: var(--muted); stroke-width: 4.5; stroke-linecap: round; opacity: 0.35; transition: stroke 0.2s, opacity 0.2s; }
+  .code-line.on { stroke: var(--accent); opacity: 1; }
+  #dev-code { transform-origin: 125px 128px; transition: transform 0.35s ease, opacity 0.35s ease; }
+  #dev-code.morph { transform: scale(0.15); opacity: 0; }
+  #ci-code { transform-origin: 575px 125px; transition: transform 0.35s ease, opacity 0.35s ease; }
+  #ci-code.hide { transform: scale(0.2); opacity: 0; }
+  #orb { fill: var(--accent); opacity: 0; }
+  #sig { fill: var(--accent); opacity: 0; }
+  #tick { opacity: 0; transition: opacity 0.25s; }
+  #tick.show { opacity: 1; }
+  #pkg { opacity: 0; transition: opacity 0.25s; }
+</style>
+</head>
+<body>
+<svg viewBox="0 0 720 240" aria-label="Animación del flujo de Integración Continua entre Desarrollador, Repositorio y Servidor de CI">
+  <!-- Cables -->
+  <path id="c-commit" class="cable" d="M 165 115 C 215 70, 265 70, 305 115" />
+  <path id="c-ci" class="cable" d="M 415 115 L 495 115" />
+  <path id="c-return" class="cable" d="M 555 180 C 420 225, 220 225, 85 170" />
+
+  <!-- Desarrollador + Bloque de código original -->
+  <circle cx="52" cy="96" r="13" fill="var(--text)" />
+  <path d="M 30 144 C 30 120, 74 120, 74 144 Z" fill="var(--text)" />
+  <text class="title" x="52" y="164">Dev</text>
+
+  <g id="dev-code">
+    <rect class="box active" x="90" y="88" width="72" height="68" rx="8" />
+    <line class="code-line on" x1="102" y1="104" x2="144" y2="104" />
+    <line class="code-line on" x1="102" y1="116" x2="150" y2="116" />
+    <line class="code-line on" x1="102" y1="128" x2="136" y2="128" />
+    <line class="code-line on" x1="102" y1="140" x2="146" y2="140" />
+  </g>
+
+  <!-- Repositorio Central -->
+  <rect id="b-repo" class="box" x="295" y="72" width="120" height="88" />
+  <text class="title" x="355" y="106">Repositorio</text>
+  <text class="sub" x="355" y="128">(Git)</text>
+
+  <!-- Servidor de CI -->
+  <rect id="b-ci" class="box" x="495" y="46" width="190" height="138" />
+  <text class="title" x="590" y="68">Servidor de CI</text>
+
+  <g id="ci-code">
+    <rect class="box" x="530" y="82" width="120" height="82" rx="8" />
+    <line id="cl1" class="code-line" x1="546" y1="100" x2="618" y2="100" />
+    <line id="cl2" class="code-line" x1="546" y1="115" x2="632" y2="115" />
+    <line id="cl3" class="code-line" x1="546" y1="130" x2="604" y2="130" />
+    <line id="cl4" class="code-line" x1="546" y1="145" x2="624" y2="145" />
+  </g>
+
+  <!-- Tick verde de Tests pasados -->
+  <g id="tick">
+    <circle cx="654" cy="84" r="14" fill="#16a34a" />
+    <path d="M 647 84 L 652 89 L 662 78" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Bola brillante (Commit) -->
+  <circle id="orb" r="9" cx="125" cy="120" />
+  <!-- Señal Repo -> CI -->
+  <circle id="sig" r="6" cx="415" cy="115" />
+
+  <!-- Paquete Build -->
+  <g id="pkg" transform="translate(555, 98)">
+    <rect width="68" height="52" rx="8" fill="var(--accent)" />
+    <line x1="0" y1="18" x2="68" y2="18" stroke="var(--surface-2)" stroke-width="2.5" />
+    <line x1="34" y1="0" x2="34" y2="18" stroke="var(--surface-2)" stroke-width="2.5" />
+    <text x="34" y="38" fill="#ffffff" font-size="11" font-weight="700" text-anchor="middle">BUILD</text>
+  </g>
+</svg>
+<script>
+  function syncTheme() {
+    try {
+      const cs = getComputedStyle(parent.document.documentElement);
+      ['--text', '--muted', '--accent', '--surface-2'].forEach(v => {
+        const val = cs.getPropertyValue(v).trim();
+        if (val) document.documentElement.style.setProperty(v, val);
+      });
+    } catch (_) {}
+  }
+  syncTheme();
+  try {
+    new MutationObserver(syncTheme).observe(parent.document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class', 'style'] });
+  } catch (_) {}
+
+  const $ = id => document.getElementById(id);
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  function animateAlong(el, pathEl, dur, isGroup) {
+    return new Promise(res => {
+      const len = pathEl.getTotalLength(), s = performance.now();
+      el.style.opacity = '1';
+      function step(now) {
+        const p = Math.min(1, (now - s) / dur);
+        const pt = pathEl.getPointAtLength(p * len);
+        if (isGroup) {
+          el.setAttribute('transform', `translate(${(pt.x - 34).toFixed(1)}, ${(pt.y - 26).toFixed(1)})`);
+        } else {
+          el.setAttribute('cx', pt.x); el.setAttribute('cy', pt.y);
+        }
+        p < 1 ? requestAnimationFrame(step) : res();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function loop() {
+    while (true) {
+      $('dev-code').classList.remove('morph');
+      $('ci-code').classList.remove('hide');
+      $('tick').classList.remove('show');
+      $('pkg').style.opacity = '0';
+      $('orb').style.opacity = '0';
+      $('sig').style.opacity = '0';
+      ['b-repo', 'b-ci'].forEach(id => $(id).classList.remove('active', 'done'));
+      ['cl1', 'cl2', 'cl3', 'cl4'].forEach(id => $(id).classList.remove('on'));
+      await wait(600);
+
+      // 1. El bloque de código se convierte en bola brillante y vuela al repositorio
+      $('dev-code').classList.add('morph');
+      await wait(250);
+      await animateAlong($('orb'), $('c-commit'), 650, false);
+      $('orb').style.opacity = '0';
+      $('b-repo').classList.add('active');
+      await wait(300);
+
+      // 2. El repositorio envía señal al Servidor de CI
+      await animateAlong($('sig'), $('c-ci'), 480, false);
+      $('sig').style.opacity = '0';
+      $('b-repo').classList.remove('active');
+      $('b-ci').classList.add('active');
+
+      // 3. El CI ejecuta el código línea por línea
+      for (const id of ['cl1', 'cl2', 'cl3', 'cl4']) {
+        $(id).classList.add('on');
+        await wait(260);
+      }
+
+      // 4. Aparece el tick verde de tests superados
+      $('tick').classList.add('show');
+      $('b-ci').classList.remove('active');
+      $('b-ci').classList.add('done');
+      await wait(550);
+
+      // 5. El código se convierte en paquete (Build) y viaja al desarrollador
+      $('ci-code').classList.add('hide');
+      $('tick').classList.remove('show');
+      $('pkg').setAttribute('transform', 'translate(556, 98)');
+      $('pkg').style.opacity = '1';
+      await wait(350);
+      await animateAlong($('pkg'), $('c-return'), 850, true);
+      $('dev-code').classList.remove('morph');
+      await wait(1300);
+    }
+  }
+  loop();
+</script>
+</body>
+</html>
