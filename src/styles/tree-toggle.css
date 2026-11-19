@@ -1,0 +1,49 @@
+/* Control de visibilidad y transición del árbol de navegación en escritorio (>= 1024px) */
+.tree-desktop-toggle {
+  color: var(--muted);
+  opacity: 0.45;
+  background-color: transparent;
+  transition: opacity 150ms ease, color 150ms ease, background-color 150ms ease;
+}
+
+#tree-aside:hover .tree-desktop-toggle {
+  opacity: 0.85;
+}
+
+.tree-desktop-toggle:hover,
+.tree-desktop-toggle:focus-visible {
+  color: var(--text);
+  background-color: var(--surface);
+  opacity: 1;
+}
+
+#tree-desktop-open {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .topic-layout {
+    transition: gap 200ms ease;
+  }
+
+  #tree-aside {
+    transition: width 200ms ease, opacity 200ms ease, visibility 200ms ease;
+  }
+
+  :root[data-tree="closed"] .topic-layout {
+    gap: 0;
+    justify-content: center;
+  }
+
+  :root[data-tree="closed"] #tree-aside {
+    width: 0;
+    opacity: 0;
+    visibility: hidden;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  :root[data-tree="closed"] #tree-desktop-open {
+    display: inline-flex;
+  }
+}

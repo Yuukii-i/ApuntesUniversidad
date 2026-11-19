@@ -1,6 +1,7 @@
 ---
 import { getClasses, topicsOfClass, topicSlugOf } from '../lib/content';
 import { getCollection } from 'astro:content';
+import Icon from './Icon.astro';
 
 interface Heading {
   depth: number;
@@ -47,7 +48,7 @@ const sections = headings.filter((h) => h.depth === 2 || h.depth === 3);
 <!-- Contenedor del árbol de navegación -->
 <aside
   id="tree-aside"
-  class="fixed lg:sticky top-0 lg:top-16 left-0 z-50 lg:z-10 h-full lg:h-auto max-h-screen lg:max-h-[calc(100vh-4.5rem)] w-[290px] shrink-0 bg-bg lg:bg-transparent p-4 lg:p-0 overflow-y-auto tree-scroll transform -translate-x-full lg:translate-x-0 transition-transform duration-200 lg:transition-none"
+  class="fixed lg:sticky top-0 lg:top-16 left-0 z-50 lg:z-10 h-full lg:h-auto max-h-screen lg:max-h-[calc(100vh-4.5rem)] w-[290px] shrink-0 bg-bg lg:bg-transparent p-4 lg:p-0 overflow-y-auto tree-scroll transform -translate-x-full lg:translate-x-0 transition-transform duration-200"
   aria-label="Navegación de materias y temas"
 >
   <!-- Cabecera de cierre en móvil -->
@@ -65,17 +66,30 @@ const sections = headings.filter((h) => h.depth === 2 || h.depth === 3);
     </button>
   </div>
 
-  <nav class="space-y-3">
-    {treeData.map((item) => {
-      const isCurrentClass = item.classSlug === currentClassSlug;
-      return (
-        <div class="tree-class-folder" data-class-slug={item.classSlug} data-is-current={isCurrentClass ? 'true' : 'false'}>
-          <!-- Botón de carpeta de la materia -->
-          <button
-            type="button"
-            class="tree-folder-toggle flex items-center justify-between w-full py-1.5 px-2 rounded-lg text-left text-[15px] font-semibold text-text hover:bg-surface transition-colors cursor-pointer group"
-            aria-expanded={isCurrentClass ? 'true' : 'false'}
-          >
+  <div class="relative lg:w-[290px]">
+    <button
+      id="tree-desktop-close"
+      type="button"
+      class="tree-desktop-toggle hidden lg:inline-flex items-center justify-center w-8 h-8 rounded-lg absolute top-0 right-0 z-10 cursor-pointer"
+      aria-label="Ocultar menú de temas"
+      title="Ocultar menú de temas"
+      aria-expanded="true"
+      aria-controls="tree-aside"
+    >
+      <Icon name="chevron-left" size={16} />
+    </button>
+
+    <nav class="space-y-3">
+      {treeData.map((item, idx) => {
+        const isCurrentClass = item.classSlug === currentClassSlug;
+        return (
+          <div class="tree-class-folder" data-class-slug={item.classSlug} data-is-current={isCurrentClass ? 'true' : 'false'}>
+            <!-- Botón de carpeta de la materia -->
+            <button
+              type="button"
+              class={`tree-folder-toggle flex items-center justify-between w-full py-1.5 px-2 ${idx === 0 ? 'lg:pr-9' : ''} rounded-lg text-left text-[15px] font-semibold text-text hover:bg-surface transition-colors cursor-pointer group`}
+              aria-expanded={isCurrentClass ? 'true' : 'false'}
+            >
             <span class="flex items-center gap-2 truncate">
               <svg
                 class="tree-chevron w-3.5 h-3.5 text-muted group-hover:text-text transition-transform duration-150 shrink-0"
@@ -129,8 +143,22 @@ const sections = headings.filter((h) => h.depth === 2 || h.depth === 3);
         </div>
       );
     })}
-  </nav>
+    </nav>
+  </div>
 </aside>
+
+<!-- Botón flotante para reabrir el árbol en escritorio (>= 1024px) -->
+<button
+  id="tree-desktop-open"
+  type="button"
+  class="tree-desktop-toggle fixed top-16 left-4 z-20 items-center justify-center w-8 h-8 rounded-lg cursor-pointer"
+  aria-label="Mostrar menú de temas"
+  title="Mostrar menú de temas"
+  aria-expanded="false"
+  aria-controls="tree-aside"
+>
+  <Icon name="chevron-right" size={16} />
+</button>
 
 <style>
   /* Scrollbar fina y discreta */
@@ -230,6 +258,45 @@ const sections = headings.filter((h) => h.depth === 2 || h.depth === 3);
           closeDrawer();
         }
       });
+    });
+
+    // 2.5. Control colapsable del árbol en escritorio (>= 1024px)
+    const desktopCloseBtn = document.getElementById('tree-desktop-close');
+    const desktopOpenBtn = document.getElementById('tree-desktop-open');
+
+    function syncDesktopTreeAria() {
+      const isClosed = document.documentElement.dataset.tree === 'closed';
+      const expanded = isClosed ? 'false' : 'true';
+      desktopCloseBtn?.setAttribute('aria-expanded', expanded);
+      desktopOpenBtn?.setAttribute('aria-expanded', expanded);
+    }
+
+    syncDesktopTreeAria();
+
+    desktopCloseBtn?.addEventListener('click', (e) => {
+      document.documentElement.dataset.tree = 'closed';
+      try {
+        localStorage.setItem('tree-closed', 'true');
+      } catch (err) {
+        // Ignorar errores de almacenamiento
+      }
+      syncDesktopTreeAria();
+      if (e.detail === 0) {
+        desktopOpenBtn?.focus();
+      }
+    });
+
+    desktopOpenBtn?.addEventListener('click', (e) => {
+      delete document.documentElement.dataset.tree;
+      try {
+        localStorage.removeItem('tree-closed');
+      } catch (err) {
+        // Ignorar errores de almacenamiento
+      }
+      syncDesktopTreeAria();
+      if (e.detail === 0) {
+        desktopCloseBtn?.focus();
+      }
     });
 
     // 3. Scroll-spy para resaltar la sección actual y desplazar únicamente el contenedor del árbol

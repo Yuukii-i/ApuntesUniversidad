@@ -3,6 +3,7 @@ import '@fontsource-variable/inter';
 import '@fontsource-variable/jetbrains-mono';
 import '../styles/theme.css';
 import '../styles/inline-code.css';
+import '../styles/tree-toggle.css';
 import 'katex/dist/katex.min.css';
 import Header from '../components/Header.astro';
 
@@ -35,6 +36,13 @@ const baseUrl = import.meta.env.BASE_URL.replace(/\/$/, '');
           document.documentElement.setAttribute('data-theme', 'light');
         } else {
           document.documentElement.removeAttribute('data-theme');
+        }
+        try {
+          if (localStorage.getItem('tree-closed') === 'true') {
+            document.documentElement.dataset.tree = 'closed';
+          }
+        } catch (e) {
+          // Ignorar errores de acceso a localStorage
         }
       })();
     </script>
